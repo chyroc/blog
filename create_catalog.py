@@ -13,21 +13,22 @@ def get_issues_from_github():
 
 def format_md(issues):
     line_dict = {}
+    issues = sorted(issues, key=lambda x: x['updated_at'], reverse=True)
     for issue in issues:
         if issue['state'] != 'open':
             continue
 
         labels = ', '.join([gen_label_md(i['name']) for i in issue.get('labels', '')])
 
-        created_at = datetime.datetime.strptime(issue['created_at'], '%Y-%m-%dT%H:%M:%SZ')
-        created_at_key = '{}-{}'.format(created_at.year, created_at.month)
+        updated_at = datetime.datetime.strptime(issue['updated_at'], '%Y-%m-%dT%H:%M:%SZ')
+        updated_at_key = '{}-{}'.format(updated_at.year, updated_at.month)
 
         line = '[{}]({}) {}'.format(issue['title'], issue['html_url'], labels)
 
-        if created_at_key in line_dict:
-            line_dict[created_at_key].append(line)
+        if updated_at_key in line_dict:
+            line_dict[updated_at_key].append(line)
         else:
-            line_dict[created_at_key] = [line]
+            line_dict[updated_at_key] = [line]
 
     return line_dict
 
