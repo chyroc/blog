@@ -25,7 +25,7 @@ def format_md(issues):
         labels = ', '.join([gen_label_md(i['name']) for i in issue.get('labels', '')])
 
         updated_at = datetime.datetime.strptime(issue['updated_at'], '%Y-%m-%dT%H:%M:%SZ')
-        updated_at_key = '{}-{}'.format(updated_at.year, updated_at.month)
+        updated_at_key = '{}-{}-{}'.format(updated_at.year, updated_at.month, updated_at.day)
 
         line = '[{}]({}) {}'.format(issue['title'], issue['html_url'], labels)
 
