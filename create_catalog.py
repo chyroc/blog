@@ -138,7 +138,7 @@ def main():
     issues = filter_issues(get_issues_from_github())
 
     issues_old = get_metadata()
-    issues_new = save_metadata(issues, False)
+    issues_new = save_metadata(issues, True)
 
     commit_msg = diff_metadata(issues_old, issues_new)
 
