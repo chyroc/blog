@@ -2,7 +2,6 @@ Chyroc Blog
 > created by issue
 
 ### 2017-8
-- [test2](https://github.com/Chyroc/blog/issues/23) 
 - [最大子序列和问题](https://github.com/Chyroc/blog/issues/21) [#algorithm](https://github.com/Chyroc/blog/issues?q=is:issue+is:open+label:algorithm), [#Go](https://github.com/Chyroc/blog/issues?q=is:issue+is:open+label:Go)
 - [uuid从32字符缩小为16个字符](https://github.com/Chyroc/blog/issues/15) [#code](https://github.com/Chyroc/blog/issues?q=is:issue+is:open+label:code), [#Go](https://github.com/Chyroc/blog/issues?q=is:issue+is:open+label:Go)
 - [dropbox 开启二次验证+各种 dnBuCg== 登录国家](https://github.com/Chyroc/blog/issues/4) [#Dropbox](https://github.com/Chyroc/blog/issues?q=is:issue+is:open+label:Dropbox)
