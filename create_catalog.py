@@ -130,7 +130,7 @@ def diff_metadata(old, new):
 
 
 def push_to_github(commit_msg):
-    os.system('git commit -a -m "{}"'.format('\n'.join(commit_msg)))
+    os.system('git commit -a -m "{}" && git push'.format('\n'.join(commit_msg)))
     # ' && git push'
 
 
