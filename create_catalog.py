@@ -25,6 +25,7 @@ def format_md(issues):
         labels = ', '.join([gen_label_md(i['name']) for i in issue.get('labels', '')])
 
         updated_at = datetime.datetime.strptime(issue['updated_at'], '%Y-%m-%dT%H:%M:%SZ')
+        updated_at = updated_at + datetime.timedelta(hours=8)
         updated_at_key = '{}-{}-{}'.format(updated_at.year, updated_at.month, updated_at.day)
 
         line = '[{}]({}) {}'.format(issue['title'], issue['html_url'], labels)
@@ -131,7 +132,6 @@ def diff_metadata(old, new):
 
 def push_to_github(commit_msg):
     os.system('git commit -a -m "{}" && git push'.format('\n'.join(commit_msg)))
-    # ' && git push'
 
 
 def main():

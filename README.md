@@ -1,7 +1,7 @@
 Chyroc Blog
 > created by issue
 
-### 2017-8-6
+### 2017-8-7
 - [最大子序列和问题](https://github.com/Chyroc/blog/issues/21) [#algorithm](https://github.com/Chyroc/blog/issues?q=is:issue+is:open+label:algorithm), [#Go](https://github.com/Chyroc/blog/issues?q=is:issue+is:open+label:Go)
 
 ### 2017-8-4
@@ -11,8 +11,6 @@ Chyroc Blog
 - [本博客使用的Labels说明](https://github.com/Chyroc/blog/issues/18) [#random](https://github.com/Chyroc/blog/issues?q=is:issue+is:open+label:random)
 - [golang的interface(第二篇) - 接口的作用](https://github.com/Chyroc/blog/issues/19) [#Go](https://github.com/Chyroc/blog/issues?q=is:issue+is:open+label:Go)
 - [golang的interface(第一篇) - 接口的定义与实现](https://github.com/Chyroc/blog/issues/16) [#code](https://github.com/Chyroc/blog/issues?q=is:issue+is:open+label:code), [#Go](https://github.com/Chyroc/blog/issues?q=is:issue+is:open+label:Go)
-
-### 2017-8-3
 - [reeder阅读器rss源制作](https://github.com/Chyroc/blog/issues/11) [#random](https://github.com/Chyroc/blog/issues?q=is:issue+is:open+label:random)
 - [毕设记录](https://github.com/Chyroc/blog/issues/10) [#random](https://github.com/Chyroc/blog/issues?q=is:issue+is:open+label:random)
 - [kindle人签到](https://github.com/Chyroc/blog/issues/7) [#random](https://github.com/Chyroc/blog/issues?q=is:issue+is:open+label:random)
