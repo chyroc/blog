@@ -15,7 +15,7 @@ def get_issues_from_github():
 
 
 def filter_issues(issues):
-    issues = sorted(issues, key=lambda x: x['updated_at'], reverse=True)
+    issues = sorted(issues, key=lambda x: x['created_at'], reverse=True)
     return list(filter(lambda x: x['state'] == 'open' and 'issues' in x['html_url'], issues))
 
 
@@ -24,16 +24,15 @@ def format_md(issues):
     for issue in issues:
         labels = ', '.join([gen_label_md(i['name']) for i in issue.get('labels', '')])
 
-        updated_at = datetime.datetime.strptime(issue['updated_at'], '%Y-%m-%dT%H:%M:%SZ')
-        updated_at = updated_at + datetime.timedelta(hours=8)
-        updated_at_key = '{}-{}-{}'.format(updated_at.year, updated_at.month, updated_at.day)
+        time_at = datetime.datetime.strptime(issue['created_at'], '%Y-%m-%dT%H:%M:%SZ') + datetime.timedelta(hours=8)
+        time_at_key = '{}-{}-{}'.format(time_at.year, time_at.month, time_at.day)
 
         line = '[{}]({}) {}'.format(issue['title'], issue['html_url'], labels)
 
-        if updated_at_key in line_dict:
-            line_dict[updated_at_key].append(line)
+        if time_at_key in line_dict:
+            line_dict[time_at_key].append(line)
         else:
-            line_dict[updated_at_key] = [line]
+            line_dict[time_at_key] = [line]
 
     return line_dict
 
