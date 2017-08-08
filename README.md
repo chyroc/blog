@@ -1,6 +1,9 @@
 Chyroc Blog
 > created by issue
 
+### 2017-8-8
+- [mac命令添加高亮与中文](https://github.com/Chyroc/blog/issues/24) [#mac](https://github.com/Chyroc/blog/issues?q=is:issue+is:open+label:mac)
+
 ### 2017-8-7
 - [最大子序列和问题](https://github.com/Chyroc/blog/issues/21) [#algorithm](https://github.com/Chyroc/blog/issues?q=is:issue+is:open+label:algorithm), [#Go](https://github.com/Chyroc/blog/issues?q=is:issue+is:open+label:Go)
 
