@@ -1,6 +1,12 @@
 Chyroc Blog
 > created by issue
 
+### 2017-8-18
+- [我的golang的包管理方法](https://github.com/Chyroc/blog/issues/26) [#Go](https://github.com/Chyroc/blog/issues?q=is:issue+is:open+label:Go)
+
+### 2017-8-12
+- [vue小练习](https://github.com/Chyroc/blog/issues/25) [#NodeJS](https://github.com/Chyroc/blog/issues?q=is:issue+is:open+label:NodeJS), [#Python](https://github.com/Chyroc/blog/issues?q=is:issue+is:open+label:Python)
+
 ### 2017-8-8
 - [mac命令添加高亮与中文](https://github.com/Chyroc/blog/issues/24) [#mac](https://github.com/Chyroc/blog/issues?q=is:issue+is:open+label:mac)
 
