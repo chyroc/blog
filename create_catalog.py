@@ -95,7 +95,8 @@ def diff_metadata(old, new):
     old_num = old_dict.keys()
     for i in new:
         if i['number'] not in old_num:
-            msg.append('add [{}]({})'.format(i['title'], i['html_url']))
+            # msg.append('add [{}]({})'.format(i['title'], i['html_url']))
+            msg.append('add {}'.format(i['title']))
         else:
             both_num.append(i['number'])
 
@@ -103,27 +104,28 @@ def diff_metadata(old, new):
     new_num = new_dict.keys()
     for i in old:
         if i['number'] not in new_num:
-            msg.append('delete [{}]({})'.format(i['title'], i['html_url']))
+            # msg.append('delete [{}]({})'.format(i['title'], i['html_url']))
+            msg.append('delete {}'.format(i['title']))
 
     # 名字改变
     for i in both_num:
         if old_dict[i]['title'] != new_dict[i]['title']:
-            msg.append('change [{}]({})\'s title to {}'.format(old_dict[i]['title'], old_dict[i]['html_url'],
-                                                               new_dict[i]['title']))
+            # msg.append('change [{}]({})\'s title to {}'.format(old_dict[i]['title'], old_dict[i]['html_url'], new_dict[i]['title']))
+            msg.append('change {}\'s title to {}'.format(old_dict[i]['title'], new_dict[i]['title']))
 
     # label改变
     for i in both_num:
         if old_dict[i]['labels'] != new_dict[i]['labels']:
             msg.append(
-                'change [{}]({})\'s label [{}] to [{}]'.format(old_dict[i]['title'], old_dict[i]['html_url'],
-                                                               ', '.join(old_dict[i]['labels']),
-                                                               ', '.join(new_dict[i]['labels'])))
+                # 'change [{}]({})\'s label [{}] to [{}]'.format(old_dict[i]['title'], old_dict[i]['html_url'], ', '.join(old_dict[i]['labels']), ', '.join(new_dict[i]['labels'])))
+                'change {}\'s label [{}] to [{}]'.format(old_dict[i]['title'], ', '.join(old_dict[i]['labels']),
+                                                         ', '.join(new_dict[i]['labels'])))
 
     if len(msg) == 0:
         # 内容改变(update 时间改变)
         for i in both_num:
             if old_dict[i]['updated_at'] != new_dict[i]['updated_at']:
-                msg.append('[{}]({}) change some content'.format(old_dict[i]['title'], old_dict[i]['html_url']))
+                msg.append('{} change some content'.format(old_dict[i]['title']))
 
     # 没有任何改变
     return msg
