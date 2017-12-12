@@ -1,0 +1,167 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Begin Jekyll SEO tag v2.3.0 -->
+    <title>chyroc.github.io | 基于issues的个人博客</title>
+    <meta property="og:title" content="chyroc.github.io"/>
+    <meta property="og:locale" content="en_US"/>
+    <meta name="description" content="基于issues的个人博客"/>
+    <meta property="og:description" content="基于issues的个人博客"/>
+    <link rel="canonical" href="http://blog.chyroc.cn/articles/some.html"/>
+    <meta property="og:url" content="http://blog.chyroc.cn/articles/some.html"/>
+    <meta property="og:site_name" content="chyroc.github.io"/>
+    <script type="application/ld+json">
+        {"name":null,"description":"基于issues的个人博客","author":null,"@type":"WebPage","url":"http://blog.chyroc.cn/articles/some.html","image":null,"publisher":null,"headline":"chyroc.github.io","dateModified":null,"datePublished":null,"sameAs":null,"mainEntityOfPage":null,"@context":"http://schema.org"}
+    </script>
+    <!-- End Jekyll SEO tag -->
+
+    <link href="http://blog.chyroc.cn/assets/css/style.css?v=efb62de7b7525b6b14733e28358121421ac29cfd" rel="stylesheet">
+</head>
+
+<body>
+<div class="container-lg px-3 my-5 markdown-body">
+    <h1><a href="http://blog.chyroc.cn/">chyroc.github.io</a></h1>
+<h3>
+<a id="user-content-实现" class="anchor" href="#%E5%AE%9E%E7%8E%B0" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>实现</h3>
+<p>本篇代码实现了一个socket服务端和客户端，两边可读可写，但是都是自说自话，哈哈。</p>
+<h2>
+<a id="user-content-服务端代码" class="anchor" href="#%E6%9C%8D%E5%8A%A1%E7%AB%AF%E4%BB%A3%E7%A0%81" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>服务端代码</h2>
+<div class="highlight highlight-source-go"><pre><span class="pl-c"><span class="pl-c">//</span> server.go</span>
+<span class="pl-k">package</span> main
+
+<span class="pl-k">import</span> (
+	<span class="pl-s"><span class="pl-pds">"</span>net<span class="pl-pds">"</span></span>
+	<span class="pl-s"><span class="pl-pds">"</span>fmt<span class="pl-pds">"</span></span>
+)
+
+<span class="pl-k">func</span> <span class="pl-en">handleClient</span>(<span class="pl-v">conn</span> <span class="pl-v">net</span>.<span class="pl-v">Conn</span>) {
+	<span class="pl-k">defer</span> conn.<span class="pl-c1">Close</span>()
+
+	conn.<span class="pl-c1">Write</span>([]<span class="pl-k">byte</span>(<span class="pl-s"><span class="pl-pds">"</span>received.<span class="pl-pds">"</span></span>))
+}
+
+<span class="pl-k">func</span> <span class="pl-en">main</span>() {
+	<span class="pl-smi">tcpAddr</span>, <span class="pl-smi">err</span> <span class="pl-k">:=</span> net.<span class="pl-c1">ResolveTCPAddr</span>(<span class="pl-s"><span class="pl-pds">"</span>tcp<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>:1234<span class="pl-pds">"</span></span>)
+	<span class="pl-k">if</span> err != <span class="pl-c1">nil</span> {
+		<span class="pl-c1">panic</span>(err)
+	}
+
+	<span class="pl-smi">listen</span>, <span class="pl-smi">err</span> <span class="pl-k">:=</span> net.<span class="pl-c1">ListenTCP</span>(<span class="pl-s"><span class="pl-pds">"</span>tcp<span class="pl-pds">"</span></span>, tcpAddr)
+	<span class="pl-k">if</span> err != <span class="pl-c1">nil</span> {
+		<span class="pl-c1">panic</span>(err)
+	}
+
+	<span class="pl-k">for</span> {
+		<span class="pl-smi">conn</span>, <span class="pl-smi">err</span> <span class="pl-k">:=</span> listen.<span class="pl-c1">Accept</span>()
+		<span class="pl-k">if</span> err != <span class="pl-c1">nil</span> {
+			fmt.<span class="pl-c1">Printf</span>(<span class="pl-s"><span class="pl-pds">"</span>err: <span class="pl-c1">%v</span><span class="pl-pds">"</span></span>, err)
+			<span class="pl-k">continue</span>
+		}
+
+		<span class="pl-k">go</span> <span class="pl-c1">handleClient</span>(conn)
+	}
+}</pre></div>
+<h2>
+<a id="user-content-客户端代码" class="anchor" href="#%E5%AE%A2%E6%88%B7%E7%AB%AF%E4%BB%A3%E7%A0%81" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>客户端代码</h2>
+<div class="highlight highlight-source-go"><pre><span class="pl-c"><span class="pl-c">//</span> client.go</span>
+<span class="pl-k">package</span> main
+
+<span class="pl-k">import</span> (
+	<span class="pl-s"><span class="pl-pds">"</span>net<span class="pl-pds">"</span></span>
+	<span class="pl-s"><span class="pl-pds">"</span>fmt<span class="pl-pds">"</span></span>
+	<span class="pl-s"><span class="pl-pds">"</span>io/ioutil<span class="pl-pds">"</span></span>
+)
+
+<span class="pl-k">func</span> <span class="pl-en">main</span>() {
+	<span class="pl-smi">conn</span>, <span class="pl-smi">err</span> <span class="pl-k">:=</span> net.<span class="pl-c1">Dial</span>(<span class="pl-s"><span class="pl-pds">"</span>tcp<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>:1234<span class="pl-pds">"</span></span>)
+	<span class="pl-k">if</span> err != <span class="pl-c1">nil</span> {
+		fmt.<span class="pl-c1">Printf</span>(<span class="pl-s"><span class="pl-pds">"</span>conn err: <span class="pl-c1">%v</span><span class="pl-pds">"</span></span>, err)
+		<span class="pl-k">return</span>
+	}
+
+	conn.<span class="pl-c1">Write</span>([]<span class="pl-k">byte</span>(<span class="pl-s"><span class="pl-pds">"</span>hello server.<span class="pl-pds">"</span></span>))
+
+	<span class="pl-smi">data</span>, <span class="pl-smi">err</span> <span class="pl-k">:=</span> ioutil.<span class="pl-c1">ReadAll</span>(conn)
+	<span class="pl-k">if</span> err != <span class="pl-c1">nil</span> {
+		fmt.<span class="pl-c1">Printf</span>(<span class="pl-s"><span class="pl-pds">"</span>read err: <span class="pl-c1">%v</span><span class="pl-pds">"</span></span>, err)
+	}
+
+	fmt.<span class="pl-c1">Printf</span>(<span class="pl-s"><span class="pl-pds">"</span>data: <span class="pl-c1">%v</span><span class="pl-pds">"</span></span>, <span class="pl-c1">string</span>(data))
+}
+</pre></div>
+<h2>
+<a id="user-content-一些总结" class="anchor" href="#%E4%B8%80%E4%BA%9B%E6%80%BB%E7%BB%93" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>一些总结</h2>
+<h3>
+<a id="user-content-go-handleclientconn" class="anchor" href="#go-handleclientconn" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><code>go handleClient(conn)</code>
+</h3>
+<p>如果使用同步编程，服务端就可能一直在处理一个请求，导致处理很慢。</p>
+<p>使用goroutine之后，主goroutine就一直在接受请求，具体的处理操作就丢给<code>handleClient</code>去搞了，可以提高并发。</p>
+<h3>
+<a id="user-content-conn是一个net连接interface" class="anchor" href="#conn%E6%98%AF%E4%B8%80%E4%B8%AAnet%E8%BF%9E%E6%8E%A5interface" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>conn是一个net连接interface</h3>
+<div class="highlight highlight-source-go"><pre><span class="pl-k">type</span> <span class="pl-v">Conn</span> <span class="pl-k">interface</span> {
+	<span class="pl-c1">Read</span>(b []<span class="pl-k">byte</span>) (n <span class="pl-k">int</span>, err <span class="pl-k">error</span>)
+	<span class="pl-c1">Write</span>(b []<span class="pl-k">byte</span>) (n <span class="pl-k">int</span>, err <span class="pl-k">error</span>)
+	<span class="pl-c1">Close</span>() <span class="pl-k">error</span>
+	<span class="pl-c1">LocalAddr</span>() <span class="pl-v">Addr</span>
+	<span class="pl-c1">RemoteAddr</span>() <span class="pl-v">Addr</span>
+	<span class="pl-c1">SetDeadline</span>(t time.<span class="pl-smi">Time</span>) <span class="pl-k">error</span>
+	<span class="pl-c1">SetReadDeadline</span>(t time.<span class="pl-smi">Time</span>) <span class="pl-k">error</span>
+	<span class="pl-c1">SetWriteDeadline</span>(t time.<span class="pl-smi">Time</span>) <span class="pl-k">error</span>
+}</pre></div>
+<p>conn可读（读客户端发来的数据）可写（向客户端发送数据），可以设置超时时间</p>
+<h3>
+<a id="user-content-netresolvetcpaddr--netlistentcp" class="anchor" href="#netresolvetcpaddr--netlistentcp" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>net.ResolveTCPAddr &amp;&amp; net.ListenTCP</h3>
+<p>在<code>net.ListenTCP("tcp", tcpAddr)</code>里面，<code>tcpAddr</code>是一个<code>TCPAddr</code>类型：</p>
+<div class="highlight highlight-source-go"><pre><span class="pl-k">type</span> <span class="pl-v">TCPAddr</span> <span class="pl-k">struct</span> {
+	<span class="pl-v">IP</span>   <span class="pl-v">IP</span>
+	<span class="pl-v">Port</span> <span class="pl-k">int</span>
+	<span class="pl-v">Zone</span> <span class="pl-k">string</span> <span class="pl-c"><span class="pl-c">//</span> IPv6 scoped addressing zone</span>
+}</pre></div>
+<p>所以不能直接写string，需要使用<code>net.ResolveTCPAddr</code>去生成一个：</p>
+<div class="highlight highlight-source-go"><pre><span class="pl-smi">tcpAddr</span>, <span class="pl-smi">err</span> <span class="pl-k">:=</span> net.<span class="pl-c1">ResolveTCPAddr</span>(<span class="pl-s"><span class="pl-pds">"</span>tcp<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>:1234<span class="pl-pds">"</span></span>)</pre></div>
+<h3>
+<a id="user-content-continue" class="anchor" href="#continue" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>continue</h3>
+<p>服务端在启动之后，不应该因为请求错误而程序中断。</p>
+<p>所以这里使用<code>continue</code>继续处理下一次请求，而将错误信息记录到日志。</p>
+<h3>
+<a id="user-content-data-err--ioutilreadallconn" class="anchor" href="#data-err--ioutilreadallconn" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>data, err := ioutil.ReadAll(conn)</h3>
+<p>前面说了，<code>conn</code>是一个可读可写的类型，在客户端里，其指的是：conn可读（读服务端发来的数据）可写（向服务端发送数据）。</p>
+<p><code>io/ioutil</code>是一个标准库，对<code>io</code>库进行了封装。</p>
+<p>获取服务端发来的所有数据：</p>
+<div class="highlight highlight-source-go"><pre><span class="pl-smi">data</span>, <span class="pl-smi">err</span> <span class="pl-k">:=</span> ioutil.<span class="pl-c1">ReadAll</span>(conn)</pre></div>
+<p>如果不使用这个，就需要将下面的代码进行循环递归获取数据：</p>
+<div class="highlight highlight-source-go"><pre><span class="pl-smi">buf</span> <span class="pl-k">:=</span> <span class="pl-c1">make</span>([]<span class="pl-k">byte</span>, <span class="pl-c1">4</span>)
+<span class="pl-k">if</span> <span class="pl-smi">_</span>, <span class="pl-smi">err</span> <span class="pl-k">:=</span> io.<span class="pl-c1">ReadFull</span>(r, buf); err != <span class="pl-c1">nil</span> {
+	log.<span class="pl-c1">Fatal</span>(err)
+}</pre></div>
+
+    <div id="disqus_thread"></div>
+    <script>
+
+      /**
+       *  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+       *  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables*/
+      /*
+       var disqus_config = function () {
+       this.page.url = PAGE_URL;  // Replace PAGE_URL with your page's canonical URL variable
+       this.page.identifier = PAGE_IDENTIFIER; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+       };
+       */
+      (function () { // DON'T EDIT BELOW THIS LINE
+        var d = document, s = d.createElement('script')
+        s.src = 'https://chyroc.disqus.com/embed.js'
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s)
+      })()
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by
+        Disqus.</a></noscript>
+    <script id="dsq-count-scr" src="//chyroc.disqus.com/count.js" async></script>
+</div>
+</body>
+
+</html>

@@ -1,0 +1,114 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Begin Jekyll SEO tag v2.3.0 -->
+    <title>chyroc.github.io | 基于issues的个人博客</title>
+    <meta property="og:title" content="chyroc.github.io"/>
+    <meta property="og:locale" content="en_US"/>
+    <meta name="description" content="基于issues的个人博客"/>
+    <meta property="og:description" content="基于issues的个人博客"/>
+    <link rel="canonical" href="http://blog.chyroc.cn/articles/some.html"/>
+    <meta property="og:url" content="http://blog.chyroc.cn/articles/some.html"/>
+    <meta property="og:site_name" content="chyroc.github.io"/>
+    <script type="application/ld+json">
+        {"name":null,"description":"基于issues的个人博客","author":null,"@type":"WebPage","url":"http://blog.chyroc.cn/articles/some.html","image":null,"publisher":null,"headline":"chyroc.github.io","dateModified":null,"datePublished":null,"sameAs":null,"mainEntityOfPage":null,"@context":"http://schema.org"}
+    </script>
+    <!-- End Jekyll SEO tag -->
+
+    <link href="http://blog.chyroc.cn/assets/css/style.css?v=efb62de7b7525b6b14733e28358121421ac29cfd" rel="stylesheet">
+</head>
+
+<body>
+<div class="container-lg px-3 my-5 markdown-body">
+    <h1><a href="http://blog.chyroc.cn/">chyroc.github.io</a></h1>
+<p>注意！！少用中文</p>
+<h2>
+<a id="user-content-高亮" class="anchor" href="#%E9%AB%98%E4%BA%AE" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>高亮</h2>
+<p>添加下列配置到<code>~/.zshrc</code></p>
+<pre><code>man() {
+  env GROFF_NO_SGR=1 \
+    LESS_TERMCAP_mb=$'\E[1;36m' \
+    LESS_TERMCAP_md=$'\E[1;36m' \
+    LESS_TERMCAP_me=$'\E[0m' \
+    LESS_TERMCAP_se=$'\E[0m' \
+    LESS_TERMCAP_so=$'\E[1;44;33m' \
+    LESS_TERMCAP_ue=$'\E[0m' \
+    LESS_TERMCAP_us=$'\E[1;33m' \
+    man "$@"
+}
+</code></pre>
+<p><a href="https://user-images.githubusercontent.com/15604894/29067802-966a4da4-7c66-11e7-89ab-dd1cf5ae0cf7.png" target="_blank" rel="nofollow"><img src="https://user-images.githubusercontent.com/15604894/29067802-966a4da4-7c66-11e7-89ab-dd1cf5ae0cf7.png" alt="image" style="max-width:100%;"></a></p>
+<h2>
+<a id="user-content-中文man" class="anchor" href="#%E4%B8%AD%E6%96%87man" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>中文man</h2>
+<h6>
+<a id="user-content-中文乱码问题" class="anchor" href="#%E4%B8%AD%E6%96%87%E4%B9%B1%E7%A0%81%E9%97%AE%E9%A2%98" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>中文乱码问题</h6>
+<ul>
+<li>升级groff
+<pre><code>brew install homebrew/dupes/groff
+brew link homebrew/dupes/groff
+</code></pre>
+</li>
+<li>编辑/etc/man.conf文件
+<ul>
+<li>搜索NROFF，替换为
+<blockquote>
+<p>NROFF preconv -e utf8 | /usr/local/bin/groff -Wall -mtty-char -Tutf8 -mandoc -c</p>
+</blockquote>
+</li>
+<li>搜索PAGER，替换为
+<blockquote>
+<p>PAGER /usr/bin/less -isR</p>
+</blockquote>
+</li>
+</ul>
+</li>
+</ul>
+<h6>
+<a id="user-content-下载并安装" class="anchor" href="#%E4%B8%8B%E8%BD%BD%E5%B9%B6%E5%AE%89%E8%A3%85" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>下载并安装</h6>
+<pre><code>wget https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/manpages-zh/manpages-zh-1.5.1.tar.gz
+tar zxf manpages-zh-1.5.1.tar.gz
+cd manpages-zh-1.5.1
+./configure --disable-zhtw # 不需要繁体中文版本
+make &amp;&amp; make install
+</code></pre>
+<h6>
+<a id="user-content-配置alias" class="anchor" href="#%E9%85%8D%E7%BD%AEalias" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>配置alias</h6>
+<pre><code>alias cman=’man -M /usr/local/share/man/zh_CN’
+</code></pre>
+<p><a href="https://user-images.githubusercontent.com/15604894/29067815-a83ad42c-7c66-11e7-905b-34322764c4bf.png" target="_blank" rel="nofollow"><img src="https://user-images.githubusercontent.com/15604894/29067815-a83ad42c-7c66-11e7-905b-34322764c4bf.png" alt="image" style="max-width:100%;"></a></p>
+<h2>
+<a id="user-content-参考文章" class="anchor" href="#%E5%8F%82%E8%80%83%E6%96%87%E7%AB%A0" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>参考文章</h2>
+<ul>
+<li><a href="https://lamjack.github.io/2017/mac-install-chinese-man-doc/" rel="nofollow">Mac系统安装man命令中文文档</a></li>
+</ul>
+
+    <div id="disqus_thread"></div>
+    <script>
+
+      /**
+       *  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+       *  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables*/
+      /*
+       var disqus_config = function () {
+       this.page.url = PAGE_URL;  // Replace PAGE_URL with your page's canonical URL variable
+       this.page.identifier = PAGE_IDENTIFIER; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+       };
+       */
+      (function () { // DON'T EDIT BELOW THIS LINE
+        var d = document, s = d.createElement('script')
+        s.src = 'https://chyroc.disqus.com/embed.js'
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s)
+      })()
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by
+        Disqus.</a></noscript>
+    <script id="dsq-count-scr" src="//chyroc.disqus.com/count.js" async></script>
+</div>
+</body>
+
+</html>

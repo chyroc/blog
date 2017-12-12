@@ -1,0 +1,71 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Begin Jekyll SEO tag v2.3.0 -->
+    <title>chyroc.github.io | 基于issues的个人博客</title>
+    <meta property="og:title" content="chyroc.github.io"/>
+    <meta property="og:locale" content="en_US"/>
+    <meta name="description" content="基于issues的个人博客"/>
+    <meta property="og:description" content="基于issues的个人博客"/>
+    <link rel="canonical" href="http://blog.chyroc.cn/articles/some.html"/>
+    <meta property="og:url" content="http://blog.chyroc.cn/articles/some.html"/>
+    <meta property="og:site_name" content="chyroc.github.io"/>
+    <script type="application/ld+json">
+        {"name":null,"description":"基于issues的个人博客","author":null,"@type":"WebPage","url":"http://blog.chyroc.cn/articles/some.html","image":null,"publisher":null,"headline":"chyroc.github.io","dateModified":null,"datePublished":null,"sameAs":null,"mainEntityOfPage":null,"@context":"http://schema.org"}
+    </script>
+    <!-- End Jekyll SEO tag -->
+
+    <link href="http://blog.chyroc.cn/assets/css/style.css?v=efb62de7b7525b6b14733e28358121421ac29cfd" rel="stylesheet">
+</head>
+
+<body>
+<div class="container-lg px-3 my-5 markdown-body">
+    <h1><a href="http://blog.chyroc.cn/">chyroc.github.io</a></h1>
+<p>参考文章：<a href="http://www.au92.com/archives/python-requests-chinese-improve-random-code.html" rel="nofollow">Python+Requests抓取中文乱码改进方案</a></p>
+<p>还有这篇文章下的第一个评论</p>
+<p>参考文章：<a href="http://liguangming.com/python-requests-ge-encoding-from-headers" rel="nofollow">Python+Requests编码识别Bug</a></p>
+<p>添加代码如下</p>
+<div class="highlight highlight-source-python"><pre><span class="pl-k">import</span> requests
+r <span class="pl-k">=</span> requests.get(url)
+<span class="pl-k">if</span> r.status_code <span class="pl-k">==</span> requests.codes.ok:
+    r.encoding <span class="pl-k">=</span> get_encoding_from_reponse(r)
+<span class="pl-k">return</span> r.text</pre></div>
+<p>其中get_encoding_from_reponse函数是：</p>
+<div class="highlight highlight-source-python"><pre><span class="pl-k">def</span> <span class="pl-en">get_encoding_from_reponse</span>(<span class="pl-smi">reponse</span>):
+    encoding <span class="pl-k">=</span> requests.utils.get_encodings_from_content(reponse.text)
+    <span class="pl-k">if</span> encoding:
+        <span class="pl-k">return</span> encoding[<span class="pl-c1">0</span>]
+    <span class="pl-k">else</span>:
+        <span class="pl-k">return</span> requests.utils.get_encoding_from_headers(reponse.headers)
+</pre></div>
+
+    <div id="disqus_thread"></div>
+    <script>
+
+      /**
+       *  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+       *  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables*/
+      /*
+       var disqus_config = function () {
+       this.page.url = PAGE_URL;  // Replace PAGE_URL with your page's canonical URL variable
+       this.page.identifier = PAGE_IDENTIFIER; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+       };
+       */
+      (function () { // DON'T EDIT BELOW THIS LINE
+        var d = document, s = d.createElement('script')
+        s.src = 'https://chyroc.disqus.com/embed.js'
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s)
+      })()
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by
+        Disqus.</a></noscript>
+    <script id="dsq-count-scr" src="//chyroc.disqus.com/count.js" async></script>
+</div>
+</body>
+
+</html>

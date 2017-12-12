@@ -1,0 +1,69 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Begin Jekyll SEO tag v2.3.0 -->
+    <title>chyroc.github.io | 基于issues的个人博客</title>
+    <meta property="og:title" content="chyroc.github.io"/>
+    <meta property="og:locale" content="en_US"/>
+    <meta name="description" content="基于issues的个人博客"/>
+    <meta property="og:description" content="基于issues的个人博客"/>
+    <link rel="canonical" href="http://blog.chyroc.cn/articles/some.html"/>
+    <meta property="og:url" content="http://blog.chyroc.cn/articles/some.html"/>
+    <meta property="og:site_name" content="chyroc.github.io"/>
+    <script type="application/ld+json">
+        {"name":null,"description":"基于issues的个人博客","author":null,"@type":"WebPage","url":"http://blog.chyroc.cn/articles/some.html","image":null,"publisher":null,"headline":"chyroc.github.io","dateModified":null,"datePublished":null,"sameAs":null,"mainEntityOfPage":null,"@context":"http://schema.org"}
+    </script>
+    <!-- End Jekyll SEO tag -->
+
+    <link href="http://blog.chyroc.cn/assets/css/style.css?v=efb62de7b7525b6b14733e28358121421ac29cfd" rel="stylesheet">
+</head>
+
+<body>
+<div class="container-lg px-3 my-5 markdown-body">
+    <h1><a href="http://blog.chyroc.cn/">chyroc.github.io</a></h1>
+<p>在一个业务中用到了token</p>
+<p>加密：将各种信息+生成时间(issueTime)+有效期(ttl)利用私钥加密，然后base64。</p>
+<p>判断过期的时候，会首先去检查token里面编码的 <code>issueTime+ttl</code>，和<code>time.now</code>对比。</p>
+<p>但是呢，为了减少token的长度，<code>ttl</code>是int16类型的（单位分钟），所以最大存储 32768。而我们需要存储一星期的token，也就是 7<em>24</em>60 = 10080。</p>
+<p>哈哈，本来是没有问题的，bug就是出现在下面一点。</p>
+<p>计算过期：</p>
+<div class="highlight highlight-source-go"><pre><span class="pl-k">if</span> issueTime + <span class="pl-c1">uint32</span>(ttl*<span class="pl-c1">60</span>) &lt; time.<span class="pl-c1">Now</span>().<span class="pl-c1">Unix</span>() {
+    <span class="pl-c"><span class="pl-c">//</span> 过期</span>
+}</pre></div>
+<p>我刚开始是认为ttl虽然是int16的，但是外面包了一层uint32，所以结果没什么问题。可是<code>ttl*60</code>的结果直接就溢出了，所以就算外面包了一层，也没有任何影响。最终的结果还是溢出。。</p>
+<p>改进：</p>
+<div class="highlight highlight-source-go"><pre><span class="pl-k">if</span> issueTime + <span class="pl-c1">uint32</span>(ttl)*<span class="pl-c1">60</span> &lt; time.<span class="pl-c1">Now</span>().<span class="pl-c1">Unix</span>() {
+    <span class="pl-c"><span class="pl-c">//</span> 过期</span>
+}</pre></div>
+<p>bug记录。</p>
+
+    <div id="disqus_thread"></div>
+    <script>
+
+      /**
+       *  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+       *  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables*/
+      /*
+       var disqus_config = function () {
+       this.page.url = PAGE_URL;  // Replace PAGE_URL with your page's canonical URL variable
+       this.page.identifier = PAGE_IDENTIFIER; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+       };
+       */
+      (function () { // DON'T EDIT BELOW THIS LINE
+        var d = document, s = d.createElement('script')
+        s.src = 'https://chyroc.disqus.com/embed.js'
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s)
+      })()
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by
+        Disqus.</a></noscript>
+    <script id="dsq-count-scr" src="//chyroc.disqus.com/count.js" async></script>
+</div>
+</body>
+
+</html>
