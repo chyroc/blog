@@ -1,0 +1,257 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Begin Jekyll SEO tag v2.3.0 -->
+    <title>chyroc.github.io | 基于issues的个人博客</title>
+    <meta property="og:title" content="chyroc.github.io"/>
+    <meta property="og:locale" content="en_US"/>
+    <meta name="description" content="基于issues的个人博客"/>
+    <meta property="og:description" content="基于issues的个人博客"/>
+    <link rel="canonical" href="http://blog.chyroc.cn/articles/some.html"/>
+    <meta property="og:url" content="http://blog.chyroc.cn/articles/some.html"/>
+    <meta property="og:site_name" content="chyroc.github.io"/>
+    <script type="application/ld+json">
+        {"name":null,"description":"基于issues的个人博客","author":null,"@type":"WebPage","url":"http://blog.chyroc.cn/articles/some.html","image":null,"publisher":null,"headline":"chyroc.github.io","dateModified":null,"datePublished":null,"sameAs":null,"mainEntityOfPage":null,"@context":"http://schema.org"}
+    </script>
+    <!-- End Jekyll SEO tag -->
+
+    <link href="http://blog.chyroc.cn/assets/css/style.css?v=efb62de7b7525b6b14733e28358121421ac29cfd" rel="stylesheet">
+</head>
+
+<body>
+<div class="container-lg px-3 my-5 markdown-body">
+    <h1><a href="http://blog.chyroc.cn/">chyroc.github.io</a></h1>
+<p>最大子序列和问题</p>
+<h1>
+<a id="user-content-问题" class="anchor" href="#%E9%97%AE%E9%A2%98" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>问题</h1>
+<p>最大子序列和问题：</p>
+<p>给定整数A1,A2,...,An（可能有负数），求<a href="https://camo.githubusercontent.com/5ca80df3ba9c0ab6c32e53c5b9552c18e57062db/687474703a2f2f63686172742e676f6f676c65617069732e636f6d2f63686172743f6368743d74782663686c3d2535434c6172676525323025374225354373756d5f2537426b3d692537442535452537426a253744415f2537426b253744" target="_blank" rel="nofollow"><img src="https://camo.githubusercontent.com/5ca80df3ba9c0ab6c32e53c5b9552c18e57062db/687474703a2f2f63686172742e676f6f676c65617069732e636f6d2f63686172743f6368743d74782663686c3d2535434c6172676525323025374225354373756d5f2537426b3d692537442535452537426a253744415f2537426b253744" alt="" data-canonical-src="http://chart.googleapis.com/chart?cht=tx&amp;chl=%5CLarge%20%7B%5Csum_%7Bk=i%7D%5E%7Bj%7DA_%7Bk%7D" style="max-width:100%;"></a>的最大值</p>
+<p>（为方便起见，如果所有整数都是负数，则明天子序列和为0）</p>
+<h1>
+<a id="user-content-四个算法和时间复杂度" class="anchor" href="#%E5%9B%9B%E4%B8%AA%E7%AE%97%E6%B3%95%E5%92%8C%E6%97%B6%E9%97%B4%E5%A4%8D%E6%9D%82%E5%BA%A6" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>四个算法和时间复杂度</h1>
+<table>
+<thead>
+<tr>
+<th>算法</th>
+<th>时间复杂度</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>算法一</td>
+<td><a href="https://camo.githubusercontent.com/9fd6f9f1a98163bcf07624860c86cec8263f1526/687474703a2f2f63686172742e676f6f676c65617069732e636f6d2f63686172743f6368743d74782663686c3d2535434c617267652532304f284e2535453329" target="_blank" rel="nofollow"><img src="https://camo.githubusercontent.com/9fd6f9f1a98163bcf07624860c86cec8263f1526/687474703a2f2f63686172742e676f6f676c65617069732e636f6d2f63686172743f6368743d74782663686c3d2535434c617267652532304f284e2535453329" alt="" data-canonical-src="http://chart.googleapis.com/chart?cht=tx&amp;chl=%5CLarge%20O(N%5E3)" style="max-width:100%;"></a></td>
+</tr>
+<tr>
+<td>算法二</td>
+<td><a href="https://camo.githubusercontent.com/e8eeb68649c4d20c4e5ae37ac102eb67fcd43f2b/687474703a2f2f63686172742e676f6f676c65617069732e636f6d2f63686172743f6368743d74782663686c3d2535434c617267652532304f284e2535453229" target="_blank" rel="nofollow"><img src="https://camo.githubusercontent.com/e8eeb68649c4d20c4e5ae37ac102eb67fcd43f2b/687474703a2f2f63686172742e676f6f676c65617069732e636f6d2f63686172743f6368743d74782663686c3d2535434c617267652532304f284e2535453229" alt="" data-canonical-src="http://chart.googleapis.com/chart?cht=tx&amp;chl=%5CLarge%20O(N%5E2)" style="max-width:100%;"></a></td>
+</tr>
+<tr>
+<td>算法三</td>
+<td><a href="https://camo.githubusercontent.com/2f9f8d21b01dc36a46b8c4198f342e09f1aa81d0/687474703a2f2f63686172742e676f6f676c65617069732e636f6d2f63686172743f6368743d74782663686c3d2535434c617267652532304f284e6c6f674e29" target="_blank" rel="nofollow"><img src="https://camo.githubusercontent.com/2f9f8d21b01dc36a46b8c4198f342e09f1aa81d0/687474703a2f2f63686172742e676f6f676c65617069732e636f6d2f63686172743f6368743d74782663686c3d2535434c617267652532304f284e6c6f674e29" alt="" data-canonical-src="http://chart.googleapis.com/chart?cht=tx&amp;chl=%5CLarge%20O(NlogN)" style="max-width:100%;"></a></td>
+</tr>
+<tr>
+<td>算法四</td>
+<td><a href="https://camo.githubusercontent.com/73404d81519194fc85adab152bc5f2511b112393/687474703a2f2f63686172742e676f6f676c65617069732e636f6d2f63686172743f6368743d74782663686c3d2535434c617267652532304f284e29" target="_blank" rel="nofollow"><img src="https://camo.githubusercontent.com/73404d81519194fc85adab152bc5f2511b112393/687474703a2f2f63686172742e676f6f676c65617069732e636f6d2f63686172743f6368743d74782663686c3d2535434c617267652532304f284e29" alt="" data-canonical-src="http://chart.googleapis.com/chart?cht=tx&amp;chl=%5CLarge%20O(N)" style="max-width:100%;"></a></td>
+</tr>
+</tbody>
+</table>
+<h1>
+<a id="user-content-算法一" class="anchor" href="#%E7%AE%97%E6%B3%95%E4%B8%80" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>算法一</h1>
+<p>三重循环。</p>
+<p>前两个循环是列出所有可能的子序列，<code>i</code>, <code>j</code>分别指向子序列的头和尾。</p>
+<p>第三个循环是对子序列进行求和。</p>
+<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">function1</span>(<span class="pl-v">a</span> []<span class="pl-v">int</span>) <span class="pl-v">int</span> {
+	<span class="pl-smi">n</span> <span class="pl-k">:=</span> <span class="pl-c1">len</span>(a)
+	<span class="pl-smi">maxSum</span> <span class="pl-k">:=</span> <span class="pl-c1">0</span>
+	<span class="pl-k">for</span> <span class="pl-smi">i</span> <span class="pl-k">:=</span> <span class="pl-c1">0</span>; i &lt; n; i++ {
+		<span class="pl-k">for</span> <span class="pl-smi">j</span> <span class="pl-k">:=</span> i; j &lt; n; j++ {
+			<span class="pl-smi">tempSum</span> <span class="pl-k">:=</span> <span class="pl-c1">0</span>
+			<span class="pl-k">for</span> <span class="pl-smi">k</span> <span class="pl-k">:=</span> i; k &lt;= j; k++ {
+				tempSum += a[k]
+			}
+			<span class="pl-k">if</span> tempSum &gt; maxSum {
+				maxSum = tempSum
+			}
+		}
+	}
+	<span class="pl-k">return</span> maxSum
+}</pre></div>
+<h1>
+<a id="user-content-算法二" class="anchor" href="#%E7%AE%97%E6%B3%95%E4%BA%8C" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>算法二</h1>
+<ul>
+<li>和算法一相比，将第二个循环和第三个循环合并。也就是说不用再特地循环一遍子数组，在第二次循环的时候已经计算了子数组的最大值。</li>
+<li>从这个角度去看的话，算法一实际上对一些已经计算的并且待会还要用到的数据进行了丢失。</li>
+</ul>
+<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">function2</span>(<span class="pl-v">a</span> []<span class="pl-v">int</span>) <span class="pl-v">int</span> {
+	<span class="pl-smi">n</span> <span class="pl-k">:=</span> <span class="pl-c1">len</span>(a)
+	<span class="pl-smi">maxSum</span> <span class="pl-k">:=</span> <span class="pl-c1">0</span>
+	<span class="pl-k">for</span> <span class="pl-smi">i</span> <span class="pl-k">:=</span> <span class="pl-c1">0</span>; i &lt; n; i++ {
+		<span class="pl-smi">tempSum</span> <span class="pl-k">:=</span> <span class="pl-c1">0</span>
+		<span class="pl-k">for</span> <span class="pl-smi">j</span> <span class="pl-k">:=</span> i; j &lt; n; j++ {
+			tempSum += a[j]
+			<span class="pl-k">if</span> tempSum &gt; maxSum {
+				maxSum = tempSum
+			}
+		}
+	}
+	<span class="pl-k">return</span> maxSum
+}</pre></div>
+<h1>
+<a id="user-content-算法三" class="anchor" href="#%E7%AE%97%E6%B3%95%E4%B8%89" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>算法三</h1>
+<ul>
+<li>使用了分治算法
+<ul>
+<li>分：将一个问题分成两个差不多的子问题，再递归求解</li>
+<li>治：在问题规模很小的时候，给出解决方案</li>
+</ul>
+</li>
+<li>所以，本题的最大子序列，只有3个可能
+<ul>
+<li>[1] 在左半区间</li>
+<li>[2] 在右半区间</li>
+<li>[3] 横跨左右区间</li>
+</ul>
+</li>
+<li>思路
+<ul>
+<li>对 [1] [2]而言，递归即可</li>
+<li>对 [3]而言，是前部分最大和与后半部分最大和的和（这个很容易理解吧）</li>
+</ul>
+<blockquote>
+<p>注意一点的是，[3]中的两个小部分的一头是中间按个元素的位置，是不变的，所以通过简单的循环就可以知道两个小部分的最大值，和本题的情况是不一样的。</p>
+</blockquote>
+</li>
+</ul>
+<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">function3Sum</span>(<span class="pl-v">a</span> []<span class="pl-v">int</span>, <span class="pl-v">leftIndex</span>, <span class="pl-v">rightIndex</span> <span class="pl-v">int</span>) <span class="pl-v">int</span> {
+	<span class="pl-smi">maxSum</span> <span class="pl-k">:=</span> <span class="pl-c1">0</span>
+	<span class="pl-k">if</span> leftIndex == rightIndex {
+		<span class="pl-k">if</span> a[leftIndex] &gt; <span class="pl-c1">0</span> {
+			maxSum = a[leftIndex]
+		}
+		<span class="pl-k">return</span> maxSum
+	}
+
+	<span class="pl-k">var</span> <span class="pl-smi">centerIndex</span> <span class="pl-k">int</span>
+	centerIndex = (leftIndex + rightIndex) / <span class="pl-c1">2</span>
+	<span class="pl-smi">leftMaxSum</span> <span class="pl-k">:=</span> <span class="pl-c1">function3Sum</span>(a, leftIndex, centerIndex)
+	<span class="pl-smi">rightMaxSum</span> <span class="pl-k">:=</span> <span class="pl-c1">function3Sum</span>(a, centerIndex+<span class="pl-c1">1</span>, rightIndex)
+
+	<span class="pl-smi">leftSectionMaxSum</span> <span class="pl-k">:=</span> <span class="pl-c1">0</span>
+	<span class="pl-smi">leftSectionSum</span> <span class="pl-k">:=</span> <span class="pl-c1">0</span>
+	<span class="pl-k">for</span> <span class="pl-smi">i</span> <span class="pl-k">:=</span> centerIndex; i &gt;= <span class="pl-c1">0</span>; i-- {
+		leftSectionSum += a[i]
+		<span class="pl-k">if</span> leftSectionSum &gt; leftSectionMaxSum {
+			leftSectionMaxSum = leftSectionSum
+		}
+	}
+	<span class="pl-smi">rightSectionMaxSum</span> <span class="pl-k">:=</span> <span class="pl-c1">0</span>
+	<span class="pl-smi">rightSectionSum</span> <span class="pl-k">:=</span> <span class="pl-c1">0</span>
+	<span class="pl-k">for</span> <span class="pl-smi">i</span> <span class="pl-k">:=</span> centerIndex + <span class="pl-c1">1</span>; i &lt; rightIndex; i++ {
+		rightSectionSum += a[i]
+		<span class="pl-k">if</span> rightSectionSum &gt; rightSectionMaxSum {
+			rightSectionMaxSum = rightSectionSum
+		}
+	}
+
+	<span class="pl-k">return</span> <span class="pl-c1">int</span>(math.<span class="pl-c1">Max</span>(math.<span class="pl-c1">Max</span>(<span class="pl-k">float64</span>(leftMaxSum), <span class="pl-c1">float64</span>(rightMaxSum)), <span class="pl-c1">float64</span>(leftSectionMaxSum+rightSectionMaxSum)))
+}
+
+<span class="pl-k">func</span> <span class="pl-en">function3</span>(<span class="pl-v">arr</span> []<span class="pl-v">int</span>) <span class="pl-v">int</span> {
+	<span class="pl-k">return</span> <span class="pl-c1">function3Sum</span>(arr, <span class="pl-c1">0</span>, <span class="pl-c1">len</span>(arr)-<span class="pl-c1">1</span>)
+}</pre></div>
+<h1>
+<a id="user-content-算法四" class="anchor" href="#%E7%AE%97%E6%B3%95%E5%9B%9B" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>算法四</h1>
+<ul>
+<li>如果一个子数组的和小于0，那么这个数组的最后一个元素肯定小于0</li>
+<li>所以就对后面的和计算无益，可以舍去整个数组</li>
+<li>一次循环即可解决问题</li>
+</ul>
+<blockquote>
+<p>该算法的一个优点就是，数据一旦被扫描，就不需要在此记忆</p>
+</blockquote>
+<blockquote>
+<p>是联机算法：在任何时刻，该算法都能对它已经读取的数据，给出子序列的最大值的正确答案</p>
+</blockquote>
+<blockquote>
+<p>只需要常量空间，以线性时间允许的，联机算法，几乎是完美的算法</p>
+</blockquote>
+<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">function4</span>(<span class="pl-v">a</span> []<span class="pl-v">int</span>) <span class="pl-v">int</span> {
+	<span class="pl-smi">n</span> <span class="pl-k">:=</span> <span class="pl-c1">len</span>(a)
+	<span class="pl-smi">maxSum</span> <span class="pl-k">:=</span> <span class="pl-c1">0</span>
+	<span class="pl-smi">tempSum</span> <span class="pl-k">:=</span> <span class="pl-c1">0</span>
+	<span class="pl-k">for</span> <span class="pl-smi">i</span> <span class="pl-k">:=</span> <span class="pl-c1">0</span>; i &lt; n; i++ {
+		<span class="pl-k">if</span> tempSum &lt; <span class="pl-c1">0</span> {
+			tempSum = <span class="pl-c1">0</span>
+		}
+		tempSum += a[i]
+
+		<span class="pl-k">if</span> tempSum &gt; maxSum {
+			maxSum = tempSum
+		}
+	}
+	<span class="pl-k">return</span> maxSum
+}</pre></div>
+<h1>
+<a id="user-content-算法的结果和运行时间" class="anchor" href="#%E7%AE%97%E6%B3%95%E7%9A%84%E7%BB%93%E6%9E%9C%E5%92%8C%E8%BF%90%E8%A1%8C%E6%97%B6%E9%97%B4" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>算法的结果和运行时间</h1>
+<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">genArray</span>(<span class="pl-v">count</span> <span class="pl-v">int</span>) []<span class="pl-v">int</span> {
+	<span class="pl-smi">r</span> <span class="pl-k">:=</span> rand.<span class="pl-c1">New</span>(rand.<span class="pl-c1">NewSource</span>(time.<span class="pl-c1">Now</span>().<span class="pl-c1">UnixNano</span>()))
+	<span class="pl-smi">a</span> <span class="pl-k">:=</span> []<span class="pl-k">int</span>{}
+	<span class="pl-k">for</span> <span class="pl-smi">i</span> <span class="pl-k">:=</span> <span class="pl-c1">0</span>; i &lt; count; i++ {
+		a = <span class="pl-c1">append</span>(a, r.<span class="pl-c1">Intn</span>(<span class="pl-c1">500</span>)-<span class="pl-c1">250</span>)
+	}
+	<span class="pl-k">return</span> a
+}
+
+<span class="pl-k">func</span> <span class="pl-c1">runGetMaxSum</span>(f <span class="pl-k">func</span>([]<span class="pl-k">int</span>) <span class="pl-k">int</span>, a []<span class="pl-k">int</span>) {
+	<span class="pl-smi">t</span> <span class="pl-k">:=</span> time.<span class="pl-c1">Now</span>()
+	<span class="pl-smi">maxSum</span> <span class="pl-k">:=</span> <span class="pl-c1">f</span>(a)
+	fmt.<span class="pl-c1">Println</span>(time.<span class="pl-c1">Since</span>(t), maxSum)
+}
+
+<span class="pl-k">func</span> <span class="pl-en">main</span>() {
+	<span class="pl-smi">t0</span> <span class="pl-k">:=</span> time.<span class="pl-c1">Now</span>()
+	<span class="pl-smi">a</span> <span class="pl-k">:=</span> <span class="pl-c1">genArray</span>(<span class="pl-c1">3000</span>)
+	fmt.<span class="pl-c1">Println</span>(time.<span class="pl-c1">Since</span>(t0))
+
+	<span class="pl-c1">runGetMaxSum</span>(function1, a)
+	<span class="pl-c1">runGetMaxSum</span>(function2, a)
+	<span class="pl-c1">runGetMaxSum</span>(function3, a)
+	<span class="pl-c1">runGetMaxSum</span>(function4, a)
+}</pre></div>
+<pre><code>140.44µs
+2.279837401s 9560
+4.8763ms 9560
+8.076376ms 9560
+8.059µs 9560
+</code></pre>
+
+    <div id="disqus_thread"></div>
+    <script>
+
+      /**
+       *  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+       *  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables*/
+      /*
+       var disqus_config = function () {
+       this.page.url = PAGE_URL;  // Replace PAGE_URL with your page's canonical URL variable
+       this.page.identifier = PAGE_IDENTIFIER; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+       };
+       */
+      (function () { // DON'T EDIT BELOW THIS LINE
+        var d = document, s = d.createElement('script')
+        s.src = 'https://chyroc.disqus.com/embed.js'
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s)
+      })()
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by
+        Disqus.</a></noscript>
+    <script id="dsq-count-scr" src="//chyroc.disqus.com/count.js" async></script>
+</div>
+</body>
+
+</html>

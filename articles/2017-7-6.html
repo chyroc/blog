@@ -1,0 +1,100 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Begin Jekyll SEO tag v2.3.0 -->
+    <title>chyroc.github.io | 基于issues的个人博客</title>
+    <meta property="og:title" content="chyroc.github.io"/>
+    <meta property="og:locale" content="en_US"/>
+    <meta name="description" content="基于issues的个人博客"/>
+    <meta property="og:description" content="基于issues的个人博客"/>
+    <link rel="canonical" href="http://blog.chyroc.cn/articles/some.html"/>
+    <meta property="og:url" content="http://blog.chyroc.cn/articles/some.html"/>
+    <meta property="og:site_name" content="chyroc.github.io"/>
+    <script type="application/ld+json">
+        {"name":null,"description":"基于issues的个人博客","author":null,"@type":"WebPage","url":"http://blog.chyroc.cn/articles/some.html","image":null,"publisher":null,"headline":"chyroc.github.io","dateModified":null,"datePublished":null,"sameAs":null,"mainEntityOfPage":null,"@context":"http://schema.org"}
+    </script>
+    <!-- End Jekyll SEO tag -->
+
+    <link href="http://blog.chyroc.cn/assets/css/style.css?v=efb62de7b7525b6b14733e28358121421ac29cfd" rel="stylesheet">
+</head>
+
+<body>
+<div class="container-lg px-3 my-5 markdown-body">
+    <h1><a href="http://blog.chyroc.cn/">chyroc.github.io</a></h1>
+<h1>
+<a id="user-content-一楼弃用" class="anchor" href="#%E4%B8%80%E6%A5%BC%E5%BC%83%E7%94%A8" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><strong>一楼弃用</strong>
+</h1>
+<h2>
+<a id="user-content-用户" class="anchor" href="#%E7%94%A8%E6%88%B7" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>用户</h2>
+<pre><code>useradd chyroc
+password chyroc
+</code></pre>
+<h2>
+<a id="user-content-添加权限" class="anchor" href="#%E6%B7%BB%E5%8A%A0%E6%9D%83%E9%99%90" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>添加权限</h2>
+<pre><code>vim /etc/sudoers
+</code></pre>
+<p><a href="https://camo.githubusercontent.com/3c3898c30308ca6eab906461d1b6337de29ae8c5/687474703a2f2f79756e2e636879726f632e636e2f626c6f672d6164642d7375646f2e6a7067" target="_blank" rel="nofollow"><img src="https://camo.githubusercontent.com/3c3898c30308ca6eab906461d1b6337de29ae8c5/687474703a2f2f79756e2e636879726f632e636e2f626c6f672d6164642d7375646f2e6a7067" alt="" data-canonical-src="http://yun.chyroc.cn/blog-add-sudo.jpg" style="max-width:100%;"></a></p>
+<h2>
+<a id="user-content-配置-ssh" class="anchor" href="#%E9%85%8D%E7%BD%AE-ssh" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>配置 ssh</h2>
+<pre><code>#切换到要生成key的账号
+su - chyroc
+
+#建立公钥与私钥
+ssh-keygen -t rsa
+
+#改名为sshd支持的默认公钥文件名
+cat ~/.ssh/id_rsa.pub &gt;&gt; ~/.ssh/authorized_keys
+
+#文件权限安全问题
+chmod 600 ~/.ssh/authorized_keys
+chmod 700 ~/.ssh
+
+# save ~/.ssh/id_rsa to local ~/.ssh/chyroc_aliyun
+rm –rf ~/.ssh/id_rsa
+</code></pre>
+<h2>
+<a id="user-content-登录" class="anchor" href="#%E7%99%BB%E5%BD%95" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>登录</h2>
+<pre><code>ssh chyroc@ip -i ~/.ssh/chyroc_aliyun
+</code></pre>
+<h2>
+<a id="user-content-安装git" class="anchor" href="#%E5%AE%89%E8%A3%85git" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>安装git</h2>
+<pre><code>sudo yum install git
+</code></pre>
+<h2>
+<a id="user-content-安装zsh-and-oh-my-zsh" class="anchor" href="#%E5%AE%89%E8%A3%85zsh-and-oh-my-zsh" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>安装zsh and oh-my-zsh</h2>
+<pre><code>sudo yum upgrade
+sudo yum install zsh
+chsh -s $(which /bin/zsh)
+wget https://github.com/robbyrussell/oh-my-zsh/raw/master/tools/install.sh -O - | zsh
+</code></pre>
+
+    <div id="disqus_thread"></div>
+    <script>
+
+      /**
+       *  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+       *  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables*/
+      /*
+       var disqus_config = function () {
+       this.page.url = PAGE_URL;  // Replace PAGE_URL with your page's canonical URL variable
+       this.page.identifier = PAGE_IDENTIFIER; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+       };
+       */
+      (function () { // DON'T EDIT BELOW THIS LINE
+        var d = document, s = d.createElement('script')
+        s.src = 'https://chyroc.disqus.com/embed.js'
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s)
+      })()
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by
+        Disqus.</a></noscript>
+    <script id="dsq-count-scr" src="//chyroc.disqus.com/count.js" async></script>
+</div>
+</body>
+
+</html>
