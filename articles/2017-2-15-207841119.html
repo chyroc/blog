@@ -1,0 +1,88 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>关于写docker file的一些经验 - Chyroc的博客</title>
+<meta property="og:title" content="blog.chyroc.cn" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Chyroc的博客" />
+<meta property="og:description" content="Chyroc的博客" />
+<link rel="canonical" href="blog.chyroc.cn" />
+<meta property="og:url" content="blog.chyroc.cn" />
+<meta property="og:site_name" content="blog.chyroc.cn" />
+<script type="application/ld+json">
+{"name":"blog.chyroc.cn","description":"Chyroc的博客","author":"Chyroc","@type":"WebSite","url":"blog.chyroc.cn","image":null,"publisher":null,"headline":"blog.chyroc.cn","dateModified":null,"datePublished":null,"sameAs":null,"mainEntityOfPage":null,"@context":"http://schema.org"}</script>
+
+
+<link href="http://blog.chyroc.cn/assets/css/style.css?v=305ca492b034089b2a2287dae4e9fa13ac15b666" rel="stylesheet">
+</head>
+<body>
+<div class="container-lg px-3 my-5 markdown-body">
+
+<h2>
+<a id="user-content-描述" class="anchor" href="#%E6%8F%8F%E8%BF%B0" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>描述</h2>
+<p>今天在做开发的时候，为了给ci做测试和给同事提供一个本机的环境，所以需要build docker。
+在这个过程中，写了一个 <code>Dockerfile</code>，出现了一些问题吧。
+虽然说，这些问题的出现，我都可以给一个理由解释为什么会出现这种行为，但是，本身出现这种「需要向别人解释才能清楚的code」也是一种功力的缺失吧，何况，我的那些代码确实有一些问题。</p>
+<h2>
+<a id="user-content-问题" class="anchor" href="#%E9%97%AE%E9%A2%98" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>问题</h2>
+<ul>
+<li>引用的了一个 <code>hadoop 2.7.2</code>的docker，但是却把它整个hadoop文件全部删除，换成了 <code>hadoop 2.7.3</code>
+</li>
+</ul>
+<blockquote>
+<p>实际上，我需要的只是这个docker的环境，而不是这个docker的hadoop本身，所以我应该做的是按照他那个docker实现我需要的环境</p>
+</blockquote>
+<ul>
+<li>S3的一个 <code>bucket</code>是一个 <code>not public</code>的东西，不能为了方便就 <code>public</code>其中的文件</li>
+</ul>
+<blockquote>
+<p>安全问题呀！</p>
+</blockquote>
+<ul>
+<li>从自己的链接下载软件包，而不是一个官方地址</li>
+</ul>
+<blockquote>
+<p>链接失效了呢</p>
+</blockquote>
+<ul>
+<li>没有添加 <code>.dockerignore</code>文件剔除不需要打包的文件</li>
+</ul>
+<blockquote>
+<p>你应该仔细读一读docker build的文档</p>
+</blockquote>
+<ul>
+<li>docker应该是一个完整的东西，而不是还需要你进去 <code>run some command</code>
+</li>
+</ul>
+<blockquote>
+<p>这样才是一个docker的意义吧，你需要的是start或者stop一个docker，而不是进入docker的bash，然后运行一个 start或者stop的脚本</p>
+</blockquote>
+<h2>
+<a id="user-content-感悟" class="anchor" href="#%E6%84%9F%E6%82%9F" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>感悟</h2>
+<p>人生经验呀。</p>
+
+
+<script src="http://blog.chyroc.cn/assets/javascript/anchor-js/anchor.min.js"></script>
+<script>anchors.add();</script>
+
+<div id="disqus_thread"></div>
+<script>
+(function () { 
+var d = document, s = d.createElement('script')
+s.src = 'https://chyroc.disqus.com/embed.js'
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s)
+})()
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by
+Disqus.</a></noscript>
+<script id="dsq-count-scr" src="//chyroc.disqus.com/count.js" async></script>
+
+</div>
+
+</body>
+</html>
