@@ -2,29 +2,26 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <!-- Begin Jekyll SEO tag v2.3.0 -->
-    <title>chyroc.github.io | 基于issues的个人博客</title>
-    <meta property="og:title" content="chyroc.github.io"/>
-    <meta property="og:locale" content="en_US"/>
-    <meta name="description" content="基于issues的个人博客"/>
-    <meta property="og:description" content="基于issues的个人博客"/>
-    <link rel="canonical" href="http://blog.chyroc.cn/articles/some.html"/>
-    <meta property="og:url" content="http://blog.chyroc.cn/articles/some.html"/>
-    <meta property="og:site_name" content="chyroc.github.io"/>
-    <script type="application/ld+json">
-        {"name":null,"description":"基于issues的个人博客","author":null,"@type":"WebPage","url":"http://blog.chyroc.cn/articles/some.html","image":null,"publisher":null,"headline":"chyroc.github.io","dateModified":null,"datePublished":null,"sameAs":null,"mainEntityOfPage":null,"@context":"http://schema.org"}
-    </script>
-    <!-- End Jekyll SEO tag -->
+<title>int16溢出bug记录 - chyroc的博客</title>
+<meta property="og:title" content="blog.chyroc.cn" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="chyroc的博客" />
+<meta property="og:description" content="chyroc的博客" />
+<link rel="canonical" href="blog.chyroc.cn" />
+<meta property="og:url" content="blog.chyroc.cn" />
+<meta property="og:site_name" content="blog.chyroc.cn" />
+<script type="application/ld+json">
+{"name":"blog.chyroc.cn","description":"chyroc的博客","author":"chyroc","@type":"WebSite","url":"blog.chyroc.cn","image":null,"publisher":null,"headline":"blog.chyroc.cn","dateModified":null,"datePublished":null,"sameAs":null,"mainEntityOfPage":null,"@context":"http://schema.org"}</script>
 
-    <link href="http://blog.chyroc.cn/assets/css/style.css?v=efb62de7b7525b6b14733e28358121421ac29cfd" rel="stylesheet">
+
+<link href="http://blog.chyroc.cn/assets/css/style.css?v=305ca492b034089b2a2287dae4e9fa13ac15b666" rel="stylesheet">
 </head>
-
 <body>
 <div class="container-lg px-3 my-5 markdown-body">
-    <h1><a href="http://blog.chyroc.cn/">chyroc.github.io</a></h1>
+
 <p>在一个业务中用到了token</p>
 <p>加密：将各种信息+生成时间(issueTime)+有效期(ttl)利用私钥加密，然后base64。</p>
 <p>判断过期的时候，会首先去检查token里面编码的 <code>issueTime+ttl</code>，和<code>time.now</code>对比。</p>
@@ -41,29 +38,24 @@
 }</pre></div>
 <p>bug记录。</p>
 
-    <div id="disqus_thread"></div>
-    <script>
 
-      /**
-       *  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
-       *  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables*/
-      /*
-       var disqus_config = function () {
-       this.page.url = PAGE_URL;  // Replace PAGE_URL with your page's canonical URL variable
-       this.page.identifier = PAGE_IDENTIFIER; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
-       };
-       */
-      (function () { // DON'T EDIT BELOW THIS LINE
-        var d = document, s = d.createElement('script')
-        s.src = 'https://chyroc.disqus.com/embed.js'
-        s.setAttribute('data-timestamp', +new Date());
-        (d.head || d.body).appendChild(s)
-      })()
-    </script>
-    <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by
-        Disqus.</a></noscript>
-    <script id="dsq-count-scr" src="//chyroc.disqus.com/count.js" async></script>
 </div>
-</body>
 
+<script src="http://blog.chyroc.cn/assets/javascript/anchor-js/anchor.min.js"></script>
+<script>anchors.add();</script>
+
+<div id="disqus_thread"></div>
+<script>
+(function () { 
+var d = document, s = d.createElement('script')
+s.src = 'https://chyroc.disqus.com/embed.js'
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s)
+})()
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by
+Disqus.</a></noscript>
+<script id="dsq-count-scr" src="//chyroc.disqus.com/count.js" async></script>
+
+</body>
 </html>
