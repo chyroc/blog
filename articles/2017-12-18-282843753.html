@@ -1,0 +1,237 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>rfc1180（TCP/IP概览）阅读笔记 - Chyroc的博客</title>
+<meta property="og:title" content="blog.chyroc.cn" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Chyroc的博客" />
+<meta property="og:description" content="Chyroc的博客" />
+<link rel="canonical" href="blog.chyroc.cn" />
+<meta property="og:url" content="blog.chyroc.cn" />
+<meta property="og:site_name" content="blog.chyroc.cn" />
+<script type="application/ld+json">
+{"name":"blog.chyroc.cn","description":"Chyroc的博客","author":"Chyroc","@type":"WebSite","url":"blog.chyroc.cn","image":null,"publisher":null,"headline":"blog.chyroc.cn","dateModified":null,"datePublished":null,"sameAs":null,"mainEntityOfPage":null,"@context":"http://schema.org"}</script>
+
+
+<link href="http://blog.chyroc.cn/assets/css/style.css?v=305ca492b034089b2a2287dae4e9fa13ac15b666" rel="stylesheet">
+</head>
+<body>
+<div class="container-lg px-3 my-5 markdown-body">
+
+<p>rfc1180（TCP/IP概览）阅读笔记</p>
+<p>介绍了一个网络流量是怎么从起点达到终点的，涉及到Ethernet/ARP/TCP/IP/UDP。注意本文的目的是解释而不是定义。</p>
+<h1>
+<a id="user-content-概览" class="anchor" href="#%E6%A6%82%E8%A7%88" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>概览</h1>
+<p><code>TCP/IP</code>这个一般指任何和<code>TCP</code>和<code>IP</code>有关的概念，比如协议(<code>UDP</code>, <code>ARP</code>, <code>ICMP</code>)，应用(<code>TELNET</code>, <code>FTP</code>, <code>rcp</code>)。</p>
+<p><a href="https://camo.githubusercontent.com/c1068b113ab50e87c42e394c689c395b7b6911cc/68747470733a2f2f7777772e64726f70626f782e636f6d2f732f3174793975377574366738703679382f254535254231253846254535254239253935254536253838254141254535253942254245253230323031372d31322d313825323031322e32382e32392e706e673f646c3d30" target="_blank" rel="nofollow"><img src="https://camo.githubusercontent.com/c1068b113ab50e87c42e394c689c395b7b6911cc/68747470733a2f2f7777772e64726f70626f782e636f6d2f732f3174793975377574366738703679382f254535254231253846254535254239253935254536253838254141254535253942254245253230323031372d31322d313825323031322e32382e32392e706e673f646c3d30" alt="" data-canonical-src="https://www.dropbox.com/s/1ty9u7ut6g8p6y8/%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE%202017-12-18%2012.28.29.png?dl=0" style="max-width:100%;"></a></p>
+<h2>
+<a id="user-content-术语" class="anchor" href="#%E6%9C%AF%E8%AF%AD" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>术语</h2>
+<p>数据流在不同的协议阶段有不同的名称（和结构），在<code>Ethernet</code>里面叫做<code>Ethernet frame</code>；Ethernet driver 和 the IP module之间就是<code>IP packet</code>；在IP module 和 the UDP module 之间叫做<code>UDP datagram</code>；在IP module 和 the TCP module 之间叫做<code>TCP segment</code> (more generally, a <code>transport message</code>)；在a network application 中叫做<code>application message</code>。</p>
+<p>更具体的定义参见<a href="https://tools.ietf.org/html/rfc1122#section-1.3.3" rel="nofollow">RFC 1122, section 1.3.3</a></p>
+<p><code>A driver</code> is software that communicates directly with the network interface hardware.</p>
+<p><code>A module</code> is software that communicates with a driver, with network applications, or with another module.</p>
+<p>The terms <code>driver</code>, <code>module</code>, <code>Ethernet frame</code>, <code>IP packet</code>, <code>UDP datagram</code>, <code>TCP message</code>, and <code>application message</code>在本文中将一直出现</p>
+<h2>
+<a id="user-content-数据流" class="anchor" href="#%E6%95%B0%E6%8D%AE%E6%B5%81" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>数据流</h2>
+<p>按照图1的数据流动方向来看看数据是怎么传播的。</p>
+<p>对于一个使用<code>TCP</code> (Transmission Control Protocol)的application来说，数据传递到了<code>TCP module</code>。对于一个使用<code>UDP</code> (User Datagram Protocol)的application来说，数据传递到了<code>UDP module</code>。<code>FTP</code> (File Transfer Protocol) 是一个经典的使用TCP的application，他的协议栈是<code>FTP</code>/<code>TCP</code>/<code>IP</code>/<code>ENET</code>。<code>SNMP</code> (Simple Network Management Protocol) 是一个使用了<code>UDP</code>的application，它的协议栈是 SNMP/UDP/IP/ENET。</p>
+<p><code>TCP module</code>, <code>UDP module</code>, 和<code>Ethernet driver</code> 都是 n-to-1 multiplexers. 什么是multiplexers呢：多输入，一个输出。他们也是 1-to-n de-multiplexers. 什么是de-multiplexers呢：一个输入，多个输出（通过协议头的type field来控制）</p>
+<p><a href="https://camo.githubusercontent.com/d73aa72305be449aa832bf835bdd61a5f7cf7581/68747470733a2f2f7777772e64726f70626f782e636f6d2f732f706d6e347837356c6f67386b3734692f254535254231253846254535254239253935254536253838254141254535253942254245253230323031372d31322d313825323031342e33322e33312e706e673f646c3d31" target="_blank" rel="nofollow"><img src="https://camo.githubusercontent.com/d73aa72305be449aa832bf835bdd61a5f7cf7581/68747470733a2f2f7777772e64726f70626f782e636f6d2f732f706d6e347837356c6f67386b3734692f254535254231253846254535254239253935254536253838254141254535253942254245253230323031372d31322d313825323031342e33322e33312e706e673f646c3d31" alt="" data-canonical-src="https://www.dropbox.com/s/pmn4x75log8k74i/%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE%202017-12-18%2014.32.31.png?dl=1" style="max-width:100%;"></a></p>
+<p>也就说说，一个数据从Ethernet而来，可能被送往ARP，也有可能是IP。反过来就简单了，一个数据从TCP而来，那么就沿着往外传输就好了。</p>
+<p>Ethernet是本文使用的IP之下的协议（还有很多其他的协议），Ethernet地址6字节，IP地址4字节（全网唯一）。</p>
+<p>每一个计算机都会知道自己的IP地址和Ethernet地址。</p>
+<h2>
+<a id="user-content-两个网络的模型" class="anchor" href="#%E4%B8%A4%E4%B8%AA%E7%BD%91%E7%BB%9C%E7%9A%84%E6%A8%A1%E5%9E%8B" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>两个网络的模型</h2>
+<p><a href="https://camo.githubusercontent.com/2ce6fada6763c6d8f75e6486833ae68aed220b42/68747470733a2f2f7777772e64726f70626f782e636f6d2f732f61387872687472706e766f357676382f254535254231253846254535254239253935254536253838254141254535253942254245253230323031372d31322d313825323031342e34322e30382e706e673f646c3d31" target="_blank" rel="nofollow"><img src="https://camo.githubusercontent.com/2ce6fada6763c6d8f75e6486833ae68aed220b42/68747470733a2f2f7777772e64726f70626f782e636f6d2f732f61387872687472706e766f357676382f254535254231253846254535254239253935254536253838254141254535253942254245253230323031372d31322d313825323031342e34322e30382e706e673f646c3d31" alt="" data-canonical-src="https://www.dropbox.com/s/a8xrhtrpnvo5vv8/%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE%202017-12-18%2014.42.08.png?dl=1" style="max-width:100%;"></a></p>
+<p>在这个模型里面，<code>IP module</code> 是一个 n-to-m multiplexer 和一个 m-to-n de-multiplexer。</p>
+<p><a href="https://camo.githubusercontent.com/850957deb75503777a67648bb246471272c1b525/68747470733a2f2f7777772e64726f70626f782e636f6d2f732f657138743933696474656d717379642f254535254231253846254535254239253935254536253838254141254535253942254245253230323031372d31322d313825323031342e34332e32382e706e673f646c3d31" target="_blank" rel="nofollow"><img src="https://camo.githubusercontent.com/850957deb75503777a67648bb246471272c1b525/68747470733a2f2f7777772e64726f70626f782e636f6d2f732f657138743933696474656d717379642f254535254231253846254535254239253935254536253838254141254535253942254245253230323031372d31322d313825323031342e34332e32382e706e673f646c3d31" alt="" data-canonical-src="https://www.dropbox.com/s/eq8t93idtemqsyd/%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE%202017-12-18%2014.43.28.png?dl=1" style="max-width:100%;"></a></p>
+<p>数据可以任意而来，也往任意而去。</p>
+<p><a href="https://camo.githubusercontent.com/46815faacdd9a0df507cc48a0f22c5217b3d177f/68747470733a2f2f7777772e64726f70626f782e636f6d2f732f6a673562656f6a65336c6f633568342f254535254231253846254535254239253935254536253838254141254535253942254245253230323031372d31322d313825323031342e34352e31332e706e673f646c3d31" target="_blank" rel="nofollow"><img src="https://camo.githubusercontent.com/46815faacdd9a0df507cc48a0f22c5217b3d177f/68747470733a2f2f7777772e64726f70626f782e636f6d2f732f6a673562656f6a65336c6f633568342f254535254231253846254535254239253935254536253838254141254535253942254245253230323031372d31322d313825323031342e34352e31332e706e673f646c3d31" alt="" data-canonical-src="https://www.dropbox.com/s/jg5beoje3loc5h4/%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE%202017-12-18%2014.45.13.png?dl=1" style="max-width:100%;"></a></p>
+<p>一个IP packet转发可能不会涉及到<code>TCP</code>/<code>UDP</code></p>
+<p>对于数据经过的每个协议，协议都会加上它自己的头信息，相反的，也会解析去掉它所对应的头信息</p>
+<h2>
+<a id="user-content-问几个问题" class="anchor" href="#%E9%97%AE%E5%87%A0%E4%B8%AA%E9%97%AE%E9%A2%98" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>问几个问题？</h2>
+<p>1、发送IP包的时候，怎么知道目标的Ethernet地址的
+2、IP怎么知道使用哪些底层协议去传输协议
+3、一台计算机的数据怎么到达另外一个计算机
+4、为什么TCP、UDP同时存在，去掉一个行不行
+5、什么network applications可获取
+这几个问题将在下一节Ethernet之后得到解答。</p>
+<h1>
+<a id="user-content-ethernet" class="anchor" href="#ethernet" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Ethernet</h1>
+<p>一个<code>Ethernet frame</code> 包含 <code>destination address</code>（目标地址）, <code>source address</code>（来源地址）, <code>type field</code>（类型头部）, 和 <code>data</code>（数据）。</p>
+<p>Ethernet地址长度6字节。每一个Ethernet设备都会有自己的地址，并且以那个地址作为<code>destination address</code>监听（就是数据发往这个地址的）。所有的设备都监听了这个<code>destination address</code>："FF-FF-FF-FF-FF-FF" (16进制)，广播地址。</p>
+<p>Ethernet 使用 <code>CSMA/CD</code> (Carrier Sense and Multiple Access with Collision Detection).什么是CSMA/CD呢：所有的设备（每个设备都有唯一的Ethernet地址）在同一时间只能有一个说话（信息包括他是谁，他要和谁说话，内容），他们同时进行监听。如果有两个设备在同一时间发声了，那么这两个设备就等待随机的一小段时间，才能说话。</p>
+<h1>
+<a id="user-content-arp" class="anchor" href="#arp" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>ARP</h1>
+<p><code>ARP</code> (Address Resolution Protocol) 是用来将IP地址转为Ethernet地址的，这个过程在IP包发出的时候就做完了，因为IP包的头部和Ethernet的头部需要这个信息。</p>
+<p><code>ARP table</code>是一个保存在内存里面的表，包含IP地址和Ethernet地址。4字节的IP地址用十进制数表示，每个数用<code>.</code>连接；6字节的Ethernet地址用16进制表示，每个数字用<code>-</code>连接：</p>
+<p><a href="https://camo.githubusercontent.com/493108ae759a4d78121e65a47343daa43c756431/68747470733a2f2f7777772e64726f70626f782e636f6d2f732f78306436796636686a74396c65326d2f254535254231253846254535254239253935254536253838254141254535253942254245253230323031372d31322d313825323031352e32332e31352e706e673f646c3d31" target="_blank" rel="nofollow"><img src="https://camo.githubusercontent.com/493108ae759a4d78121e65a47343daa43c756431/68747470733a2f2f7777772e64726f70626f782e636f6d2f732f78306436796636686a74396c65326d2f254535254231253846254535254239253935254536253838254141254535253942254245253230323031372d31322d313825323031352e32332e31352e706e673f646c3d31" alt="" data-canonical-src="https://www.dropbox.com/s/x0d6yf6hjt9le2m/%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE%202017-12-18%2015.23.15.png?dl=1" style="max-width:100%;"></a></p>
+<p>这两个地址完全没啥关系，不能通过算法计算出来。IP地址由网管分配，Ethernet地址由设备制造商确定。</p>
+<p>如果一个地址找不到了，这个时候会：
+1、向所有的设备广播一条消息，询问地址
+2、把这个无法转换的IP包假如队列，稍后处理
+3、然后监听这广播地址的所有设备收到消息之后，看看自己是不是target地址，是的话就把Ethernet地址补充了返回回去。
+4、这个时候转换出Ethernet地址，发出IP包</p>
+<h1>
+<a id="user-content-internet-protocol" class="anchor" href="#internet-protocol" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Internet Protocol</h1>
+<p><code>IP协议</code>是互联网技术的中心，而IP协议的重点就是它的路由表。</p>
+<h2>
+<a id="user-content-直接路由" class="anchor" href="#%E7%9B%B4%E6%8E%A5%E8%B7%AF%E7%94%B1" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>直接路由</h2>
+<p>下面的图是一个只有三台计算机：ABC的小型互联网。
+<a href="https://camo.githubusercontent.com/f2adb640a16bb27660cc29a9f3d06adc2befaf93/68747470733a2f2f7777772e64726f70626f782e636f6d2f732f6267356b63616469717066707969702f254535254231253846254535254239253935254536253838254141254535253942254245253230323031372d31322d313825323031352e35342e34382e706e673f646c3d31" target="_blank" rel="nofollow"><img src="https://camo.githubusercontent.com/f2adb640a16bb27660cc29a9f3d06adc2befaf93/68747470733a2f2f7777772e64726f70626f782e636f6d2f732f6267356b63616469717066707969702f254535254231253846254535254239253935254536253838254141254535253942254245253230323031372d31322d313825323031352e35342e34382e706e673f646c3d31" alt="" data-canonical-src="https://www.dropbox.com/s/bg5kcadiqpfpyip/%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE%202017-12-18%2015.54.48.png?dl=1" style="max-width:100%;"></a></p>
+<p>如果一个IP包从A发往B，那么它的头部中会包含这4个信息：</p>
+<p><a href="https://camo.githubusercontent.com/9db4e671ee0785d8a116e859fa8b8bb4899df49c/68747470733a2f2f7777772e64726f70626f782e636f6d2f732f71303578776637377566637066306e2f254535254231253846254535254239253935254536253838254141254535253942254245253230323031372d31322d313825323031352e35362e34332e706e673f646c3d31" target="_blank" rel="nofollow"><img src="https://camo.githubusercontent.com/9db4e671ee0785d8a116e859fa8b8bb4899df49c/68747470733a2f2f7777772e64726f70626f782e636f6d2f732f71303578776637377566637066306e2f254535254231253846254535254239253935254536253838254141254535253942254245253230323031372d31322d313825323031352e35362e34332e706e673f646c3d31" alt="" data-canonical-src="https://www.dropbox.com/s/q05xwf77ufcpf0n/%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE%202017-12-18%2015.56.43.png?dl=1" style="max-width:100%;"></a></p>
+<p>B收到这个IP包的时候，就会看目标地址是不是自己，如果是的话，就会传输给上层协议。</p>
+<h2>
+<a id="user-content-间接路由" class="anchor" href="#%E9%97%B4%E6%8E%A5%E8%B7%AF%E7%94%B1" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>间接路由</h2>
+<p><a href="https://camo.githubusercontent.com/3c613ac2a0843f3fbd97ff7d30442a8a882a9957/68747470733a2f2f7777772e64726f70626f782e636f6d2f732f6b3970706e7974703666616e64696b2f254535254231253846254535254239253935254536253838254141254535253942254245253230323031372d31322d313825323031362e31342e35312e706e673f646c3d31" target="_blank" rel="nofollow"><img src="https://camo.githubusercontent.com/3c613ac2a0843f3fbd97ff7d30442a8a882a9957/68747470733a2f2f7777772e64726f70626f782e636f6d2f732f6b3970706e7974703666616e64696b2f254535254231253846254535254239253935254536253838254141254535253942254245253230323031372d31322d313825323031362e31342e35312e706e673f646c3d31" alt="" data-canonical-src="https://www.dropbox.com/s/k9ppnytp6fandik/%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE%202017-12-18%2016.14.51.png?dl=1" style="max-width:100%;"></a></p>
+<p>D是<code>IP-router</code>，它连接到三个网络。每个网络之间，以及D和他们各自之间都是直接路由。跨网络就是间接路由了。</p>
+<p>如果A要发IP包到E，那么源IP地址和源Ethernt地址都是A的，目标IP地址是E的，三十目标Ethernet地址是D的。</p>
+<p><a href="https://camo.githubusercontent.com/d45b26db7d4ac4f9eb1c757e0864dfcff628a248/68747470733a2f2f7777772e64726f70626f782e636f6d2f732f376a6e637678736331326f347038662f254535254231253846254535254239253935254536253838254141254535253942254245253230323031372d31322d313825323031362e32312e30392e706e673f646c3d31" target="_blank" rel="nofollow"><img src="https://camo.githubusercontent.com/d45b26db7d4ac4f9eb1c757e0864dfcff628a248/68747470733a2f2f7777772e64726f70626f782e636f6d2f732f376a6e637678736331326f347038662f254535254231253846254535254239253935254536253838254141254535253942254245253230323031372d31322d313825323031362e32312e30392e706e673f646c3d31" alt="" data-canonical-src="https://www.dropbox.com/s/7jncvxsc12o4p8f/%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE%202017-12-18%2016.21.09.png?dl=1" style="max-width:100%;"></a></p>
+<p>然后D收到这个包的时候，发现目标IP地址不是自己的，就不会接受，并转发给E，其中数据如下：</p>
+<p><a href="https://camo.githubusercontent.com/d5c871034a420a1857330339f3f24458f03c4b2d/68747470733a2f2f7777772e64726f70626f782e636f6d2f732f62716f666366353169307a396565732f254535254231253846254535254239253935254536253838254141254535253942254245253230323031372d31322d313825323031362e32322e32372e706e673f646c3d31" target="_blank" rel="nofollow"><img src="https://camo.githubusercontent.com/d5c871034a420a1857330339f3f24458f03c4b2d/68747470733a2f2f7777772e64726f70626f782e636f6d2f732f62716f666366353169307a396565732f254535254231253846254535254239253935254536253838254141254535253942254245253230323031372d31322d313825323031362e32322e32372e706e673f646c3d31" alt="" data-canonical-src="https://www.dropbox.com/s/bqofcf51i0z9ees/%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE%202017-12-18%2016.22.27.png?dl=1" style="max-width:100%;"></a></p>
+<h2>
+<a id="user-content-ip模块路由规则" class="anchor" href="#ip%E6%A8%A1%E5%9D%97%E8%B7%AF%E7%94%B1%E8%A7%84%E5%88%99" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>IP模块路由规则</h2>
+<h2>
+<a id="user-content-ip地址" class="anchor" href="#ip%E5%9C%B0%E5%9D%80" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>IP地址</h2>
+<p>本文中举例的都是<a href="http://blog.csdn.net/panjunnn/article/details/5653388" rel="nofollow">C类IP地址</a>：前3个bit是<code>110</code>（所以第一个字节的范围是<code>1100 0000</code>到<code>1101 1111</code>，也就是192到223），加21bit的<code>network number</code>，加8bit的<code>host number</code>(也就是说最后1个字节是机器号，前3个字节是网络号，如果前3个bit是110的话)。</p>
+<p>IP地址由<code>NIC</code> (Network Information Center)分配</p>
+<h2>
+<a id="user-content-名字" class="anchor" href="#%E5%90%8D%E5%AD%97" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>名字</h2>
+<p>例如
+<a href="https://camo.githubusercontent.com/e257e1588dc1772f0c1f8d7eed5128a8dfa99b7d/68747470733a2f2f7777772e64726f70626f782e636f6d2f732f6630687776756e747462767677377a2f254535254231253846254535254239253935254536253838254141254535253942254245253230323031372d31322d313825323031372e32332e30322e706e673f646c3d31" target="_blank" rel="nofollow"><img src="https://camo.githubusercontent.com/e257e1588dc1772f0c1f8d7eed5128a8dfa99b7d/68747470733a2f2f7777772e64726f70626f782e636f6d2f732f6630687776756e747462767677377a2f254535254231253846254535254239253935254536253838254141254535253942254245253230323031372d31322d313825323031372e32332e30322e706e673f646c3d31" alt="" data-canonical-src="https://www.dropbox.com/s/f0hwvunttbvvw7z/%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE%202017-12-18%2017.23.02.png?dl=1" style="max-width:100%;"></a></p>
+<h2>
+<a id="user-content-ip路由表" class="anchor" href="#ip%E8%B7%AF%E7%94%B1%E8%A1%A8" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>IP路由表</h2>
+<p>IP协议怎么知道用什么底层协议来发送数据包呢？使用IP路由表。</p>
+<p>这个路由表包括：<code>IP network number</code>（网络号），<code>direct/indirect flag</code>，<code>router IP address</code>, and <code>interface number</code>。</p>
+<h2>
+<a id="user-content-直接路由详情" class="anchor" href="#%E7%9B%B4%E6%8E%A5%E8%B7%AF%E7%94%B1%E8%AF%A6%E6%83%85" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>直接路由详情</h2>
+<p>看一个具体的例子
+<a href="https://camo.githubusercontent.com/affa2f6b0e793ed7bfa79087d48fc86c53a423d7/68747470733a2f2f7777772e64726f70626f782e636f6d2f732f7035357331716163796469786473392f254535254231253846254535254239253935254536253838254141254535253942254245253230323031372d31322d313825323031372e32362e30352e706e673f646c3d31" target="_blank" rel="nofollow"><img src="https://camo.githubusercontent.com/affa2f6b0e793ed7bfa79087d48fc86c53a423d7/68747470733a2f2f7777772e64726f70626f782e636f6d2f732f7035357331716163796469786473392f254535254231253846254535254239253935254536253838254141254535253942254245253230323031372d31322d313825323031372e32362e30352e706e673f646c3d31" alt="" data-canonical-src="https://www.dropbox.com/s/p55s1qacydixds9/%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE%202017-12-18%2017.26.05.png?dl=1" style="max-width:100%;"></a></p>
+<p>路由表
+<a href="https://camo.githubusercontent.com/9c569a61fe2b521bb4c692726d70c89dac43acb9/68747470733a2f2f7777772e64726f70626f782e636f6d2f732f32307477726134307635377a61747a2f254535254231253846254535254239253935254536253838254141254535253942254245253230323031372d31322d313825323031372e32362e34342e706e673f646c3d31" target="_blank" rel="nofollow"><img src="https://camo.githubusercontent.com/9c569a61fe2b521bb4c692726d70c89dac43acb9/68747470733a2f2f7777772e64726f70626f782e636f6d2f732f32307477726134307635377a61747a2f254535254231253846254535254239253935254536253838254141254535253942254245253230323031372d31322d313825323031372e32362e34342e706e673f646c3d31" alt="" data-canonical-src="https://www.dropbox.com/s/20twra40v57zatz/%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE%202017-12-18%2017.26.44.png?dl=1" style="max-width:100%;"></a></p>
+<p>不带名字的路由表
+<a href="https://camo.githubusercontent.com/111aa76564195a61d83d5b72f75105e8eb8d9e00/68747470733a2f2f7777772e64726f70626f782e636f6d2f732f757667617361356f757078323933392f254535254231253846254535254239253935254536253838254141254535253942254245253230323031372d31322d313825323031372e32372e34352e706e673f646c3d31" target="_blank" rel="nofollow"><img src="https://camo.githubusercontent.com/111aa76564195a61d83d5b72f75105e8eb8d9e00/68747470733a2f2f7777772e64726f70626f782e636f6d2f732f757667617361356f757078323933392f254535254231253846254535254239253935254536253838254141254535253942254245253230323031372d31322d313825323031372e32372e34352e706e673f646c3d31" alt="" data-canonical-src="https://www.dropbox.com/s/uvgasa5oupx2939/%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE%202017-12-18%2017.27.45.png?dl=1" style="max-width:100%;"></a></p>
+<h2>
+<a id="user-content-直接的例子" class="anchor" href="#%E7%9B%B4%E6%8E%A5%E7%9A%84%E4%BE%8B%E5%AD%90" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>直接的例子</h2>
+<p>alpha发动一个IP包给beta。目标地址是beta的IP地址（223.1.2.2），IP协议取出网络号（223.1.2），然后在路由表中第一项搜索。通过路由表可以知道，通过1号接口（interface number 1）可以直接（directly）送达。然后ARP转换完成，并且这个Ethernet包通过接口1倍发往beta。</p>
+<p>如果尝试发往不在这个网络的机器，那么在路由表中就找不到，IP就会放弃这个包。</p>
+<h2>
+<a id="user-content-间接路由详情" class="anchor" href="#%E9%97%B4%E6%8E%A5%E8%B7%AF%E7%94%B1%E8%AF%A6%E6%83%85" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>间接路由详情</h2>
+<p>网络：
+<a href="https://camo.githubusercontent.com/cda02ed135b1cdbbc22801360ee86714c8e51312/68747470733a2f2f7777772e64726f70626f782e636f6d2f732f626a6370796f62777631626a7267612f254535254231253846254535254239253935254536253838254141254535253942254245253230323031372d31322d313825323031372e33332e34342e706e673f646c3d31" target="_blank" rel="nofollow"><img src="https://camo.githubusercontent.com/cda02ed135b1cdbbc22801360ee86714c8e51312/68747470733a2f2f7777772e64726f70626f782e636f6d2f732f626a6370796f62777631626a7267612f254535254231253846254535254239253935254536253838254141254535253942254245253230323031372d31322d313825323031372e33332e34342e706e673f646c3d31" alt="" data-canonical-src="https://www.dropbox.com/s/bjcpyobwv1bjrga/%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE%202017-12-18%2017.33.44.png?dl=1" style="max-width:100%;"></a></p>
+<p>路由表：
+<a href="https://camo.githubusercontent.com/996154c8cd5e6cdc83b810c35528091f6b4be104/68747470733a2f2f7777772e64726f70626f782e636f6d2f732f3273306e346f3766666732677464312f254535254231253846254535254239253935254536253838254141254535253942254245253230323031372d31322d313825323031372e33342e31322e706e673f646c3d31" target="_blank" rel="nofollow"><img src="https://camo.githubusercontent.com/996154c8cd5e6cdc83b810c35528091f6b4be104/68747470733a2f2f7777772e64726f70626f782e636f6d2f732f3273306e346f3766666732677464312f254535254231253846254535254239253935254536253838254141254535253942254245253230323031372d31322d313825323031372e33342e31322e706e673f646c3d31" alt="" data-canonical-src="https://www.dropbox.com/s/2s0n4o7ffg2gtd1/%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE%202017-12-18%2017.34.12.png?dl=1" style="max-width:100%;"></a></p>
+<p>把name换成<code>network number</code>的路由表：
+<a href="https://camo.githubusercontent.com/2edb7c09c36dc45e81da9294cc67e2af38108e5a/68747470733a2f2f7777772e64726f70626f782e636f6d2f732f677039703830687a3736396a3970772f254535254231253846254535254239253935254536253838254141254535253942254245253230323031372d31322d313825323031372e34352e34362e706e673f646c3d31" target="_blank" rel="nofollow"><img src="https://camo.githubusercontent.com/2edb7c09c36dc45e81da9294cc67e2af38108e5a/68747470733a2f2f7777772e64726f70626f782e636f6d2f732f677039703830687a3736396a3970772f254535254231253846254535254239253935254536253838254141254535253942254245253230323031372d31322d313825323031372e34352e34362e706e673f646c3d31" alt="" data-canonical-src="https://www.dropbox.com/s/gp9p80hz769j9pw/%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE%202017-12-18%2017.45.46.png?dl=1" style="max-width:100%;"></a></p>
+<h2>
+<a id="user-content-简介路由例子" class="anchor" href="#%E7%AE%80%E4%BB%8B%E8%B7%AF%E7%94%B1%E4%BE%8B%E5%AD%90" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>简介路由例子</h2>
+<p>Alpha给epsilon发了一个IP包，目标IP地址是epsilon (223.1.3.2)，取出network number是：223.1.3，然后在路由表第一列里搜索，匹配到第二行。</p>
+<p>匹配到的结果是非直连的，所以Alpha的IP模块通过ARP转换吧IP包的目标Ethernet地址填上了IP路由devnetrouter的地址，但是目标IP仍然是epsilon (223.1.3.2)。</p>
+<p>到达IP路由delta之后，因为目标IP地址不是delta的，所以delta就会转发这个请求：取出network number，然后搜索delta的IP路由表，结果是可以通过接口3直连。</p>
+<p>下图是的IP路由表：
+<a href="https://camo.githubusercontent.com/55b825719a59117d6db7e76efc56bb5705ce8432/68747470733a2f2f7777772e64726f70626f782e636f6d2f732f6d793175713871777a62646b6a78712f254535254231253846254535254239253935254536253838254141254535253942254245253230323031372d31322d313825323031372e35372e34382e706e673f646c3d31" target="_blank" rel="nofollow"><img src="https://camo.githubusercontent.com/55b825719a59117d6db7e76efc56bb5705ce8432/68747470733a2f2f7777772e64726f70626f782e636f6d2f732f6d793175713871777a62646b6a78712f254535254231253846254535254239253935254536253838254141254535253942254245253230323031372d31322d313825323031372e35372e34382e706e673f646c3d31" alt="" data-canonical-src="https://www.dropbox.com/s/my1uq8qwzbdkjxq/%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE%202017-12-18%2017.57.48.png?dl=1" style="max-width:100%;"></a></p>
+<p>现在IP报的目标IP地址和目标Ethernet地址都是epsilon的了。</p>
+<p>当IP包达到epsilon的时候，被送往epsilon的IP模块，目标IP地址匹配，所以这个IP包被传递给上层协议层。</p>
+<h2>
+<a id="user-content-匹配路由总结" class="anchor" href="#%E5%8C%B9%E9%85%8D%E8%B7%AF%E7%94%B1%E6%80%BB%E7%BB%93" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>匹配路由总结</h2>
+<p>当IP数据包通过大型互联网传输时，它可能会在到达目的地之前经过许多IP路由器。 它所采取的路径并不是由一个中心来源决定的，而是参考旅程中使用的每个路由表的结果。 每台计算机只定义旅程中的下一个跃点，并依靠该计算机发送IP数据包。</p>
+<h2>
+<a id="user-content-管理路由表" class="anchor" href="#%E7%AE%A1%E7%90%86%E8%B7%AF%E7%94%B1%E8%A1%A8" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>管理路由表</h2>
+<p>在大型互联网上的所有计算机上维护正确的路由表是一项艰巨的任务;网络管理员不断修改网络配置，以满足不断变化的需求。路由表中的错误会以难以诊断的方式阻塞通信。</p>
+<p>保持简单的网络配置对于建立可靠的互联网有很大的帮助。例如，将IP网络分配给以太网最直接的方法是为每个以太网分配一个IP网络号码。</p>
+<p>某些协议和网络应用程序也提供帮助。 <code>ICMP</code> (Internet Control Message Protocol)可以报告一些路由问题。对于小型网络，路由表由网络管理员在每台计算机上手动填写。对于较大的网络，网络管理员使用路由协议自动执行此手动操作，以在整个网络中分发路由。</p>
+<p>当一台计算机从一个IP网络移到另一个时，其IP地址必须改变。从IP网络中删除计算机时，其旧地址将变为无效。这些更改需要频繁更新“主机”文件。即使是中等规模的网络，这个平面文件也很难维护。<code>DNS</code>（Domain Name System）有助于解决这些问题。</p>
+<h1>
+<a id="user-content-udpuser-datagram-protocol" class="anchor" href="#udpuser-datagram-protocol" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>UDP（User Datagram Protocol）</h1>
+<p><a href="https://tools.ietf.org/html/rfc768" rel="nofollow">UDP</a>是IP协议之上的两个协议之一。引用有: Network File System (<code>NFS</code>) 和 Simple Network Management Protocol (<code>SNMP</code>)。</p>
+<p><code>UDP</code>是无连接的数据报传送服务，不保证传送。 UDP不保持与远程UDP模块的端到端连接; 它只是将数据报推送到网络上，并接收来自网络的传入数据报。</p>
+<p><code>UDP</code>为IP提供了两个值：<code>Ports</code>、<code>Checksum</code></p>
+<h2>
+<a id="user-content-ports" class="anchor" href="#ports" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Ports</h2>
+<p>一个计算机上的client如何在另一台计算机上访问server？</p>
+<p>应用程序和UDP之间的通信路径是通过UDP端口。这些端口被编号，从零开始。提供服务的应用程序（服务器）等待消息进入专用于该服务的特定端口。服务器耐心等待任何客户请求服务。</p>
+<p>例如，称为SNMP代理的SNMP服务器始终在端口161上等待。每台计算机只能有一个SNMP代理，因为只有一个UDP端口号161。这是一个固定的号码，互联网分配的号码。如果SNMP客户端需要服务，则将其请求发送到目标计算机上的UDP端口号161。</p>
+<p>当应用程序通过UDP发送数据时，它作为一个单元到达远端。例如，如果应用程序向UDP端口写入数据，则远端应用程序将从UDP端口读取5次数据。而且，每个写入的大小与每个读取的大小相匹配。</p>
+<p>UDP保留由应用程序定义的消息边界。它不会将两个应用程序消息连接在一起，也不会将单个应用程序消息分成几个部分。</p>
+<h2>
+<a id="user-content-checksum" class="anchor" href="#checksum" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Checksum</h2>
+<p>具有指示“UDP”的IP报头类型字段的输入IP包通过IP被传递给UDP模块。当UDP模块接收到来自IP的UDP数据报时，将检查UDP校验和。如果校验和为零，则表示校验和不是由发送方计算的，可以忽略。因此，发送计算机的UDP模块可能会或可能不会生成校验和。如果以太网是通信的两个UDP模块之间的唯一网络，那么您可能不需要校验和。但是，建议始终启用校验和生成，因为在将来的某个时刻，路由表更改可能会将数据发送到不太可靠的介质上。</p>
+<p>如果校验和是有效的（或为零），则检查目标端口号，如果应用程序绑定到该端口，应用程序消息就排队等候应用程序读取。否则，丢弃UDP数据报。如果传入的UDP数据报到达的速度比应用程序能够读取的速度快，并且队列填充到最大值，则UDP数据报将被UDP丢弃。 UDP将继续丢弃UDP数据报，直到队列中有空间。</p>
+<h2>
+<a id="user-content-tcptransmission-control-protocol" class="anchor" href="#tcptransmission-control-protocol" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>TCP(Transmission Control Protocol)</h2>
+<p>TCP提供与UDP不同的服务。 TCP提供了一个面向连接(connection)的字节流，而不是无连接的数据报传送服务。 TCP保证传送，而UDP不传送。</p>
+<p>TCP被需要保证传送的网络应用所使用，并且不会因为执行超时和重传而烦恼。使用TCP的两个最典型的网络应用程序是文件传输协议（FTP）和TELNET。其他流行的TCP网络应用程序包括X-Window系统，rcp（远程复制）和rseries命令。 TCP的更大能力不是没有代价的：它需要更多的CPU和网络带宽。 TCP模块的内部比UDP模块的内部复杂得多。</p>
+<p>与UDP类似，网络应用程序连接到TCP端口。明确的端口号专用于特定的应用程序。例如，TELNET服务器使用端口号23. TELNET客户端只需连接指定计算机上的TCP端口23即可找到服务器。</p>
+<p>当应用程序首次使用TCP时，客户端计算机上的TCP模块和服务器计算机上的TCP模块开始相互通信。这两个端点TCP模块包含定义虚拟电路的状态信息。这个虚拟电路消耗了两个TCP端点的资源。虚拟电路是全双工的;数据可以同时在两个方向上进行。应用程序将数据写入TCP端口，数据遍历网络，并由远端的应用程序读取。</p>
+<p>TCP随意打包字节流;它不保留写入之间的界限。例如，如果应用程序向TCP端口写入数据，则远端的应用程序可能会执行10次读取以获取所有数据。或者它可能通过一次读取获得所有的数据。一端的写入次数和大小与另一端的读取次数和大小之间没有关系。</p>
+<p>TCP是具有超时和重发的滑动窗口协议。传出数据必须由远端TCP确认。确认可以背上数据。两个接收端都可以控制远端，从而防止缓冲区溢出。</p>
+<p>与所有滑动窗口协议一样，协议具有窗口大小。窗口大小决定了在需要确认之前可以传输的数据量。对于TCP，这个数量不是一个TCP段数，而是一些字节数。</p>
+<h1>
+<a id="user-content-network-applications" class="anchor" href="#network-applications" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Network Applications</h1>
+<p>为什么TCP和UDP都存在，而不是一个或另一个？</p>
+<p>他们提供不同的服务。大多数应用程序被实现为仅使用一个或另一个。你，程序员，选择最能满足你需求的协议。如果您需要可靠的流传输服务，TCP可能是最好的。如果你需要数据报服务，UDP可能是最好的。如果您需要长途电路的效率，TCP可能是最好的。如果您需要快速网络的效率，那么UDP可能是最好的。如果您的需求不能很好地落入这些类别，那么“最佳”的选择是不清楚的。但是，应用程序可以弥补选择上的不足。例如，如果您选择UDP并且您需要可靠性，那么应用程序必须提供可靠性。如果您选择TCP并且您需要面向记录的服务，那么应用程序必须在字节流中插入标记以划分记录。</p>
+<p>什么网络应用程序可用？</p>
+<p>有太多可以列出。这个数字正在不断增长。一些应用程序从互联网技术开始就已经存在：TELNET和FTP。还有一些是比较新的：X-Windows和SNMP。以下是本教程中提到的应用程序的简要说明。</p>
+<h2>
+<a id="user-content-telnet" class="anchor" href="#telnet" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>TELNET</h2>
+<p>TELNET提供TCP上的远程登录功能。 操作和外观类似于通过电话交换机的键盘拨号。 在命令行中，用户键入“telnet delta”，并从计算机接收名为“delta”的登录提示。</p>
+<p>TELNET运行良好; 这是一个旧的应用程序，具有广泛的互操作性。 TELNET的实现通常在不同的操作系统之间工作。 例如，TELNET客户端可能位于VAX / VMS上，UNIX系统V上的服务器上。</p>
+<h2>
+<a id="user-content-ftp" class="anchor" href="#ftp" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>FTP</h2>
+<p>文件传输协议（FTP），和TELNET一样老，也使用TCP，具有广泛的互操作性。 操作和外观仿佛你TELNET到远程计算机。 但是，不要输入你惯常的命令，你必须做一个简短的目录列表等命令。 FTP命令允许您在计算机之间复制文件。</p>
+<h2>
+<a id="user-content-rsh" class="anchor" href="#rsh" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>rsh</h2>
+<p>远程shell（rsh或remsh）是远程UNIX样式命令的完整系列之一。 UNIX复制命令cp变为rcp。 UNIX“谁登录”命令，谁成为rwho。 该列表继续并被统称为“r”系列命令或<code>r *</code>（r之星）命令。</p>
+<p><code>r *</code>命令主要在UNIX系统之间工作，并被设计用于可信主机之间的交互。 很少考虑安全性，但它们提供了一个方便的用户环境。</p>
+<p>要在名为delta的远程计算机上执行“cc file.c”命令，请键入“rsh delta cc file.c”。 要将“file.c”文件复制到增量，请键入“rcp file.c delta：”。 要登录到增量，请键入“rlogin delta”，如果您以某种方式管理计算机，则不会受到密码提示的挑战。</p>
+<h2>
+<a id="user-content-nfs" class="anchor" href="#nfs" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>NFS</h2>
+<p>网络文件系统，由Sun Microsystems公司首先开发，使用UDP，非常适合在多台计算机上安装UNIX文件系统。 无盘工作站可以访问其服务器的硬盘，就好像该工作站的本地磁盘一样。 如果数据库的文件系统是NFS安装在“测试版”上，主机“beta”上的主机“alpha”上的数据库的单个磁盘副本也可以使用。</p>
+<p>NFS给网络增加了很大的负载，并且在慢速链路上的效用很差，但是好处很大。 NFS客户端在内核中实现，允许所有应用程序和命令像使用本地磁盘一样使用NFS安装的磁盘。</p>
+<h2>
+<a id="user-content-snmp" class="anchor" href="#snmp" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>SNMP</h2>
+<p>简单网络管理协议（SNMP）使用UDP，专为中央网络管理站使用而设计。 众所周知，如果提供足够的数据，网络管理员可以检测和诊断网络问题。 中心站使用SNMP从网络上的其他计算机收集这些数据。 SNMP定义数据的格式; 留给中心站或网络管理员来解释数据。</p>
+<h2>
+<a id="user-content-x-window" class="anchor" href="#x-window" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>X-Window</h2>
+<p>X Window系统使用TCP上的X Window协议在工作站的位图显示上绘制窗口。 X Window不仅仅是一个绘制窗口的工具， 这是设计用户界面的全部理念。</p>
+<h1>
+<a id="user-content-other-information" class="anchor" href="#other-information" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Other Information</h1>
+<p>关于互联网技术的许多信息不包含在本教程中。 本部分列出了希望了解更多内容的读者的下一级信息。</p>
+<ul>
+<li>管理命令：arp，route和netstat</li>
+<li>ARP：永久入口，发布条目，超时条目，欺骗</li>
+<li>IP路由表：主机条目，默认网关，子网</li>
+<li>IP：生存时间计数器，分段，ICMP</li>
+<li>RIP，路由循环</li>
+<li>域名系统</li>
+</ul>
+<h1>
+<a id="user-content-引用" class="anchor" href="#%E5%BC%95%E7%94%A8" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>引用</h1>
+
+
+<script src="http://blog.chyroc.cn/assets/javascript/anchor-js/anchor.min.js"></script>
+<script>anchors.add();</script>
+
+<div id="disqus_thread"></div>
+<script>
+(function () { 
+var d = document, s = d.createElement('script')
+s.src = 'https://chyroc.disqus.com/embed.js'
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s)
+})()
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by
+Disqus.</a></noscript>
+<script id="dsq-count-scr" src="//chyroc.disqus.com/count.js" async></script>
+
+</div>
+
+</body>
+</html>
