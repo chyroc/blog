@@ -5,7 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<title>mac命令添加高亮与中文 - Chyroc的博客</title>
+<title>mac命令添加高亮 - Chyroc的博客</title>
 <meta property="og:title" content="blog.chyroc.cn" />
 <meta property="og:locale" content="en_US" />
 <meta name="description" content="Chyroc的博客" />
@@ -17,7 +17,7 @@
 {"name":"blog.chyroc.cn","description":"Chyroc的博客","author":"Chyroc","@type":"WebSite","url":"blog.chyroc.cn","image":null,"publisher":null,"headline":"blog.chyroc.cn","dateModified":null,"datePublished":null,"sameAs":null,"mainEntityOfPage":null,"@context":"http://schema.org"}</script>
 
 
-<link href="http://blog.chyroc.cn/assets/css/style.css?v=305ca492b034089b2a2287dae4e9fa13ac15b666" rel="stylesheet">
+<link href="http://blog.chyroc.cn/assets/css/style.css" rel="stylesheet">
 </head>
 <body>
 <div class="container-lg px-3 my-5 markdown-body">
@@ -39,66 +39,7 @@
 }
 </code></pre>
 <p><a href="https://user-images.githubusercontent.com/15604894/29067802-966a4da4-7c66-11e7-89ab-dd1cf5ae0cf7.png" target="_blank" rel="nofollow"><img src="https://user-images.githubusercontent.com/15604894/29067802-966a4da4-7c66-11e7-89ab-dd1cf5ae0cf7.png" alt="image" style="max-width:100%;"></a></p>
-<h2>
-<a id="user-content-中文man" class="anchor" href="#%E4%B8%AD%E6%96%87man" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>中文man</h2>
-<h6>
-<a id="user-content-中文乱码问题" class="anchor" href="#%E4%B8%AD%E6%96%87%E4%B9%B1%E7%A0%81%E9%97%AE%E9%A2%98" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>中文乱码问题</h6>
-<ul>
-<li>升级groff
-<pre><code>brew install homebrew/dupes/groff
-brew link homebrew/dupes/groff
-</code></pre>
-</li>
-<li>编辑/etc/man.conf文件
-<ul>
-<li>搜索NROFF，替换为
-<blockquote>
-<p>NROFF preconv -e utf8 | /usr/local/bin/groff -Wall -mtty-char -Tutf8 -mandoc -c</p>
-</blockquote>
-</li>
-<li>搜索PAGER，替换为
-<blockquote>
-<p>PAGER /usr/bin/less -isR</p>
-</blockquote>
-</li>
-</ul>
-</li>
-</ul>
-<h6>
-<a id="user-content-下载并安装" class="anchor" href="#%E4%B8%8B%E8%BD%BD%E5%B9%B6%E5%AE%89%E8%A3%85" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>下载并安装</h6>
-<pre><code>wget https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/manpages-zh/manpages-zh-1.5.1.tar.gz
-tar zxf manpages-zh-1.5.1.tar.gz
-cd manpages-zh-1.5.1
-./configure --disable-zhtw # 不需要繁体中文版本
-make &amp;&amp; make install
-</code></pre>
-<h6>
-<a id="user-content-配置alias" class="anchor" href="#%E9%85%8D%E7%BD%AEalias" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>配置alias</h6>
-<pre><code>alias cman=’man -M /usr/local/share/man/zh_CN’
-</code></pre>
-<p><a href="https://user-images.githubusercontent.com/15604894/29067815-a83ad42c-7c66-11e7-905b-34322764c4bf.png" target="_blank" rel="nofollow"><img src="https://user-images.githubusercontent.com/15604894/29067815-a83ad42c-7c66-11e7-905b-34322764c4bf.png" alt="image" style="max-width:100%;"></a></p>
-<h2>
-<a id="user-content-参考文章" class="anchor" href="#%E5%8F%82%E8%80%83%E6%96%87%E7%AB%A0" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>参考文章</h2>
-<ul>
-<li><a href="https://lamjack.github.io/2017/mac-install-chinese-man-doc/" rel="nofollow">Mac系统安装man命令中文文档</a></li>
-</ul>
 
-
-<script src="http://blog.chyroc.cn/assets/javascript/anchor-js/anchor.min.js"></script>
-<script>anchors.add();</script>
-
-<div id="disqus_thread"></div>
-<script>
-(function () { 
-var d = document, s = d.createElement('script')
-s.src = 'https://chyroc.disqus.com/embed.js'
-s.setAttribute('data-timestamp', +new Date());
-(d.head || d.body).appendChild(s)
-})()
-</script>
-<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by
-Disqus.</a></noscript>
-<script id="dsq-count-scr" src="//chyroc.disqus.com/count.js" async></script>
 
 </div>
 
