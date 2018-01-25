@@ -1,0 +1,76 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>for循环中index指针与变量作用域的问题 - Chyroc的博客</title>
+<meta property="og:title" content="blog.chyroc.cn" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Chyroc的博客" />
+<meta property="og:description" content="Chyroc的博客" />
+<link rel="canonical" href="blog.chyroc.cn" />
+<meta property="og:url" content="blog.chyroc.cn" />
+<meta property="og:site_name" content="blog.chyroc.cn" />
+<script type="application/ld+json">
+{"name":"blog.chyroc.cn","description":"Chyroc的博客","author":"Chyroc","@type":"WebSite","url":"blog.chyroc.cn","image":null,"publisher":null,"headline":"blog.chyroc.cn","dateModified":null,"datePublished":null,"sameAs":null,"mainEntityOfPage":null,"@context":"http://schema.org"}</script>
+
+
+<link href="http://blog.chyroc.cn/assets/css/style.css" rel="stylesheet">
+</head>
+<body>
+<div class="container-lg px-3 my-5 markdown-body">
+
+<h1>
+<a id="user-content-for循环中index指针与变量作用域的问题" class="anchor" href="#for%E5%BE%AA%E7%8E%AF%E4%B8%ADindex%E6%8C%87%E9%92%88%E4%B8%8E%E5%8F%98%E9%87%8F%E4%BD%9C%E7%94%A8%E5%9F%9F%E7%9A%84%E9%97%AE%E9%A2%98" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>for循环中index指针与变量作用域的问题</h1>
+<div class="highlight highlight-source-go"><pre><span class="pl-k">package</span> main
+
+<span class="pl-k">const</span> <span class="pl-v">N</span> = <span class="pl-c1">3</span>
+
+<span class="pl-k">func</span> <span class="pl-en">main</span>() {
+	<span class="pl-smi">m</span> <span class="pl-k">:=</span> <span class="pl-c1">make</span>(<span class="pl-k">map</span>[<span class="pl-k">int</span>]*<span class="pl-k">int</span>)
+
+	<span class="pl-k">for</span> <span class="pl-smi">i</span> <span class="pl-k">:=</span> <span class="pl-c1">0</span>; i &lt; N; i++ {
+		m[i] = &amp;i <span class="pl-c"><span class="pl-c">//</span>A</span>
+	}
+
+	<span class="pl-k">for</span> <span class="pl-smi">_</span>, <span class="pl-smi">v</span> <span class="pl-k">:=</span> <span class="pl-k">range</span> m {
+		<span class="pl-c1">print</span>(*v)
+	}
+}
+</pre></div>
+<p>结果是</p>
+<pre><code>333
+</code></pre>
+<p>原因是</p>
+<ul>
+<li>循环的k,v的地址在循环的时候是不变的</li>
+<li>循环内声明的变量，每次都是不一样的</li>
+<li>存k和v的地址并不会计算出来然后存起来，而是存的「k和v的地址」这个概念，所以最后所有的值指向的都是最后一次循环的地址</li>
+</ul>
+<p><strong>所以重点就是i每次都是那个i，p每次都不是那个p（作用域知识）</strong></p>
+<p>所以需要在循环内部申请局部变量存i，然后把他的地址赋给map</p>
+<div class="highlight highlight-source-go"><pre><span class="pl-k">package</span> main
+
+<span class="pl-k">const</span> <span class="pl-v">N</span> = <span class="pl-c1">3</span>
+
+<span class="pl-k">func</span> <span class="pl-en">main</span>() {
+	<span class="pl-smi">m</span> <span class="pl-k">:=</span> <span class="pl-c1">make</span>(<span class="pl-k">map</span>[<span class="pl-k">int</span>]*<span class="pl-k">int</span>)
+
+	<span class="pl-k">for</span> <span class="pl-smi">i</span> <span class="pl-k">:=</span> <span class="pl-c1">0</span>; i &lt; N; i++ {
+		<span class="pl-smi">p</span> <span class="pl-k">:=</span> i
+		m[i] = &amp;p <span class="pl-c"><span class="pl-c">//</span>A</span>
+	}
+
+	<span class="pl-k">for</span> <span class="pl-smi">_</span>, <span class="pl-smi">v</span> <span class="pl-k">:=</span> <span class="pl-k">range</span> m {
+		<span class="pl-c1">print</span>(*v)
+	}
+}
+</pre></div>
+
+
+</div>
+
+</body>
+</html>
