@@ -1,0 +1,95 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>interface-nil.md - Chyroc的博客</title>
+<meta property="og:title" content="blog.chyroc.cn" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Chyroc的博客" />
+<meta property="og:description" content="Chyroc的博客" />
+<link rel="canonical" href="blog.chyroc.cn" />
+<meta property="og:url" content="blog.chyroc.cn" />
+<meta property="og:site_name" content="blog.chyroc.cn" />
+<script type="application/ld+json">
+{"name":"blog.chyroc.cn","description":"Chyroc的博客","author":"Chyroc","@type":"WebSite","url":"blog.chyroc.cn","image":null,"publisher":null,"headline":"blog.chyroc.cn","dateModified":null,"datePublished":null,"sameAs":null,"mainEntityOfPage":null,"@context":"http://schema.org"}</script>
+
+
+<link href="http://blog.chyroc.cn/assets/css/style.css" rel="stylesheet">
+</head>
+<body>
+<div class="container-lg px-3 my-5 markdown-body">
+
+<h1>
+<a id="user-content-interface与nil的比较" class="anchor" href="#interface%E4%B8%8Enil%E7%9A%84%E6%AF%94%E8%BE%83" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>interface与nil的比较</h1>
+<ul>
+<li>time 2018-01-25</li>
+</ul>
+<div class="highlight highlight-source-go"><pre><span class="pl-k">package</span> main
+
+<span class="pl-k">type</span> <span class="pl-v">S</span> <span class="pl-k">struct</span>{}
+
+<span class="pl-k">func</span> <span class="pl-en">(<span class="pl-v">s</span> <span class="pl-v">S</span>) <span class="pl-en">F</span></span>() {}
+
+<span class="pl-k">type</span> <span class="pl-v">IF</span> <span class="pl-k">interface</span> {
+	<span class="pl-c1">F</span>()
+}
+
+<span class="pl-k">func</span> <span class="pl-en">InitType</span>() <span class="pl-v">S</span> {
+	<span class="pl-k">var</span> <span class="pl-smi">s</span> S
+	<span class="pl-k">return</span> s
+}
+
+<span class="pl-k">func</span> <span class="pl-en">InitPointer</span>() *<span class="pl-v">S</span> {
+	<span class="pl-k">var</span> <span class="pl-smi">s</span> *S
+	<span class="pl-k">return</span> s
+}
+<span class="pl-k">func</span> <span class="pl-en">InitEfaceType</span>() <span class="pl-v">interface</span>{} {
+	<span class="pl-k">var</span> <span class="pl-smi">s</span> <span class="pl-v">S</span>
+	<span class="pl-k">return</span> s
+}
+
+<span class="pl-k">func</span> <span class="pl-en">InitEfacePointer</span>() <span class="pl-v">interface</span>{} {
+	<span class="pl-k">var</span> <span class="pl-smi">s</span> *S
+	<span class="pl-k">return</span> s
+}
+
+<span class="pl-k">func</span> <span class="pl-en">InitIfaceType</span>() <span class="pl-v">IF</span> {
+	<span class="pl-k">var</span> <span class="pl-smi">s</span> S
+	<span class="pl-k">return</span> s
+}
+
+<span class="pl-k">func</span> <span class="pl-en">InitIfacePointer</span>() <span class="pl-v">IF</span> {
+	<span class="pl-k">var</span> <span class="pl-smi">s</span> *S
+	<span class="pl-k">return</span> s
+}
+
+<span class="pl-k">func</span> <span class="pl-en">main</span>() {
+	<span class="pl-c"><span class="pl-c">//</span>println(InitType() == nil)</span>
+	<span class="pl-c1">println</span>(<span class="pl-c1">InitPointer</span>() == <span class="pl-c1">nil</span>)
+	<span class="pl-c1">println</span>(<span class="pl-c1">InitEfaceType</span>() == <span class="pl-c1">nil</span>)
+	<span class="pl-c1">println</span>(<span class="pl-c1">InitEfacePointer</span>() == <span class="pl-c1">nil</span>)
+	<span class="pl-c1">println</span>(<span class="pl-c1">InitIfaceType</span>() == <span class="pl-c1">nil</span>)
+	<span class="pl-c1">println</span>(<span class="pl-c1">InitIfacePointer</span>() == <span class="pl-c1">nil</span>)
+}
+</pre></div>
+<p>结果是</p>
+<pre><code>// cannot convert nil to type S
+true
+false
+false
+false
+false
+</code></pre>
+<p>第一个<code>cannot convert nil to type S</code>是？</p>
+<p>true是因为函数返回的是指针类型，指针类型的零值是nil</p>
+<p>后面的结果都是false的原因是：后面的函数返回的结果都是interface，而一个interface如果想要等于nil的话，那么它的<code>类型</code>和<code>值</code>都必须等于nil，也就是说必须明确的返回nil才可以。但是这些函数都是返回来了含有类型的interface，所以不等于nil。</p>
+<p>参见：<a href="https://stackoverflow.com/questions/26845572/expecting-nil-but-getting-an-interface-with-a-nil-value-in-return-which-should" rel="nofollow">go - Expecting nil but getting an interface with a nil value in return, which should be nil - Stack Overflow</a></p>
+
+
+</div>
+
+</body>
+</html>
