@@ -39,37 +39,9 @@
 <li>做scheme ci的时候，顺便学习了一下bash/sub process/global varible</li>
 <li>按照官网的说明写了安装和测试的脚本：</li>
 </ul>
-<div class="highlight highlight-source-shell"><pre><span class="pl-c"><span class="pl-c">#!</span>/bin/bash</span>
-
-VERSION=<span class="pl-s"><span class="pl-pds">"</span>9.2<span class="pl-pds">"</span></span>
-
-wget <span class="pl-s"><span class="pl-pds">"</span>http://ftp.gnu.org/gnu/mit-scheme/stable.pkg/<span class="pl-smi">${VERSION}</span>/mit-scheme-<span class="pl-smi">${VERSION}</span>-x86-64.tar.gz<span class="pl-pds">"</span></span>
-
-tar xzf mit-scheme-<span class="pl-smi">${VERSION}</span>-x86-64.tar.gz
-
-<span class="pl-c1">cd</span> mit-scheme-<span class="pl-smi">${VERSION}</span>/src
-
-./configure
-make
-sudo make install</pre></div>
-<div class="highlight highlight-source-shell"><pre><span class="pl-c"><span class="pl-c">#!</span>/bin/bash</span>
-
-run_exit=0
-
-<span class="pl-k">for</span> <span class="pl-smi">scheme_file</span> <span class="pl-k">in</span> <span class="pl-s"><span class="pl-pds">$(</span>find ./<span class="pl-k">*</span> -type f -name <span class="pl-s"><span class="pl-pds">'</span>*.scm<span class="pl-pds">'</span></span><span class="pl-pds">)</span></span><span class="pl-k">;</span>
-<span class="pl-k">do</span>
-   <span class="pl-c1">echo</span> <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">$scheme_file</span> test...<span class="pl-pds">"</span></span>
-   mit-scheme <span class="pl-k">&lt;</span> <span class="pl-smi">$scheme_file</span> <span class="pl-k">1&gt;</span>/dev/null <span class="pl-k">2&gt;&amp;1</span>
-   ret_code=<span class="pl-smi">$?</span>
-   <span class="pl-k">if</span> [ <span class="pl-smi">$ret_code</span> <span class="pl-k">!=</span> 0 ]<span class="pl-k">;</span> <span class="pl-k">then</span>
-        <span class="pl-c1">echo</span> <span class="pl-s"><span class="pl-pds">"</span><span class="pl-pds">"</span></span>
-        <span class="pl-c1">echo</span> <span class="pl-s"><span class="pl-pds">"</span>run <span class="pl-smi">$scheme_file</span> failed!<span class="pl-pds">"</span></span>
-        <span class="pl-c1">echo</span> <span class="pl-s"><span class="pl-pds">"</span><span class="pl-pds">"</span></span>
-       run_exit=<span class="pl-s"><span class="pl-pds">$((</span><span class="pl-smi">$run_exit</span> <span class="pl-k">+</span> <span class="pl-c1">1</span><span class="pl-pds">))</span></span>
-   <span class="pl-k">fi</span>
-<span class="pl-k">done</span>
-<span class="pl-c1">echo</span> <span class="pl-smi">$run_exit</span>
-<span class="pl-c1">exit</span> <span class="pl-smi">$run_exit</span></pre></div>
+<pre><code>https://github.com/Chyroc/notes/blob/master/Language/Scheme/install.sh
+https://github.com/Chyroc/notes/blob/master/Language/Scheme/test.sh
+</code></pre>
 
 
 </div>

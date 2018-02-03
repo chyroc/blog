@@ -22,6 +22,8 @@
 <body>
 <div class="container-lg px-3 my-5 markdown-body">
 
+<h1>
+<a id="user-content-int16溢出bug记录" class="anchor" href="#int16%E6%BA%A2%E5%87%BAbug%E8%AE%B0%E5%BD%95" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>int16溢出bug记录</h1>
 <p>在一个业务中用到了token</p>
 <p>加密：将各种信息+生成时间(issueTime)+有效期(ttl)利用私钥加密，然后base64。</p>
 <p>判断过期的时候，会首先去检查token里面编码的 <code>issueTime+ttl</code>，和<code>time.now</code>对比。</p>

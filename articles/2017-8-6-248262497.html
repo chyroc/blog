@@ -22,14 +22,15 @@
 <body>
 <div class="container-lg px-3 my-5 markdown-body">
 
-<p>最大子序列和问题</p>
 <h1>
-<a id="user-content-问题" class="anchor" href="#%E9%97%AE%E9%A2%98" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>问题</h1>
+<a id="user-content-最大子序列和问题" class="anchor" href="#%E6%9C%80%E5%A4%A7%E5%AD%90%E5%BA%8F%E5%88%97%E5%92%8C%E9%97%AE%E9%A2%98" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>最大子序列和问题</h1>
+<h2>
+<a id="user-content-问题" class="anchor" href="#%E9%97%AE%E9%A2%98" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>问题</h2>
 <p>最大子序列和问题：</p>
 <p>给定整数A1,A2,...,An（可能有负数），求<a href="https://camo.githubusercontent.com/5ca80df3ba9c0ab6c32e53c5b9552c18e57062db/687474703a2f2f63686172742e676f6f676c65617069732e636f6d2f63686172743f6368743d74782663686c3d2535434c6172676525323025374225354373756d5f2537426b3d692537442535452537426a253744415f2537426b253744" target="_blank" rel="nofollow"><img src="https://camo.githubusercontent.com/5ca80df3ba9c0ab6c32e53c5b9552c18e57062db/687474703a2f2f63686172742e676f6f676c65617069732e636f6d2f63686172743f6368743d74782663686c3d2535434c6172676525323025374225354373756d5f2537426b3d692537442535452537426a253744415f2537426b253744" alt="" data-canonical-src="http://chart.googleapis.com/chart?cht=tx&amp;chl=%5CLarge%20%7B%5Csum_%7Bk=i%7D%5E%7Bj%7DA_%7Bk%7D" style="max-width:100%;"></a>的最大值</p>
 <p>（为方便起见，如果所有整数都是负数，则明天子序列和为0）</p>
-<h1>
-<a id="user-content-四个算法和时间复杂度" class="anchor" href="#%E5%9B%9B%E4%B8%AA%E7%AE%97%E6%B3%95%E5%92%8C%E6%97%B6%E9%97%B4%E5%A4%8D%E6%9D%82%E5%BA%A6" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>四个算法和时间复杂度</h1>
+<h2>
+<a id="user-content-四个算法和时间复杂度" class="anchor" href="#%E5%9B%9B%E4%B8%AA%E7%AE%97%E6%B3%95%E5%92%8C%E6%97%B6%E9%97%B4%E5%A4%8D%E6%9D%82%E5%BA%A6" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>四个算法和时间复杂度</h2>
 <table>
 <thead>
 <tr>
@@ -56,8 +57,8 @@
 </tr>
 </tbody>
 </table>
-<h1>
-<a id="user-content-算法一" class="anchor" href="#%E7%AE%97%E6%B3%95%E4%B8%80" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>算法一</h1>
+<h2>
+<a id="user-content-算法一" class="anchor" href="#%E7%AE%97%E6%B3%95%E4%B8%80" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>算法一</h2>
 <p>三重循环。</p>
 <p>前两个循环是列出所有可能的子序列，<code>i</code>, <code>j</code>分别指向子序列的头和尾。</p>
 <p>第三个循环是对子序列进行求和。</p>
@@ -77,8 +78,8 @@
 	}
 	<span class="pl-k">return</span> maxSum
 }</pre></div>
-<h1>
-<a id="user-content-算法二" class="anchor" href="#%E7%AE%97%E6%B3%95%E4%BA%8C" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>算法二</h1>
+<h2>
+<a id="user-content-算法二" class="anchor" href="#%E7%AE%97%E6%B3%95%E4%BA%8C" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>算法二</h2>
 <ul>
 <li>和算法一相比，将第二个循环和第三个循环合并。也就是说不用再特地循环一遍子数组，在第二次循环的时候已经计算了子数组的最大值。</li>
 <li>从这个角度去看的话，算法一实际上对一些已经计算的并且待会还要用到的数据进行了丢失。</li>
@@ -97,8 +98,8 @@
 	}
 	<span class="pl-k">return</span> maxSum
 }</pre></div>
-<h1>
-<a id="user-content-算法三" class="anchor" href="#%E7%AE%97%E6%B3%95%E4%B8%89" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>算法三</h1>
+<h2>
+<a id="user-content-算法三" class="anchor" href="#%E7%AE%97%E6%B3%95%E4%B8%89" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>算法三</h2>
 <ul>
 <li>使用了分治算法
 <ul>
@@ -160,8 +161,8 @@
 <span class="pl-k">func</span> <span class="pl-en">function3</span>(<span class="pl-v">arr</span> []<span class="pl-v">int</span>) <span class="pl-v">int</span> {
 	<span class="pl-k">return</span> <span class="pl-c1">function3Sum</span>(arr, <span class="pl-c1">0</span>, <span class="pl-c1">len</span>(arr)-<span class="pl-c1">1</span>)
 }</pre></div>
-<h1>
-<a id="user-content-算法四" class="anchor" href="#%E7%AE%97%E6%B3%95%E5%9B%9B" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>算法四</h1>
+<h2>
+<a id="user-content-算法四" class="anchor" href="#%E7%AE%97%E6%B3%95%E5%9B%9B" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>算法四</h2>
 <ul>
 <li>如果一个子数组的和小于0，那么这个数组的最后一个元素肯定小于0</li>
 <li>所以就对后面的和计算无益，可以舍去整个数组</li>
@@ -192,8 +193,8 @@
 	}
 	<span class="pl-k">return</span> maxSum
 }</pre></div>
-<h1>
-<a id="user-content-算法的结果和运行时间" class="anchor" href="#%E7%AE%97%E6%B3%95%E7%9A%84%E7%BB%93%E6%9E%9C%E5%92%8C%E8%BF%90%E8%A1%8C%E6%97%B6%E9%97%B4" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>算法的结果和运行时间</h1>
+<h2>
+<a id="user-content-算法的结果和运行时间" class="anchor" href="#%E7%AE%97%E6%B3%95%E7%9A%84%E7%BB%93%E6%9E%9C%E5%92%8C%E8%BF%90%E8%A1%8C%E6%97%B6%E9%97%B4" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>算法的结果和运行时间</h2>
 <div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">genArray</span>(<span class="pl-v">count</span> <span class="pl-v">int</span>) []<span class="pl-v">int</span> {
 	<span class="pl-smi">r</span> <span class="pl-k">:=</span> rand.<span class="pl-c1">New</span>(rand.<span class="pl-c1">NewSource</span>(time.<span class="pl-c1">Now</span>().<span class="pl-c1">UnixNano</span>()))
 	<span class="pl-smi">a</span> <span class="pl-k">:=</span> []<span class="pl-k">int</span>{}
