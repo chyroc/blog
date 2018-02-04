@@ -4,13 +4,13 @@
     "author": "Chyroc",
     "notes": [
         {
-            "repo": "Chyroc/notes",
+            "repo": "Chyroc/chyroc.github.io.git",
             "paths": [
-                "Language/Go/goquiz.github.io/defer-return.md",
-                "Language/Go/goquiz.github.io/defer.md",
-                "Language/Go/goquiz.github.io/for-pointer.md",
-                "Language/Go/goquiz.github.io/interface-nil.md",
-                "Language/Go/goquiz.github.io/subslice-grow.md"
+                "_md/defer-return.md",
+                "_md/defer.md",
+                "_md/for-pointer.md",
+                "_md/interface-nil.md",
+                "_md/subslice-grow.md"
             ]
         }
     ],
