@@ -1,0 +1,178 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>gopher-reading-list 阅读笔记 - Chyroc的博客</title>
+<meta property="og:title" content="blog.chyroc.cn" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Chyroc的博客" />
+<meta property="og:description" content="Chyroc的博客" />
+<link rel="canonical" href="blog.chyroc.cn" />
+<meta property="og:url" content="blog.chyroc.cn" />
+<meta property="og:site_name" content="blog.chyroc.cn" />
+<script type="application/ld+json">
+{"name":"blog.chyroc.cn","description":"Chyroc的博客","author":"Chyroc","@type":"WebSite","url":"blog.chyroc.cn","image":null,"publisher":null,"headline":"blog.chyroc.cn","dateModified":null,"datePublished":null,"sameAs":null,"mainEntityOfPage":null,"@context":"http://schema.org"}</script>
+
+
+<link href="http://blog.chyroc.cn/assets/css/style.css" rel="stylesheet">
+</head>
+<body>
+<div class="container-lg px-3 my-5 markdown-body">
+
+<h1>
+<a id="user-content-gopher-reading-list-阅读笔记" class="anchor" href="#gopher-reading-list-%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>gopher-reading-list 阅读笔记</h1>
+<ul>
+<li>from <a href="https://github.com/enocom/gopher-reading-list">https://github.com/enocom/gopher-reading-list</a>
+</li>
+</ul>
+<h2>
+<a id="user-content-github---cdarwingo-koans-koans-for-go阅读有感" class="anchor" href="#github---cdarwingo-koans-koans-for-go%E9%98%85%E8%AF%BB%E6%9C%89%E6%84%9F" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><a href="https://github.com/cdarwin/go-koans">GitHub - cdarwin/go-koans: koans for go</a>阅读有感</h2>
+<div class="highlight highlight-source-go"><pre><span class="pl-k">package</span> go_koans
+
+<span class="pl-k">import</span> (
+    <span class="pl-s"><span class="pl-pds">"</span>testing<span class="pl-pds">"</span></span>
+    <span class="pl-s"><span class="pl-pds">"</span>fmt<span class="pl-pds">"</span></span>
+)
+
+<span class="pl-k">func</span> <span class="pl-en">TestNote</span>(<span class="pl-v">t</span> *<span class="pl-v">testing</span>.<span class="pl-v">T</span>) {
+    <span class="pl-c"><span class="pl-c">//</span> basic</span>
+    {
+        <span class="pl-c1">assert</span>(<span class="pl-c1">5</span>^<span class="pl-c1">2</span> == <span class="pl-c1">7</span>)
+        <span class="pl-c"><span class="pl-c">//</span> 乘方是：math.Pow()，这个是按位与</span>
+    }
+
+    <span class="pl-c"><span class="pl-c">//</span> string</span>
+    {
+        <span class="pl-c1">assert</span>(<span class="pl-s"><span class="pl-pds">"</span>abc<span class="pl-pds">"</span></span>[<span class="pl-c1">0</span>] == <span class="pl-c1">uint8</span>(<span class="pl-s"><span class="pl-pds">'</span>a<span class="pl-pds">'</span></span>))
+        <span class="pl-c1">assert</span>(fmt.<span class="pl-c1">Sprintf</span>(<span class="pl-s"><span class="pl-pds">"</span>hello <span class="pl-c1">%q</span><span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>world<span class="pl-pds">"</span></span>) == <span class="pl-s"><span class="pl-pds">"</span>hello <span class="pl-cce">\"</span>world<span class="pl-cce">\"</span><span class="pl-pds">"</span></span>)
+        <span class="pl-c1">assert</span>(fmt.<span class="pl-c1">Sprintf</span>(<span class="pl-s"><span class="pl-pds">"</span>your balance: <span class="pl-c1">%d</span> and <span class="pl-c1">%0.2f</span><span class="pl-pds">"</span></span>, <span class="pl-c1">3</span>, <span class="pl-c1">4.5589</span>) == <span class="pl-s"><span class="pl-pds">"</span>your balance: 3 and 4.56<span class="pl-pds">"</span></span>)
+        <span class="pl-c"><span class="pl-c">//</span> %q 会加上双引号</span>
+        <span class="pl-c"><span class="pl-c">//</span> %0.2f 会四舍五入</span>
+    }
+
+    <span class="pl-c"><span class="pl-c">//</span> array alice</span>
+    {
+        <span class="pl-c1">assert</span>(<span class="pl-c1">cap</span>([<span class="pl-c1">4</span>]<span class="pl-k">string</span>{<span class="pl-s"><span class="pl-pds">"</span>apple<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>orange<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>mango<span class="pl-pds">"</span></span>}) == <span class="pl-c1">4</span>) <span class="pl-c"><span class="pl-c">//</span> it can hold no more</span>
+        <span class="pl-c1">assert</span>(<span class="pl-c1">cap</span>([]<span class="pl-k">string</span>{<span class="pl-s"><span class="pl-pds">"</span>apple<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>orange<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>mango<span class="pl-pds">"</span></span>}) == <span class="pl-c1">3</span>)  <span class="pl-c"><span class="pl-c">//</span> it can hold no more</span>
+        <span class="pl-c"><span class="pl-c">//</span> array slice在计算cap的不同</span>
+
+        <span class="pl-smi">f</span> <span class="pl-k">:=</span> []<span class="pl-k">string</span>{<span class="pl-s"><span class="pl-pds">"</span>apple<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>orange<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>mango<span class="pl-pds">"</span></span>}
+        f[<span class="pl-c1">0</span>] = <span class="pl-s"><span class="pl-pds">"</span>change<span class="pl-pds">"</span></span>
+        <span class="pl-c1">assert</span>(f[<span class="pl-c1">0</span>] == <span class="pl-s"><span class="pl-pds">"</span>change<span class="pl-pds">"</span></span>)
+        <span class="pl-c"><span class="pl-c">//</span> slice会引用计算</span>
+
+        <span class="pl-smi">p</span> <span class="pl-k">:=</span> []<span class="pl-k">string</span>{<span class="pl-s"><span class="pl-pds">"</span>baby<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>baby<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>lemon<span class="pl-pds">"</span></span>}
+        <span class="pl-c1">assert</span>(<span class="pl-c1">cap</span>(p) == <span class="pl-c1">3</span>)
+        p = <span class="pl-c1">append</span>(p, <span class="pl-s"><span class="pl-pds">"</span>baby!<span class="pl-pds">"</span></span>)
+        <span class="pl-c1">assert</span>(<span class="pl-c1">cap</span>(p) == <span class="pl-c1">6</span>)
+        <span class="pl-c"><span class="pl-c">//</span> append 会扩展一倍</span>
+    }
+
+    <span class="pl-c"><span class="pl-c">//</span> ControlFlow</span>
+    {
+        <span class="pl-k">var</span> <span class="pl-smi">str</span> <span class="pl-k">string</span>
+        <span class="pl-k">switch</span> {
+        <span class="pl-k">case</span> <span class="pl-c1">false</span>:
+            str = <span class="pl-s"><span class="pl-pds">"</span>first<span class="pl-pds">"</span></span>
+        <span class="pl-k">case</span> <span class="pl-c1">true</span>:
+            str = <span class="pl-s"><span class="pl-pds">"</span>second<span class="pl-pds">"</span></span>
+        }
+        <span class="pl-c1">assert</span>(str == <span class="pl-s"><span class="pl-pds">"</span>second<span class="pl-pds">"</span></span>)
+        <span class="pl-c"><span class="pl-c">//</span> switch 在没有选项的时候，默认是true</span>
+    }
+
+    <span class="pl-c"><span class="pl-c">//</span> struct</span>
+    {
+        <span class="pl-k">var</span> <span class="pl-smi">bob</span> <span class="pl-k">struct</span> {
+            name <span class="pl-k">string</span>
+            age  <span class="pl-k">int</span>
+        }
+        bob.<span class="pl-smi">name</span> = <span class="pl-s"><span class="pl-pds">"</span>bob<span class="pl-pds">"</span></span>
+        bob.<span class="pl-smi">age</span> = <span class="pl-c1">30</span>
+
+        <span class="pl-k">type</span> person <span class="pl-k">struct</span> {
+            name <span class="pl-k">string</span>
+            age  <span class="pl-k">int</span>
+        }
+        <span class="pl-k">var</span> <span class="pl-smi">john</span> = person{
+            <span class="pl-s"><span class="pl-pds">"</span>bob<span class="pl-pds">"</span></span>,
+            <span class="pl-c1">30</span>,
+        }
+        <span class="pl-c1">assert</span>(bob == john) <span class="pl-c"><span class="pl-c">//</span> assuredly, bob is certainly not john.. yet</span>
+        <span class="pl-c"><span class="pl-c">//</span> struct只要结构和数据一样，就相同，不需要使用同一个type</span>
+    }
+
+    <span class="pl-c"><span class="pl-c">//</span> Allocation</span>
+    {
+        <span class="pl-smi">slice</span> <span class="pl-k">:=</span> <span class="pl-c1">make</span>([]<span class="pl-k">int</span>, <span class="pl-c1">3</span>)
+        <span class="pl-c1">assert</span>(<span class="pl-c1">len</span>(slice) == <span class="pl-c1">3</span>) <span class="pl-c"><span class="pl-c">//</span> make() creates slices of a given length</span>
+        <span class="pl-c"><span class="pl-c">//</span> make创建的array的长度是3</span>
+    }
+}</pre></div>
+<h2>
+<a id="user-content-frequently-asked-questions-faq阅读有感" class="anchor" href="#frequently-asked-questions-faq%E9%98%85%E8%AF%BB%E6%9C%89%E6%84%9F" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><a href="https://golang.org/doc/faq" rel="nofollow">Frequently Asked Questions (FAQ)</a>阅读有感</h2>
+<p>使用default，完成非阻塞的channel：</p>
+<div class="highlight highlight-source-go"><pre>   <span class="pl-k">select</span> {
+	<span class="pl-k">case</span> <span class="pl-smi">msg</span> <span class="pl-k">:=</span> <span class="pl-k">&lt;-</span>messages:
+		fmt.<span class="pl-c1">Println</span>(<span class="pl-s"><span class="pl-pds">"</span>received message<span class="pl-pds">"</span></span>, msg)
+	<span class="pl-k">case</span> <span class="pl-smi">sig</span> <span class="pl-k">:=</span> <span class="pl-k">&lt;-</span>signals:
+		fmt.<span class="pl-c1">Println</span>(<span class="pl-s"><span class="pl-pds">"</span>received signal<span class="pl-pds">"</span></span>, sig)
+	<span class="pl-k">default</span>:
+		fmt.<span class="pl-c1">Println</span>(<span class="pl-s"><span class="pl-pds">"</span>no activity<span class="pl-pds">"</span></span>)
+	}</pre></div>
+<p>通过range循环channel</p>
+<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">main</span>() {
+    <span class="pl-smi">queue</span> <span class="pl-k">:=</span> <span class="pl-c1">make</span>(<span class="pl-k">chan</span> <span class="pl-k">string</span>, <span class="pl-c1">2</span>)
+    queue <span class="pl-k">&lt;-</span> <span class="pl-s"><span class="pl-pds">"</span>one<span class="pl-pds">"</span></span>
+    queue <span class="pl-k">&lt;-</span> <span class="pl-s"><span class="pl-pds">"</span>two<span class="pl-pds">"</span></span>
+    <span class="pl-c1">close</span>(queue)
+
+    <span class="pl-k">for</span> <span class="pl-smi">elem</span> <span class="pl-k">:=</span> <span class="pl-k">range</span> queue {
+        fmt.<span class="pl-c1">Println</span>(elem)
+    }
+}</pre></div>
+<h2>
+<a id="user-content-6-tips-for-using-strings-in-go---calhounio阅读有感" class="anchor" href="#6-tips-for-using-strings-in-go---calhounio%E9%98%85%E8%AF%BB%E6%9C%89%E6%84%9F" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><a href="https://www.calhoun.io/6-tips-for-using-strings-in-go/" rel="nofollow">6 Tips for Using Strings in Go - Calhoun.io</a>阅读有感</h2>
+<p>使用<code>bytes/Buffer</code>或者<code>strings.Join</code>拼接字符串比<code>s+=""</code>快</p>
+<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">main</span>() {
+    <span class="pl-k">var</span> <span class="pl-smi">b</span> bytes.<span class="pl-smi">Buffer</span>
+    <span class="pl-k">for</span> <span class="pl-smi">i</span> <span class="pl-k">:=</span> <span class="pl-c1">0</span>; i &lt; <span class="pl-c1">1000</span>; i++ {
+        b.<span class="pl-c1">WriteString</span>(<span class="pl-c1">randString</span>())
+    }
+    fmt.<span class="pl-c1">Println</span>(b.<span class="pl-c1">String</span>())
+}</pre></div>
+<p>int不能简单的使用<code>string(i)</code>转成string</p>
+<div class="highlight highlight-source-go"><pre>strconv.<span class="pl-c1">Itoa</span>(i)</pre></div>
+<p>创建随机字符串</p>
+<div class="highlight highlight-source-go"><pre><span class="pl-k">package</span> main
+
+<span class="pl-k">import</span> (
+    <span class="pl-s"><span class="pl-pds">"</span>fmt<span class="pl-pds">"</span></span>
+    <span class="pl-s"><span class="pl-pds">"</span>math/rand<span class="pl-pds">"</span></span>
+    <span class="pl-s"><span class="pl-pds">"</span>time<span class="pl-pds">"</span></span>
+)
+
+<span class="pl-k">func</span> <span class="pl-en">main</span>() {
+    fmt.<span class="pl-c1">Println</span>(<span class="pl-c1">RandString</span>(<span class="pl-c1">10</span>))
+}
+
+<span class="pl-k">var</span> <span class="pl-smi">source</span> = rand.<span class="pl-c1">NewSource</span>(time.<span class="pl-c1">Now</span>().<span class="pl-c1">UnixNano</span>())
+
+<span class="pl-k">const</span> charset = <span class="pl-s"><span class="pl-pds">"</span>abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789<span class="pl-pds">"</span></span>
+
+<span class="pl-k">func</span> <span class="pl-en">RandString</span>(<span class="pl-v">length</span> <span class="pl-v">int</span>) <span class="pl-v">string</span> {
+    <span class="pl-smi">b</span> <span class="pl-k">:=</span> <span class="pl-c1">make</span>([]<span class="pl-k">byte</span>, length)
+    <span class="pl-k">for</span> <span class="pl-smi">i</span> <span class="pl-k">:=</span> <span class="pl-k">range</span> b {
+        b[i] = charset[source.<span class="pl-c1">Int63</span>()%<span class="pl-k">int64</span>(<span class="pl-c1">len</span>(charset))]
+    }
+    <span class="pl-k">return</span> <span class="pl-c1">string</span>(b)
+}</pre></div>
+
+
+</div>
+
+</body>
+</html>
