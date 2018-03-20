@@ -1,0 +1,64 @@
+# anko源代码阅读之整体结构（一）
+
+- time 2018-03-20
+
+> 今天查资料的时候看见一句话：「我写博客的习惯，一直都在假想一个小白看我的文章，要怎么样才能说得让他看完我的博客就能明白我讲解的知识点。」，觉得对于我写文章具有指导性的意见，在这里记录下来。
+
+> 这篇文章是在阅读[GitHub - mattn/anko: Scriptable interpreter written in golang](https://github.com/mattn/anko)时候的笔记
+
+## anko
+
+[GitHub - mattn/anko: Scriptable interpreter written in golang](https://github.com/mattn/anko)是一个语法类似于go，并且使用go作为引擎执行的脚本语言。
+
+公司目前使用的最常见的语言是go，在某些业务（如：提供用户在某些条件下触发trigger的能力）下，需要执行一些用户的脚本，这个时候，我们就用到了anko。
+
+但是有几处地方使用到了anko，大家对于anko不断的重复封装，所以决定在公司内部封装一套含有我们内部API的anko。
+
+我可能会涉及到这部分业务代码的编写和review，所以看了一下anko的源代码，这也是本篇文章的由来（如果有下一篇文章，那么也是本系列文章的由来。
+
+注意：本代码阅读，截止commit：https://github.com/mattn/anko/commit/45d93882b6a0a4a02bd31a9265d325c44a8a4964 。
+
+## 我的疑问
+
+* 我以前没有接触过编译器相关，一直有一个疑问：如何识别代码
+* import如何处理
+* import的包和定义的函数怎么就调用到了
+
+## 代码结构
+
+anko代码里面有一些包，本节要讲的是：
+```
+ast       // 抽象语法树结构
+parser    // 解析脚本字符串，生成抽象语法树
+vm        // 执行脚本
+```
+
+其他的暂时忽略掉
+
+## 解析脚本，生成抽象语法树
+
+代码参见：https://github.com/mattn/anko/blob/45d93882b6a0a4a02bd31a9265d325c44a8a4964/parser/lexer.go#L518
+
+解析脚本的入口
+```go
+import "github.com/mattn/anko/ast"
+
+func ParseSrc(src string) ([]ast.Stmt, error)
+```
+
+这里面的步骤如下：
+
+* goyacc将parse包下的parsr.go.y文件生成为parse.go
+* lexer.go里面的`type Lexer struct`实现了生成的代码里面的`type yyLexer interface`
+* `Lexer`被传递给生成的代码里面的`yyParser`，进行解析
+* 最后返回`l.stmts`作为解析结果，类型是`[]ast.Stmt`
+
+到底如何解析，参见下一篇文章。
+
+## 执行脚本
+
+https://github.com/mattn/anko/blob/45d93882b6a0a4a02bd31a9265d325c44a8a4964/vm/vmStmt.go#L23
+
+* 循环`l.stmts`，执行代码
+
+执行代码的逻辑具体是什么，参见下一篇文章。
