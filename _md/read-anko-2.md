@@ -1,4 +1,4 @@
-# anko源代码阅读之lex/goyacc（一）
+# anko源代码阅读之go的lex/yacc（二）
 
 - time 2018-03-21
 
@@ -6,31 +6,42 @@
 
 ## yacc的语法
 
-### 语法文件
-* 结构，由`%%`分割的三部分组成
-```
-声明
-%%
-规则
-%%
-程序
-```
+* 结构，由`%%`分割的三部分组成：`声明 %% 规则 %% 程序`
+* `%{`与`%}`之间的代码将会直接出现在目标代码中
 * yacc 命令忽略语法文件中的空格、制表符和换行符
 * 注释：`/* This is a comment on a line by itself. */`
 * 使用''（单引号）表示字符串
-* 对标记名称使用大写字母，对非终止符号名称使用小写字母。
-* 将语法规则和操作放在单独的行上，允许在更改一个时无需更改另一个。
-* 将所有的规则一起放在相同的左侧。进入左侧一次，并将竖线作为该左侧其余规则的起始位置。
-* 对于相同左侧的每一个规则集，请在该左侧的最后一条规则后输入一个分号，并独立成行。您可在以后方便地添加新的规则。
-* 使用两个制表符停止位缩进规则主体，使用三个制表符停止位缩进操作体。
-
-### yacc规则
-* 语法文件的规则部分包含一条或者多条语法规则。
-* 语法规则具有下述格式：`A : BODY;`
-* 其中 A 为非终止名称，BODY 为 0 个或者多个名称、文字和语义操作的序列，语义操作后面可有优先顺序规则（可选）。只有名称和文字是构成语法所必需的。语义操作和优先顺序规则为可选的。冒号和分号是必需的 yacc 标点。
 * 优先顺序规则由 %prec 关键字定义，并更改与特定的语法规则关联的优先顺序级别。保留符号 %prec 可紧跟在语法规则的主体后面，且其后可有标记名称或者文字。构造使得语法规则的优先顺序成为标记名称或者文字的优先顺序。
+* 其他语法请阅读下面的注释
 
-## anko的yacc文件注释阅读
+## go的yacc工具
+### 安装
+```
+go get -u golang.org/x/tools/cmd/goyacc
+```
+
+### 使用
+```
+goyacc -o parse.go parse.y
+```
+使用上面的工具和命令会生成一个`parse.go`文件
+
+### 编写lex文件
+
+为了用上这个文件，我们需要实现`yyLexer`接口
+```
+type yyLexer interface {
+	Lex(lval *yySymType) int
+	Error(s string)
+}
+```
+
+Lex函数要求返回token的值
+
+Error函数会在有错误时调用
+
+
+## 最后，anko的yacc文件注释阅读
 
 ```diff
 + /* %{}%之间的代码会直接输出到go代码中 */
@@ -156,7 +167,7 @@ import (
 + /* 第一个%%之前是定义 */
 %%
 
-+ /* 代码块 */
++ /* compstmt: 代码块 */
 compstmt :
 +   /* 空格，分号，换行 */
 	opt_terms
@@ -415,20 +426,26 @@ array_count :
 		$$.Count = $$.Count + 1
 	}
 
++   /* 键值对 */
 expr_pair :
++   /* string:expr */
 	STRING ':' expr
 	{
 		$$ = &ast.PairExpr{Key: $1.Lit, Value: $3}
 	}
 
++   /* 键值对 s */
 expr_pairs :
++   /* 空 */
 	{
 		$$ = []ast.Expr{}
 	}
++   /* 一个键值对 */
 	| expr_pair
 	{
 		$$ = []ast.Expr{$1}
 	}
++   /* 一个键值对 */
 	| expr_pairs ',' opt_terms expr_pair
 	{
 		$$ = append($1, $4)
@@ -470,14 +487,17 @@ expr_lets : expr_many '=' expr_many
 	}
 
 expr_many :
++   /* expr */
 	expr
 	{
 		$$ = []ast.Expr{$1}
 	}
++   /* expr, expr */
 	| exprs ',' opt_terms expr
 	{
 		$$ = append($1, $4)
 	}
++   /* expr, IDENT */
 	| exprs ',' opt_terms IDENT
 	{
 		$$ = append($1, &ast.IdentExpr{Lit: $4.Lit})
@@ -595,37 +615,43 @@ expr :
 		$$ = &ast.MemberExpr{Expr: $1, Name: $3.Lit}
 		$$.SetPosition($1.Position())
 	}
++   /* func (expr_idents) { 代码块 } */
 	| FUNC '(' expr_idents ')' '{' compstmt '}'
 	{
 		$$ = &ast.FuncExpr{Params: $3, Stmts: $6}
 		$$.SetPosition($1.Position())
 	}
++   /* func (expr_idents ...) { 代码块 } */
 	| FUNC '(' expr_idents VARARG ')' '{' compstmt '}'
 	{
 		$$ = &ast.FuncExpr{Params: $3, Stmts: $7, VarArg: true}
 		$$.SetPosition($1.Position())
 	}
++   /* func IDENT (expr_idents) { 代码块 } */
 	| FUNC IDENT '(' expr_idents ')' '{' compstmt '}'
 	{
 		$$ = &ast.FuncExpr{Name: $2.Lit, Params: $4, Stmts: $7}
 		$$.SetPosition($1.Position())
 	}
++   /* func IDENT (expr_idents ...) { 代码块 } */
 	| FUNC IDENT '(' expr_idents VARARG ')' '{' compstmt '}'
 	{
 		$$ = &ast.FuncExpr{Name: $2.Lit, Params: $4, Stmts: $8, VarArg: true}
 		$$.SetPosition($1.Position())
 	}
++   /* [ exprs ] */
 	| '[' opt_terms exprs opt_terms ']'
 	{
 		$$ = &ast.ArrayExpr{Exprs: $3}
 		if l, ok := yylex.(*Lexer); ok { $$.SetPosition(l.pos) }
 	}
++   /* [ exprs, ] */
 	| '[' opt_terms exprs ',' opt_terms ']'
 	{
 		$$ = &ast.ArrayExpr{Exprs: $3}
 		if l, ok := yylex.(*Lexer); ok { $$.SetPosition(l.pos) }
 	}
-+   /* ? */
++   /* { "":expr, ... } */
 	| '{' opt_terms expr_pairs opt_terms '}'
 	{
 		mapExpr := make(map[string]ast.Expr)
@@ -635,7 +661,7 @@ expr :
 		$$ = &ast.MapExpr{MapExpr: mapExpr}
 		if l, ok := yylex.(*Lexer); ok { $$.SetPosition(l.pos) }
 	}
-+   /* ? */
++   /* { "":expr, } */
 	| '{' opt_terms expr_pairs ',' opt_terms '}'
 	{
 		mapExpr := make(map[string]ast.Expr)
@@ -807,67 +833,67 @@ expr :
 		$$ = &ast.BinOpExpr{Lhs: $1, Operator: "&&", Rhs: $3}
 		$$.SetPosition($1.Position())
 	}
-+   /* IDENT(agrs ...) */
++   /* IDENT(exprs ...) */
 	| IDENT '(' exprs VARARG ')'
 	{
 		$$ = &ast.CallExpr{Name: $1.Lit, SubExprs: $3, VarArg: true}
 		$$.SetPosition($1.Position())
 	}
-+   /* func_name(args) */
++   /* IDENT(exprs) */
 	| IDENT '(' exprs ')'
 	{
 		$$ = &ast.CallExpr{Name: $1.Lit, SubExprs: $3}
 		$$.SetPosition($1.Position())
 	}
-+   /* go func_name(args...) */
++   /* go IDENT(exprs ...) */
 	| GO IDENT '(' exprs VARARG ')'
 	{
 		$$ = &ast.CallExpr{Name: $2.Lit, SubExprs: $4, VarArg: true, Go: true}
 		$$.SetPosition($2.Position())
 	}
-+   /* go func_name(args) */
++   /* go IDENT(exprs) */
 	| GO IDENT '(' exprs ')'
 	{
 		$$ = &ast.CallExpr{Name: $2.Lit, SubExprs: $4, Go: true}
 		$$.SetPosition($2.Position())
 	}
-+   /* func(args...) */
++   /* IDENT(args...) */
 	| expr '(' exprs VARARG ')'
 	{
 		$$ = &ast.AnonCallExpr{Expr: $1, SubExprs: $3, VarArg: true}
 		$$.SetPosition($1.Position())
 	}
-+   /* func(args) */	
++   /* expr(args) */	
 	| expr '(' exprs ')'
 	{
 		$$ = &ast.AnonCallExpr{Expr: $1, SubExprs: $3}
 		$$.SetPosition($1.Position())
 	}
-+   /* go ...(...) */	
++   /* go expr(exprs ...) */	
 	| GO expr '(' exprs VARARG ')'
 	{
 		$$ = &ast.AnonCallExpr{Expr: $2, SubExprs: $4, VarArg: true, Go: true}
 		$$.SetPosition($2.Position())
 	}
-+   /* go ...(...) */	
++   /* go expr(exprs) */	
 	| GO expr '(' exprs ')'
 	{
 		$$ = &ast.AnonCallExpr{Expr: $2, SubExprs: $4, Go: true}
 		$$.SetPosition($1.Position())
 	}
-+   /* a[...] */	
++   /* IDENT[expr] */	
 	| IDENT '[' expr ']'
 	{
 		$$ = &ast.ItemExpr{Value: &ast.IdentExpr{Lit: $1.Lit}, Index: $3}
 		$$.SetPosition($1.Position())
 	}
-+   /* ...[...] */	
++   /* expr[expr] */	
 	| expr '[' expr ']'
 	{
 		$$ = &ast.ItemExpr{Value: $1, Index: $3}
 		$$.SetPosition($1.Position())
 	}
-+   /* a[10:20] */	
++   /* IDENT[10:20] */	
 	| IDENT '[' expr ':' expr ']'
 	{
 		$$ = &ast.SliceExpr{Value: &ast.IdentExpr{Lit: $1.Lit}, Begin: $3, End: $5}

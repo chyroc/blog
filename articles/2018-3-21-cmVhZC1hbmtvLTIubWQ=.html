@@ -1,0 +1,1059 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>anko源代码阅读之go的lex/yacc（二） - Chyroc的博客</title>
+<meta property="og:title" content="blog.chyroc.cn" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Chyroc的博客" />
+<meta property="og:description" content="Chyroc的博客" />
+<link rel="canonical" href="blog.chyroc.cn" />
+<meta property="og:url" content="blog.chyroc.cn" />
+<meta property="og:site_name" content="blog.chyroc.cn" />
+<script type="application/ld+json">
+{"name":"blog.chyroc.cn","description":"Chyroc的博客","author":"Chyroc","@type":"WebSite","url":"blog.chyroc.cn","image":null,"publisher":null,"headline":"blog.chyroc.cn","dateModified":null,"datePublished":null,"sameAs":null,"mainEntityOfPage":null,"@context":"http://schema.org"}</script>
+
+
+<link href="http://blog.chyroc.cn/assets/css/style.css" rel="stylesheet">
+</head>
+<body>
+<div class="container-lg px-3 my-5 markdown-body">
+
+<h1>
+<a id="user-content-anko源代码阅读之go的lexyacc二" class="anchor" href="#anko%E6%BA%90%E4%BB%A3%E7%A0%81%E9%98%85%E8%AF%BB%E4%B9%8Bgo%E7%9A%84lexyacc%E4%BA%8C" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>anko源代码阅读之go的lex/yacc（二）</h1>
+<blockquote>
+<p>这篇文章是在阅读<a href="https://github.com/mattn/anko">GitHub - mattn/anko: Scriptable interpreter written in golang</a>时候的笔记</p>
+</blockquote>
+<h2>
+<a id="user-content-yacc的语法" class="anchor" href="#yacc%E7%9A%84%E8%AF%AD%E6%B3%95" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>yacc的语法</h2>
+<ul>
+<li>结构，由<code>%%</code>分割的三部分组成：<code>声明 %% 规则 %% 程序</code>
+</li>
+<li>
+<code>%{</code>与<code>%}</code>之间的代码将会直接出现在目标代码中</li>
+<li>yacc 命令忽略语法文件中的空格、制表符和换行符</li>
+<li>注释：<code>/* This is a comment on a line by itself. */</code>
+</li>
+<li>使用''（单引号）表示字符串</li>
+<li>优先顺序规则由 %prec 关键字定义，并更改与特定的语法规则关联的优先顺序级别。保留符号 %prec 可紧跟在语法规则的主体后面，且其后可有标记名称或者文字。构造使得语法规则的优先顺序成为标记名称或者文字的优先顺序。</li>
+<li>其他语法请阅读下面的注释</li>
+</ul>
+<h2>
+<a id="user-content-go的yacc工具" class="anchor" href="#go%E7%9A%84yacc%E5%B7%A5%E5%85%B7" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>go的yacc工具</h2>
+<h3>
+<a id="user-content-安装" class="anchor" href="#%E5%AE%89%E8%A3%85" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>安装</h3>
+<pre><code>go get -u golang.org/x/tools/cmd/goyacc
+</code></pre>
+<h3>
+<a id="user-content-使用" class="anchor" href="#%E4%BD%BF%E7%94%A8" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>使用</h3>
+<pre><code>goyacc -o parse.go parse.y
+</code></pre>
+<p>使用上面的工具和命令会生成一个<code>parse.go</code>文件</p>
+<h3>
+<a id="user-content-编写lex文件" class="anchor" href="#%E7%BC%96%E5%86%99lex%E6%96%87%E4%BB%B6" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>编写lex文件</h3>
+<p>为了用上这个文件，我们需要实现<code>yyLexer</code>接口</p>
+<pre><code>type yyLexer interface {
+	Lex(lval *yySymType) int
+	Error(s string)
+}
+</code></pre>
+<p>Lex函数要求返回token的值</p>
+<p>Error函数会在有错误时调用</p>
+<h2>
+<a id="user-content-最后anko的yacc文件注释阅读" class="anchor" href="#%E6%9C%80%E5%90%8Eanko%E7%9A%84yacc%E6%96%87%E4%BB%B6%E6%B3%A8%E9%87%8A%E9%98%85%E8%AF%BB" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>最后，anko的yacc文件注释阅读</h2>
+<div class="highlight highlight-source-diff"><pre><span class="pl-mi1"><span class="pl-mi1">+</span> /* %{}%之间的代码会直接输出到go代码中 */</span>
+%{
+package parser
+
+import (
+	"github.com/mattn/anko/ast"
+)
+
+%}
+<span class="pl-mi1"><span class="pl-mi1">+</span> /* %type &lt;x&gt; y 规定y的类型是x*/</span>
+%type&lt;compstmt&gt; compstmt
+%type&lt;stmts&gt; stmts
+%type&lt;stmt&gt; stmt
+%type&lt;stmt_if&gt; stmt_if
+%type&lt;stmt_default&gt; stmt_default
+%type&lt;stmt_case&gt; stmt_case
+%type&lt;stmt_cases&gt; stmt_cases
+%type&lt;expr&gt; expr
+%type&lt;exprs&gt; exprs
+%type&lt;expr_many&gt; expr_many
+%type&lt;expr_lets&gt; expr_lets
+%type&lt;expr_pair&gt; expr_pair
+%type&lt;expr_pairs&gt; expr_pairs
+%type&lt;expr_idents&gt; expr_idents
+%type&lt;expr_type&gt; expr_type
+%type&lt;array_count&gt; array_count
+
+<span class="pl-mi1"><span class="pl-mi1">+</span> /* 会生成一个struct的type，字段是这些*/</span>
+%union{
+	compstmt               []ast.Stmt
+	stmt_if                ast.Stmt
+	stmt_default           ast.Stmt
+	stmt_case              ast.Stmt
+	stmt_cases             []ast.Stmt
+	stmts                  []ast.Stmt
+	stmt                   ast.Stmt
+	expr                   ast.Expr
+	exprs                  []ast.Expr
+	expr_many              []ast.Expr
+	expr_lets              ast.Expr
+	expr_pair              ast.Expr
+	expr_pairs             []ast.Expr
+	expr_idents            []string
+	expr_type              string
+	tok                    ast.Token
+	term                   ast.Token
+	terms                  ast.Token
+	opt_terms              ast.Token
+	array_count            ast.ArrayCount
+}
+
+<span class="pl-mi1"><span class="pl-mi1">+</span> /*</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span> IDENT           结构体成员变量？</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span> NUMBER          数字</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span> STRING          字符串，"" 、 \'\' 、 ``之间的部分</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span> ARRAY           数组</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span> VARARG          ...</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span> FUNC            func</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span> RETURN          return</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span> VAR             var</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span> THROW           throw</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span> IF              if</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span> ELSE            else</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span> FOR             for</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span> IN              in</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span> EQEQ            ==</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span> NEQ             !=</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span> GE              &gt;=</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span> LE              &lt;=</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span> OROR            ||</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span> ANDAND          &amp;&amp;</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span> NEW             new</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span> TRUE            true</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span> FALSE           false</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span> NIL             nil</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span> MODULE          module</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span> TRY             try</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span> CATCH           catch</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span> FINALLY         finally</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span> PLUSEQ          +=</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span> MINUSEQ         -=</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span> MULEQ           *=</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span> DIVEQ           /=</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span> ANDEQ           &amp;=</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span> OREQ            |=</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span> BREAK           break</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span> CONTINUE        continue</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span> PLUSPLUS        ++</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span> MINUSMINUS      --</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span> POW             **</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span> SHIFTLEFT       &lt;&lt;</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span> SHIFTRIGHT      &gt;&gt;</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span> SWITCH          switch</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span> CASE            case</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span> DEFAULT         default</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span> GO              go</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span> CHAN            chan</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span> MAKE            make</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span> OPCHAN          &lt;-</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span> TYPE            type</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span> LEN             len</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span> */</span>
+%token&lt;tok&gt; IDENT NUMBER STRING ARRAY VARARG FUNC RETURN VAR THROW IF ELSE FOR IN EQEQ NEQ GE LE OROR ANDAND NEW TRUE FALSE NIL MODULE TRY CATCH FINALLY PLUSEQ MINUSEQ MULEQ DIVEQ ANDEQ OREQ BREAK CONTINUE PLUSPLUS MINUSMINUS POW SHIFTLEFT SHIFTRIGHT SWITCH CASE DEFAULT GO CHAN MAKE OPCHAN TYPE LEN
+
+<span class="pl-mi1"><span class="pl-mi1">+</span> /* 定义优先级 */</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span> /* 同一行优先级一致 */</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span> /* 越后面，优先级越高 */</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span> /* left是左结合，rifht是右结合 */</span>
+%right '='
+%right '?' ':'
+%left OROR
+%left ANDAND
+%left IDENT
+%nonassoc EQEQ NEQ ','
+%left '&gt;' GE '&lt;' LE SHIFTLEFT SHIFTRIGHT
+
+%left '+' '-' PLUSPLUS MINUSMINUS
+%left '*' '/' '%'
+%right UNARY
+
+<span class="pl-mi1"><span class="pl-mi1">+</span> /* 第一个%%之前是定义 */</span>
+%%
+
+<span class="pl-mi1"><span class="pl-mi1">+</span> /* compstmt: 代码块 */</span>
+compstmt :
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* 空格，分号，换行 */</span>
+	opt_terms
+	{
+		$$ = nil
+	}
+	| stmts opt_terms
+	{
+		$$ = $1
+	}
+
+<span class="pl-mi1"><span class="pl-mi1">+</span> /*</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span>   l.stmts 就是解析后需要的东西 */</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span>   yylex 是 lex.go 里面实现了yyLexer接口的Lexer</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span>   为了改 stmts ,先做一个 type assert</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span> */</span>
+stmts :
+	{
+		$$ = nil
+		if l, ok := yylex.(*Lexer); ok {
+			l.stmts = $$
+		}
+	}
+	| opt_terms stmt
+	{
+		$$ = []ast.Stmt{$2}
+		if l, ok := yylex.(*Lexer); ok {
+			l.stmts = $$
+		}
+	}
+	| stmts terms stmt
+	{
+		if $3 != nil {
+			$$ = append($1, $3)
+			if l, ok := yylex.(*Lexer); ok {
+				l.stmts = $$
+			}
+		}
+	}
+
+<span class="pl-mi1"><span class="pl-mi1">+</span> /*</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span>   一个代码块，递归的</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span>   yylex 是 lex.go 里面实现了yyLexer接口的Lexer</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span>   为了改 stmts ,先做一个 type assert</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span> */</span>
+stmt :
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* a = 1,2,3 */</span>
+	VAR expr_idents '=' expr_many
+	{
+		$$ = &amp;ast.VarStmt{Names: $2, Exprs: $4}
+		$$.SetPosition($1.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* a = b */</span>
+	| expr '=' expr
+	{
+		$$ = &amp;ast.LetsStmt{Lhss: []ast.Expr{$1}, Operator: "=", Rhss: []ast.Expr{$3}}
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* a,b = a,b */</span>
+	| expr_many '=' expr_many
+	{
+		$$ = &amp;ast.LetsStmt{Lhss: $1, Operator: "=", Rhss: $3}
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* break */</span>
+	| BREAK
+	{
+		$$ = &amp;ast.BreakStmt{}
+		$$.SetPosition($1.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* continue */</span>
+	| CONTINUE
+	{
+		$$ = &amp;ast.ContinueStmt{}
+		$$.SetPosition($1.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* return */</span>
+	| RETURN exprs
+	{
+		$$ = &amp;ast.ReturnStmt{Exprs: $2}
+		$$.SetPosition($1.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* throw 表达式*/</span>
+	| THROW expr
+	{
+		$$ = &amp;ast.ThrowStmt{Expr: $2}
+		$$.SetPosition($1.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* module IDENT { 代码块 } */</span>
+	| MODULE IDENT '{' compstmt '}'
+	{
+		$$ = &amp;ast.ModuleStmt{Name: $2.Lit, Stmts: $4}
+		$$.SetPosition($1.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* if */</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* stmt_if 代码块 */</span>
+	| stmt_if
+	{
+		$$ = $1
+		$$.SetPosition($1.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* for { 代码块 } */</span>
+	| FOR '{' compstmt '}'
+	{
+		$$ = &amp;ast.LoopStmt{Stmts: $3}
+		$$.SetPosition($1.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* for ？ in 表达式 { 代码块 } */</span>
+	| FOR expr_idents IN expr '{' compstmt '}'
+	{
+		$$ = &amp;ast.ForStmt{Vars: $2, Value: $4, Stmts: $6}
+		$$.SetPosition($1.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* for 赋值表达式;表达式;表达式 { 代码块 } */</span>
+	| FOR expr_lets ';' expr ';' expr '{' compstmt '}'
+	{
+		$$ = &amp;ast.CForStmt{Expr1: $2, Expr2: $4, Expr3: $6, Stmts: $8}
+		$$.SetPosition($1.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* for 表达式 { 代码块 } */</span>
+	| FOR expr '{' compstmt '}'
+	{
+		$$ = &amp;ast.LoopStmt{Expr: $2, Stmts: $4}
+		$$.SetPosition($1.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* try { 代码块 } catch IDENT { 代码块 } finally { 代码块 } */</span>
+	| TRY '{' compstmt '}' CATCH IDENT '{' compstmt '}' FINALLY '{' compstmt '}'
+	{
+		$$ = &amp;ast.TryStmt{Try: $3, Var: $6.Lit, Catch: $8, Finally: $12}
+		$$.SetPosition($1.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* try { 代码块 } catch { 代码块 } finally { 代码块 } */</span>
+	| TRY '{' compstmt '}' CATCH '{' compstmt '}' FINALLY '{' compstmt '}'
+	{
+		$$ = &amp;ast.TryStmt{Try: $3, Catch: $7, Finally: $11}
+		$$.SetPosition($1.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* try { 代码块 } catch IDENT { 代码块 } */</span>
+	| TRY '{' compstmt '}' CATCH IDENT '{' compstmt '}'
+	{
+		$$ = &amp;ast.TryStmt{Try: $3, Var: $6.Lit, Catch: $8}
+		$$.SetPosition($1.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* try { 代码块 } catch { 代码块 } */</span>
+	| TRY '{' compstmt '}' CATCH '{' compstmt '}'
+	{
+		$$ = &amp;ast.TryStmt{Try: $3, Catch: $7}
+		$$.SetPosition($1.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* switch expr { switch代码块 } */</span>
+	| SWITCH expr '{' stmt_cases '}'
+	{
+		$$ = &amp;ast.SwitchStmt{Expr: $2, Cases: $4}
+		$$.SetPosition($1.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* 表达式 */</span>
+	| expr
+	{
+		$$ = &amp;ast.ExprStmt{Expr: $1}
+		$$.SetPosition($1.Position())
+	}
+
+<span class="pl-mi1"><span class="pl-mi1">+</span> /*</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span>   if代码块</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span> */</span>
+stmt_if :
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* stmt_if 加 else if { 代码块 } */</span>
+	stmt_if ELSE IF expr '{' compstmt '}'
+	{
+		$1.(*ast.IfStmt).ElseIf = append($1.(*ast.IfStmt).ElseIf, &amp;ast.IfStmt{If: $4, Then: $6})
+		$$.SetPosition($1.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* stmt_if 加 else { 代码块 } */</span>
+	| stmt_if ELSE '{' compstmt '}'
+	{
+		if $$.(*ast.IfStmt).Else != nil {
+			yylex.Error("multiple else statement")
+		} else {
+			$$.(*ast.IfStmt).Else = append($$.(*ast.IfStmt).Else, $4...)
+		}
+		$$.SetPosition($1.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* if xxx { 代码块 } */</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* 最简单的 stmt_if 就是上面这个形式 */</span>
+	| IF expr '{' compstmt '}'
+	{
+		$$ = &amp;ast.IfStmt{If: $2, Then: $4, Else: nil}
+		$$.SetPosition($1.Position())
+	}
+
+<span class="pl-mi1"><span class="pl-mi1">+</span> /*</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span>   switch...case...代码块</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span>   注意：这里面的代码都是switch里面的</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span> */</span>
+stmt_cases :
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* 空 */</span>
+	{
+		$$ = []ast.Stmt{}
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* 一个case */</span>
+	| opt_terms stmt_case
+	{
+		$$ = []ast.Stmt{$2}
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* 一个default */</span>
+	| opt_terms stmt_default
+	{
+		$$ = []ast.Stmt{$2}
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* 多个stmt_case */</span>
+	| stmt_cases stmt_case
+	{
+		$$ = append($1, $2)
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* 多个stmt_default，然后就会报错 */</span>
+	| stmt_cases stmt_default
+	{
+		for _, stmt := range $1 {
+			if _, ok := stmt.(*ast.DefaultStmt); ok {
+				yylex.Error("multiple default statement")
+			}
+		}
+		$$ = append($1, $2)
+	}
+
+<span class="pl-mi1"><span class="pl-mi1">+</span> /*</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span>   switch...case...代码块</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span>   注意：这里面的代码都是case里面的</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span> */</span>
+stmt_case :
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* case expr : 代码块 */</span>
+	CASE expr ':' opt_terms compstmt
+	{
+		$$ = &amp;ast.CaseStmt{Expr: $2, Stmts: $5}
+	}
+
+<span class="pl-mi1"><span class="pl-mi1">+</span> /*</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span>   switch...case...代码块</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span>   注意：这里面的代码都是default里面的</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span> */</span>
+stmt_default :
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* default : 代码块 */</span>
+	DEFAULT ':' opt_terms compstmt
+	{
+		$$ = &amp;ast.DefaultStmt{Stmts: $4}
+	}
+
+array_count :
+	{
+		$$ = ast.ArrayCount{Count: 0}
+	}
+	| '[' ']'
+	{
+		$$ = ast.ArrayCount{Count: 1}
+	}
+	| array_count '[' ']'
+	{
+		$$.Count = $$.Count + 1
+	}
+
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* 键值对 */</span>
+expr_pair :
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* string:expr */</span>
+	STRING ':' expr
+	{
+		$$ = &amp;ast.PairExpr{Key: $1.Lit, Value: $3}
+	}
+
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* 键值对 s */</span>
+expr_pairs :
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* 空 */</span>
+	{
+		$$ = []ast.Expr{}
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* 一个键值对 */</span>
+	| expr_pair
+	{
+		$$ = []ast.Expr{$1}
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* 一个键值对 */</span>
+	| expr_pairs ',' opt_terms expr_pair
+	{
+		$$ = append($1, $4)
+	}
+
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* name数组 */</span>
+expr_idents :
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* 空 */</span>
+	{
+		$$ = []string{}
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* name */</span>
+	| IDENT
+	{
+		$$ = []string{$1.Lit}
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* name, ? */</span>
+	| expr_idents ',' opt_terms IDENT
+	{
+		$$ = append($1, $4.Lit)
+	}
+
+expr_type :
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* name */</span>
+	IDENT
+	{
+		$$ = $1.Lit
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* some.name */</span>
+	| expr_type '.' IDENT
+	{
+		$$ = $$ + "." + $3.Lit
+	}
+
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* a,b=b,a */</span>
+expr_lets : expr_many '=' expr_many
+	{
+		$$ = &amp;ast.LetsExpr{Lhss: $1, Operator: "=", Rhss: $3}
+	}
+
+expr_many :
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* expr */</span>
+	expr
+	{
+		$$ = []ast.Expr{$1}
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* expr, expr */</span>
+	| exprs ',' opt_terms expr
+	{
+		$$ = append($1, $4)
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* expr, IDENT */</span>
+	| exprs ',' opt_terms IDENT
+	{
+		$$ = append($1, &amp;ast.IdentExpr{Lit: $4.Lit})
+	}
+
+<span class="pl-mi1"><span class="pl-mi1">+</span>  /* exprs 多个表达式 */</span>
+exprs :
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* 空 */</span>
+	{
+		$$ = nil
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* 一个式子 expr  */</span>
+	| expr
+	{
+		$$ = []ast.Expr{$1}
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* 逗号分隔的多个 expr */</span>
+	| exprs ',' opt_terms expr
+	{
+		$$ = append($1, $4)
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* 逗号分隔的多个 IDENT */</span>
+	| exprs ',' opt_terms IDENT
+	{
+		$$ = append($1, &amp;ast.IdentExpr{Lit: $4.Lit})
+	}
+
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* 一个式子 expr  */</span>
+expr :
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* IDENT 由字母组成的单词 */</span>
+	IDENT
+	{
+		$$ = &amp;ast.IdentExpr{Lit: $1.Lit}
+		$$.SetPosition($1.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* 数字 */</span>
+	| NUMBER
+	{
+		$$ = &amp;ast.NumberExpr{Lit: $1.Lit}
+		$$.SetPosition($1.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* -expr */</span>
+	| '-' expr %prec UNARY
+	{
+		$$ = &amp;ast.UnaryExpr{Operator: "-", Expr: $2}
+		$$.SetPosition($2.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* !expr */</span>
+	| '!' expr %prec UNARY
+	{
+		$$ = &amp;ast.UnaryExpr{Operator: "!", Expr: $2}
+		$$.SetPosition($2.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* ^expr */</span>
+	| '^' expr %prec UNARY
+	{
+		$$ = &amp;ast.UnaryExpr{Operator: "^", Expr: $2}
+		$$.SetPosition($2.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* &amp;IDENT */</span>
+	| '&amp;' IDENT %prec UNARY
+	{
+		$$ = &amp;ast.AddrExpr{Expr: &amp;ast.IdentExpr{Lit: $2.Lit}}
+		$$.SetPosition($2.Position())
+	}
+	| '&amp;' expr '.' IDENT %prec UNARY
+	{
+		$$ = &amp;ast.AddrExpr{Expr: &amp;ast.MemberExpr{Expr: $2, Name: $4.Lit}}
+		$$.SetPosition($2.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* *IDENT */</span>
+	| '*' IDENT %prec UNARY
+	{
+		$$ = &amp;ast.DerefExpr{Expr: &amp;ast.IdentExpr{Lit: $2.Lit}}
+		$$.SetPosition($2.Position())
+	}
+	| '*' expr '.' IDENT %prec UNARY
+	{
+		$$ = &amp;ast.DerefExpr{Expr: &amp;ast.MemberExpr{Expr: $2, Name: $4.Lit}}
+		$$.SetPosition($2.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* 字符串，"" 、 \'\' 、 ``之间的部分 */</span>
+	| STRING
+	{
+		$$ = &amp;ast.StringExpr{Lit: $1.Lit}
+		$$.SetPosition($1.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* true */</span>
+	| TRUE
+	{
+		$$ = &amp;ast.ConstExpr{Value: $1.Lit}
+		$$.SetPosition($1.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* false */</span>
+	| FALSE
+	{
+		$$ = &amp;ast.ConstExpr{Value: $1.Lit}
+		$$.SetPosition($1.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* nil */</span>
+	| NIL
+	{
+		$$ = &amp;ast.ConstExpr{Value: $1.Lit}
+		$$.SetPosition($1.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* expr ? expr : expr */</span>
+	| expr '?' expr ':' expr
+	{
+		$$ = &amp;ast.TernaryOpExpr{Expr: $1, Lhs: $3, Rhs: $5}
+		$$.SetPosition($1.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* expr.IDENT */</span>
+	| expr '.' IDENT
+	{
+		$$ = &amp;ast.MemberExpr{Expr: $1, Name: $3.Lit}
+		$$.SetPosition($1.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* func (expr_idents) { 代码块 } */</span>
+	| FUNC '(' expr_idents ')' '{' compstmt '}'
+	{
+		$$ = &amp;ast.FuncExpr{Params: $3, Stmts: $6}
+		$$.SetPosition($1.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* func (expr_idents ...) { 代码块 } */</span>
+	| FUNC '(' expr_idents VARARG ')' '{' compstmt '}'
+	{
+		$$ = &amp;ast.FuncExpr{Params: $3, Stmts: $7, VarArg: true}
+		$$.SetPosition($1.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* func IDENT (expr_idents) { 代码块 } */</span>
+	| FUNC IDENT '(' expr_idents ')' '{' compstmt '}'
+	{
+		$$ = &amp;ast.FuncExpr{Name: $2.Lit, Params: $4, Stmts: $7}
+		$$.SetPosition($1.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* func IDENT (expr_idents ...) { 代码块 } */</span>
+	| FUNC IDENT '(' expr_idents VARARG ')' '{' compstmt '}'
+	{
+		$$ = &amp;ast.FuncExpr{Name: $2.Lit, Params: $4, Stmts: $8, VarArg: true}
+		$$.SetPosition($1.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* [ exprs ] */</span>
+	| '[' opt_terms exprs opt_terms ']'
+	{
+		$$ = &amp;ast.ArrayExpr{Exprs: $3}
+		if l, ok := yylex.(*Lexer); ok { $$.SetPosition(l.pos) }
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* [ exprs, ] */</span>
+	| '[' opt_terms exprs ',' opt_terms ']'
+	{
+		$$ = &amp;ast.ArrayExpr{Exprs: $3}
+		if l, ok := yylex.(*Lexer); ok { $$.SetPosition(l.pos) }
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* { "":expr, ... } */</span>
+	| '{' opt_terms expr_pairs opt_terms '}'
+	{
+		mapExpr := make(map[string]ast.Expr)
+		for _, v := range $3 {
+			mapExpr[v.(*ast.PairExpr).Key] = v.(*ast.PairExpr).Value
+		}
+		$$ = &amp;ast.MapExpr{MapExpr: mapExpr}
+		if l, ok := yylex.(*Lexer); ok { $$.SetPosition(l.pos) }
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* { "":expr, } */</span>
+	| '{' opt_terms expr_pairs ',' opt_terms '}'
+	{
+		mapExpr := make(map[string]ast.Expr)
+		for _, v := range $3 {
+			mapExpr[v.(*ast.PairExpr).Key] = v.(*ast.PairExpr).Value
+		}
+		$$ = &amp;ast.MapExpr{MapExpr: mapExpr}
+		if l, ok := yylex.(*Lexer); ok { $$.SetPosition(l.pos) }
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* (expr) */</span>
+	| '(' expr ')'
+	{
+		$$ = &amp;ast.ParenExpr{SubExpr: $2}
+		if l, ok := yylex.(*Lexer); ok { $$.SetPosition(l.pos) }
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* expr + expr */</span>
+	| expr '+' expr
+	{
+		$$ = &amp;ast.BinOpExpr{Lhs: $1, Operator: "+", Rhs: $3}
+		$$.SetPosition($1.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* expr - expr */</span>
+	| expr '-' expr
+	{
+		$$ = &amp;ast.BinOpExpr{Lhs: $1, Operator: "-", Rhs: $3}
+		$$.SetPosition($1.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* expr * expr */</span>
+	| expr '*' expr
+	{
+		$$ = &amp;ast.BinOpExpr{Lhs: $1, Operator: "*", Rhs: $3}
+		$$.SetPosition($1.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* expr / expr */</span>
+	| expr '/' expr
+	{
+		$$ = &amp;ast.BinOpExpr{Lhs: $1, Operator: "/", Rhs: $3}
+		$$.SetPosition($1.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* expr % expr */</span>
+	| expr '%' expr
+	{
+		$$ = &amp;ast.BinOpExpr{Lhs: $1, Operator: "%", Rhs: $3}
+		$$.SetPosition($1.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* expr ** expr */</span>
+	| expr POW expr
+	{
+		$$ = &amp;ast.BinOpExpr{Lhs: $1, Operator: "**", Rhs: $3}
+		$$.SetPosition($1.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* expr &lt;&lt; expr */</span>
+	| expr SHIFTLEFT expr
+	{
+		$$ = &amp;ast.BinOpExpr{Lhs: $1, Operator: "&lt;&lt;", Rhs: $3}
+		$$.SetPosition($1.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* expr &gt;&gt; expr */</span>
+	| expr SHIFTRIGHT expr
+	{
+		$$ = &amp;ast.BinOpExpr{Lhs: $1, Operator: "&gt;&gt;", Rhs: $3}
+		$$.SetPosition($1.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* expr == expr */</span>
+	| expr EQEQ expr
+	{
+		$$ = &amp;ast.BinOpExpr{Lhs: $1, Operator: "==", Rhs: $3}
+		$$.SetPosition($1.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* expr != expr */</span>
+	| expr NEQ expr
+	{
+		$$ = &amp;ast.BinOpExpr{Lhs: $1, Operator: "!=", Rhs: $3}
+		$$.SetPosition($1.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* expr &gt; expr */</span>
+	| expr '&gt;' expr
+	{
+		$$ = &amp;ast.BinOpExpr{Lhs: $1, Operator: "&gt;", Rhs: $3}
+		$$.SetPosition($1.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* expr &gt;= expr */</span>
+	| expr GE expr
+	{
+		$$ = &amp;ast.BinOpExpr{Lhs: $1, Operator: "&gt;=", Rhs: $3}
+		$$.SetPosition($1.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* expr &lt; expr */</span>
+	| expr '&lt;' expr
+	{
+		$$ = &amp;ast.BinOpExpr{Lhs: $1, Operator: "&lt;", Rhs: $3}
+		$$.SetPosition($1.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* expr &lt;= expr */</span>
+	| expr LE expr
+	{
+		$$ = &amp;ast.BinOpExpr{Lhs: $1, Operator: "&lt;=", Rhs: $3}
+		$$.SetPosition($1.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* expr += expr */</span>
+	| expr PLUSEQ expr
+	{
+		$$ = &amp;ast.AssocExpr{Lhs: $1, Operator: "+=", Rhs: $3}
+		$$.SetPosition($1.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* expr -= expr */</span>
+	| expr MINUSEQ expr
+	{
+		$$ = &amp;ast.AssocExpr{Lhs: $1, Operator: "-=", Rhs: $3}
+		$$.SetPosition($1.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* expr *= expr */</span>
+	| expr MULEQ expr
+	{
+		$$ = &amp;ast.AssocExpr{Lhs: $1, Operator: "*=", Rhs: $3}
+		$$.SetPosition($1.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* expr /= expr */</span>
+	| expr DIVEQ expr
+	{
+		$$ = &amp;ast.AssocExpr{Lhs: $1, Operator: "/=", Rhs: $3}
+		$$.SetPosition($1.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* expr &amp;= expr */</span>
+	| expr ANDEQ expr
+	{
+		$$ = &amp;ast.AssocExpr{Lhs: $1, Operator: "&amp;=", Rhs: $3}
+		$$.SetPosition($1.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* expr |= expr */</span>
+	| expr OREQ expr
+	{
+		$$ = &amp;ast.AssocExpr{Lhs: $1, Operator: "|=", Rhs: $3}
+		$$.SetPosition($1.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* expr ++ */</span>
+	| expr PLUSPLUS
+	{
+		$$ = &amp;ast.AssocExpr{Lhs: $1, Operator: "++"}
+		$$.SetPosition($1.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* expr -- */</span>
+	| expr MINUSMINUS
+	{
+		$$ = &amp;ast.AssocExpr{Lhs: $1, Operator: "--"}
+		$$.SetPosition($1.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* expr | expr */</span>
+	| expr '|' expr
+	{
+		$$ = &amp;ast.BinOpExpr{Lhs: $1, Operator: "|", Rhs: $3}
+		$$.SetPosition($1.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* expr || expr */</span>
+	| expr OROR expr
+	{
+		$$ = &amp;ast.BinOpExpr{Lhs: $1, Operator: "||", Rhs: $3}
+		$$.SetPosition($1.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* expr &amp; expr */</span>
+	| expr '&amp;' expr
+	{
+		$$ = &amp;ast.BinOpExpr{Lhs: $1, Operator: "&amp;", Rhs: $3}
+		$$.SetPosition($1.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* expr &amp;&amp; expr */</span>
+	| expr ANDAND expr
+	{
+		$$ = &amp;ast.BinOpExpr{Lhs: $1, Operator: "&amp;&amp;", Rhs: $3}
+		$$.SetPosition($1.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* IDENT(exprs ...) */</span>
+	| IDENT '(' exprs VARARG ')'
+	{
+		$$ = &amp;ast.CallExpr{Name: $1.Lit, SubExprs: $3, VarArg: true}
+		$$.SetPosition($1.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* IDENT(exprs) */</span>
+	| IDENT '(' exprs ')'
+	{
+		$$ = &amp;ast.CallExpr{Name: $1.Lit, SubExprs: $3}
+		$$.SetPosition($1.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* go IDENT(exprs ...) */</span>
+	| GO IDENT '(' exprs VARARG ')'
+	{
+		$$ = &amp;ast.CallExpr{Name: $2.Lit, SubExprs: $4, VarArg: true, Go: true}
+		$$.SetPosition($2.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* go IDENT(exprs) */</span>
+	| GO IDENT '(' exprs ')'
+	{
+		$$ = &amp;ast.CallExpr{Name: $2.Lit, SubExprs: $4, Go: true}
+		$$.SetPosition($2.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* IDENT(args...) */</span>
+	| expr '(' exprs VARARG ')'
+	{
+		$$ = &amp;ast.AnonCallExpr{Expr: $1, SubExprs: $3, VarArg: true}
+		$$.SetPosition($1.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* expr(args) */	</span>
+	| expr '(' exprs ')'
+	{
+		$$ = &amp;ast.AnonCallExpr{Expr: $1, SubExprs: $3}
+		$$.SetPosition($1.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* go expr(exprs ...) */	</span>
+	| GO expr '(' exprs VARARG ')'
+	{
+		$$ = &amp;ast.AnonCallExpr{Expr: $2, SubExprs: $4, VarArg: true, Go: true}
+		$$.SetPosition($2.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* go expr(exprs) */	</span>
+	| GO expr '(' exprs ')'
+	{
+		$$ = &amp;ast.AnonCallExpr{Expr: $2, SubExprs: $4, Go: true}
+		$$.SetPosition($1.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* IDENT[expr] */	</span>
+	| IDENT '[' expr ']'
+	{
+		$$ = &amp;ast.ItemExpr{Value: &amp;ast.IdentExpr{Lit: $1.Lit}, Index: $3}
+		$$.SetPosition($1.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* expr[expr] */	</span>
+	| expr '[' expr ']'
+	{
+		$$ = &amp;ast.ItemExpr{Value: $1, Index: $3}
+		$$.SetPosition($1.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* IDENT[10:20] */	</span>
+	| IDENT '[' expr ':' expr ']'
+	{
+		$$ = &amp;ast.SliceExpr{Value: &amp;ast.IdentExpr{Lit: $1.Lit}, Begin: $3, End: $5}
+		$$.SetPosition($1.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* a[10:] */	</span>
+	| IDENT '[' expr ':' ']'
+	{
+		$$ = &amp;ast.SliceExpr{Value: &amp;ast.IdentExpr{Lit: $1.Lit}, Begin: $3, End: nil}
+		$$.SetPosition($1.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* a[10:20] */	</span>
+	| IDENT '[' ':' expr ']'
+	{
+		$$ = &amp;ast.SliceExpr{Value: &amp;ast.IdentExpr{Lit: $1.Lit}, Begin: nil, End: $4}
+		$$.SetPosition($1.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* ...[10:20] */	</span>
+	| expr '[' expr ':' expr ']'
+	{
+		$$ = &amp;ast.SliceExpr{Value: $1, Begin: $3, End: $5}
+		$$.SetPosition($1.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* ...[10:] */	</span>
+	| expr '[' expr ':' ']'
+	{
+		$$ = &amp;ast.SliceExpr{Value: $1, Begin: $3, End: nil}
+		$$.SetPosition($1.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* ...[:10] */	</span>
+	| expr '[' ':' expr ']'
+	{
+		$$ = &amp;ast.SliceExpr{Value: $1, Begin: nil, End: $4}
+		$$.SetPosition($1.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* len(...) */	</span>
+	| LEN '(' expr ')'
+	{
+		$$ = &amp;ast.LenExpr{Expr: $3}
+		$$.SetPosition($1.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* new(Type) */</span>
+	| NEW '(' expr_type ')'
+	{
+		$$ = &amp;ast.NewExpr{Type: $3}
+		$$.SetPosition($1.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* make(chan string) */</span>
+	| MAKE '(' CHAN expr_type ')'
+	{
+		$$ = &amp;ast.MakeChanExpr{Type: $4, SizeExpr: nil}
+		$$.SetPosition($1.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* make(chan string, 10) */</span>
+	| MAKE '(' CHAN expr_type ',' expr ')'
+	{
+		$$ = &amp;ast.MakeChanExpr{Type: $4, SizeExpr: $6}
+		$$.SetPosition($1.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* ? */</span>
+	| MAKE '(' array_count expr_type ')'
+	{
+		$$ = &amp;ast.MakeExpr{Dimensions: $3.Count, Type: $4}
+		$$.SetPosition($1.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* make([]string, 10) */</span>
+	| MAKE '(' array_count expr_type ',' expr ')'
+	{
+		$$ = &amp;ast.MakeExpr{Dimensions: $3.Count,Type: $4, LenExpr: $6}
+		$$.SetPosition($1.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* make([]string, 10, 10) */</span>
+	| MAKE '(' array_count expr_type ',' expr ',' expr ')'
+	{
+		$$ = &amp;ast.MakeExpr{Dimensions: $3.Count,Type: $4, LenExpr: $6, CapExpr: $8}
+		$$.SetPosition($1.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* ? todo */</span>
+	| MAKE '(' TYPE IDENT ',' expr ')'
+	{
+		$$ = &amp;ast.MakeTypeExpr{Name: $4.Lit, Type: $6}
+		$$.SetPosition($1.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* a&lt;-b */</span>
+	| expr OPCHAN expr
+	{
+		$$ = &amp;ast.ChanExpr{Lhs: $1, Rhs: $3}
+		$$.SetPosition($1.Position())
+	}
+<span class="pl-mi1"><span class="pl-mi1">+</span>   /* &lt;-b */</span>
+	| OPCHAN expr
+	{
+		$$ = &amp;ast.ChanExpr{Rhs: $2}
+		$$.SetPosition($2.Position())
+	}
+
+<span class="pl-mi1"><span class="pl-mi1">+</span> /* 空字符串或者terms（term（分号或者换行）或者多个 term） */</span>
+opt_terms : /* none */
+	| terms
+	;
+
+<span class="pl-mi1"><span class="pl-mi1">+</span> /* term（分号或者换行）或者多个 term*/</span>
+terms : term
+	{
+	}
+	| terms term
+	{
+	}
+	;
+
+<span class="pl-mi1"><span class="pl-mi1">+</span> /* 分号或者换行 */</span>
+term : ';'
+	{
+	}
+	| '\n'
+	{
+	}
+	;
+
+<span class="pl-mi1"><span class="pl-mi1">+</span> /* 第二个%%之前是规则 */</span>
+
+%%
+</pre></div>
+<p>参考：</p>
+<ul>
+<li><a href="https://blog.golang.org/generate" rel="nofollow">https://blog.golang.org/generate</a></li>
+<li><a href="https://github.com/cdstelly/goyacc-sample">https://github.com/cdstelly/goyacc-sample</a></li>
+<li><a href="https://www.ibm.com/support/knowledgecenter/zh/ssw_aix_71/com.ibm.aix.genprogc/chapter13.htm" rel="nofollow">https://www.ibm.com/support/knowledgecenter/zh/ssw_aix_71/com.ibm.aix.genprogc/chapter13.htm</a></li>
+<li><a href="https://www.ibm.com/support/knowledgecenter/zh/ssw_aix_71/com.ibm.aix.genprogc/using_yacc_file.htm" rel="nofollow">https://www.ibm.com/support/knowledgecenter/zh/ssw_aix_71/com.ibm.aix.genprogc/using_yacc_file.htm</a></li>
+<li><a href="https://www.ibm.com/support/knowledgecenter/zh/ssw_aix_71/com.ibm.aix.genprogc/yaac_file_declarations.htm" rel="nofollow">https://www.ibm.com/support/knowledgecenter/zh/ssw_aix_71/com.ibm.aix.genprogc/yaac_file_declarations.htm</a></li>
+<li><a href="https://www.ibm.com/support/knowledgecenter/zh/ssw_aix_71/com.ibm.aix.genprogc/yacc_rules.htm" rel="nofollow">https://www.ibm.com/support/knowledgecenter/zh/ssw_aix_71/com.ibm.aix.genprogc/yacc_rules.htm</a></li>
+<li><a href="https://www.ibm.com/support/knowledgecenter/zh/ssw_aix_71/com.ibm.aix.genprogc/yacc_actions.htm" rel="nofollow">https://www.ibm.com/support/knowledgecenter/zh/ssw_aix_71/com.ibm.aix.genprogc/yacc_actions.htm</a></li>
+<li><a href="http://jiayaowei.blogspot.com/2007/12/lexyaccyacc_03.html" rel="nofollow">http://jiayaowei.blogspot.com/2007/12/lexyaccyacc_03.html</a></li>
+<li><a href="http://shahuwang.com/%E7%BC%96%E8%AF%91%E5%8E%9F%E7%90%86/%E5%AE%9E%E7%8E%B0%E8%87%AA%E5%B7%B1%E7%9A%84%E8%84%9A%E6%9C%AC%E8%AF%AD%E8%A8%80(%E4%BA%8C).html" rel="nofollow">http://shahuwang.com/%E7%BC%96%E8%AF%91%E5%8E%9F%E7%90%86/%E5%AE%9E%E7%8E%B0%E8%87%AA%E5%B7%B1%E7%9A%84%E8%84%9A%E6%9C%AC%E8%AF%AD%E8%A8%80(%E4%BA%8C).html</a></li>
+<li><a href="https://github.com/shahuwang/yaccalc">https://github.com/shahuwang/yaccalc</a></li>
+<li><a href="https://github.com/cdstelly/goyacc-sample">https://github.com/cdstelly/goyacc-sample</a></li>
+</ul>
+
+
+</div>
+
+</body>
+</html>
