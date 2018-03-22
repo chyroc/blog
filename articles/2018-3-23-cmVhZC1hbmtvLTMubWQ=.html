@@ -1,0 +1,646 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>anko源代码阅读之lex文件阅读（三） - Chyroc的博客</title>
+<meta property="og:title" content="blog.chyroc.cn" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Chyroc的博客" />
+<meta property="og:description" content="Chyroc的博客" />
+<link rel="canonical" href="blog.chyroc.cn" />
+<meta property="og:url" content="blog.chyroc.cn" />
+<meta property="og:site_name" content="blog.chyroc.cn" />
+<script type="application/ld+json">
+{"name":"blog.chyroc.cn","description":"Chyroc的博客","author":"Chyroc","@type":"WebSite","url":"blog.chyroc.cn","image":null,"publisher":null,"headline":"blog.chyroc.cn","dateModified":null,"datePublished":null,"sameAs":null,"mainEntityOfPage":null,"@context":"http://schema.org"}</script>
+
+
+<link href="http://blog.chyroc.cn/assets/css/style.css" rel="stylesheet">
+</head>
+<body>
+<div class="container-lg px-3 my-5 markdown-body">
+
+<h1>
+<a id="user-content-anko源代码阅读之lex文件阅读三" class="anchor" href="#anko%E6%BA%90%E4%BB%A3%E7%A0%81%E9%98%85%E8%AF%BB%E4%B9%8Blex%E6%96%87%E4%BB%B6%E9%98%85%E8%AF%BB%E4%B8%89" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>anko源代码阅读之lex文件阅读（三）</h1>
+<blockquote>
+<p>这篇文章是在阅读<a href="https://github.com/mattn/anko">GitHub - mattn/anko: Scriptable interpreter written in golang</a>时候的笔记</p>
+</blockquote>
+<div class="highlight highlight-source-diff"><pre><span class="pl-c1">diff --git parser/lexer.go parser/lexer.go</span>
+ // Package parser implements parser for anko.
+ package parser
+
+ import (
+ 	"errors"
+ 	"fmt"
+ 	"unicode"
+
+ 	"github.com/mattn/anko/ast"
+ )
+
+ const (
+ 	// EOF is short for End of file.
+<span class="pl-mi1"><span class="pl-mi1">+</span>	// 文件的末尾</span>
+ 	EOF = -1
+<span class="pl-mi1"><span class="pl-mi1">+</span>	// 行的末尾</span>
+ 	// EOL is short for End of line.
+ 	EOL = '\n'
+ )
+
+ // Error provides a convenient interface for handling runtime error.
+ // It can be Error interface with type cast which can call Pos().
+ type Error struct {
+ 	Message  string
+ 	Pos      ast.Position
+ 	Filename string
+ 	Fatal    bool
+ }
+
+ // Error returns the error message.
+ func (e *Error) Error() string {
+ 	return e.Message
+ }
+
+ // Scanner stores informations for lexer.
+ type Scanner struct {
+<span class="pl-md"><span class="pl-md">-</span>	src      []rune</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span>	src []rune</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span>	// 当前scan的位置</span>
+ 	offset   int
+ 	lineHead int
+ 	line     int
+ }
+
+ // opName is correction of operation names.
+<span class="pl-mi1"><span class="pl-mi1">+</span>// 这里记录着关键字</span>
+ var opName = map[string]int{
+ 	"func":     FUNC,
+ 	"return":   RETURN,
+ 	"var":      VAR,
+ 	"throw":    THROW,
+ 	"if":       IF,
+ 	"for":      FOR,
+ 	"break":    BREAK,
+ 	"continue": CONTINUE,
+ 	"in":       IN,
+ 	"else":     ELSE,
+ 	"new":      NEW,
+ 	"true":     TRUE,
+ 	"false":    FALSE,
+ 	"nil":      NIL,
+ 	"module":   MODULE,
+ 	"try":      TRY,
+ 	"catch":    CATCH,
+ 	"finally":  FINALLY,
+ 	"switch":   SWITCH,
+ 	"case":     CASE,
+ 	"default":  DEFAULT,
+ 	"go":       GO,
+ 	"chan":     CHAN,
+ 	"make":     MAKE,
+ 	"type":     TYPE,
+ 	"len":      LEN,
+ 	"delete":   DELETE,
+ }
+
+ // Init resets code to scan.
+<span class="pl-mi1"><span class="pl-mi1">+</span>// Init string -&gt; []rune</span>
+ func (s *Scanner) Init(src string) {
+ 	s.src = []rune(src)
+ }
+
+ // Scan analyses token, and decide identify or literals.
+<span class="pl-mi1"><span class="pl-mi1">+</span>// scan是扫描的主逻辑</span>
+ func (s *Scanner) Scan() (tok int, lit string, pos ast.Position, err error) {
+ retry:
+<span class="pl-md"><span class="pl-md">-</span>	s.skipBlank()</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span>	s.skipBlank() // 跳过空白</span>
+ 	pos = s.pos()
+ 	switch ch := s.peek(); {
+ 	case isLetter(ch):
+<span class="pl-mi1"><span class="pl-mi1">+</span>		// 如果是字母，获取 scanIdentifier</span>
+ 		lit, err = s.scanIdentifier()
+ 		if err != nil {
+ 			return
+ 		}
+<span class="pl-mi1"><span class="pl-mi1">+</span></span>
+<span class="pl-mi1"><span class="pl-mi1">+</span>		// 是否是已经记录的关键字</span>
+ 		if name, ok := opName[lit]; ok {
+ 			tok = name
+ 		} else {
+<span class="pl-mi1"><span class="pl-mi1">+</span>			// IDENT</span>
+ 			tok = IDENT
+ 		}
+ 	case isDigit(ch):
+<span class="pl-mi1"><span class="pl-mi1">+</span>		// 如果是数字，获取数字，NUMBER</span>
+ 		tok = NUMBER
+ 		lit, err = s.scanNumber()
+ 		if err != nil {
+ 			return
+ 		}
+ 	case ch == '"':
+<span class="pl-mi1"><span class="pl-mi1">+</span>		// 如果是 "，扫描下一个"，并设置为string</span>
+ 		tok = STRING
+ 		lit, err = s.scanString('"')
+ 		if err != nil {
+ 			return
+ 		}
+ 	case ch == '\'':
+<span class="pl-mi1"><span class="pl-mi1">+</span>		// 如果是 \'，扫描下一个\'，并设置为string</span>
+ 		tok = STRING
+ 		lit, err = s.scanString('\'')
+ 		if err != nil {
+ 			return
+ 		}
+ 	case ch == '`':
+<span class="pl-mi1"><span class="pl-mi1">+</span>		// 如果是 `，扫描下一个`，并设置为string</span>
+ 		tok = STRING
+ 		lit, err = s.scanRawString()
+ 		if err != nil {
+ 			return
+ 		}
+ 	default:
+<span class="pl-mi1"><span class="pl-mi1">+</span>		// 剩下这些有一个共同点，需要 s.next()</span>
+ 		switch ch {
+ 		case EOF:
+<span class="pl-mi1"><span class="pl-mi1">+</span>			// 文件末尾</span>
+ 			tok = EOF
+ 		case '#':
+<span class="pl-mi1"><span class="pl-mi1">+</span>			// 注释，把这一行葬送掉，然后retry</span>
+ 			for !isEOL(s.peek()) {
+ 				s.next()
+ 			}
+ 			goto retry
+ 		case '!':
+ 			s.next()
+ 			switch s.peek() {
+ 			case '=':
+<span class="pl-mi1"><span class="pl-mi1">+</span>				// `!=`</span>
+ 				tok = NEQ
+ 				lit = "!="
+ 			default:
+<span class="pl-mi1"><span class="pl-mi1">+</span>				// `!`</span>
+ 				s.back()
+ 				tok = int(ch)
+ 				lit = string(ch)
+ 			}
+ 		case '=':
+ 			s.next()
+ 			switch s.peek() {
+ 			case '=':
+<span class="pl-mi1"><span class="pl-mi1">+</span>				// `==`</span>
+ 				tok = EQEQ
+ 				lit = "=="
+ 			default:
+<span class="pl-mi1"><span class="pl-mi1">+</span>				// `=`</span>
+ 				s.back()
+ 				tok = int(ch)
+ 				lit = string(ch)
+ 			}
+ 		case '+':
+ 			s.next()
+ 			switch s.peek() {
+ 			case '+':
+<span class="pl-mi1"><span class="pl-mi1">+</span>				// `++`</span>
+ 				tok = PLUSPLUS
+ 				lit = "++"
+ 			case '=':
+<span class="pl-mi1"><span class="pl-mi1">+</span>				// `+=`</span>
+ 				tok = PLUSEQ
+ 				lit = "+="
+ 			default:
+<span class="pl-mi1"><span class="pl-mi1">+</span>				// `+`</span>
+ 				s.back()
+ 				tok = int(ch)
+ 				lit = string(ch)
+ 			}
+ 		case '-':
+ 			s.next()
+ 			switch s.peek() {
+ 			case '-':
+<span class="pl-mi1"><span class="pl-mi1">+</span>				// `--`</span>
+ 				tok = MINUSMINUS
+ 				lit = "--"
+ 			case '=':
+<span class="pl-mi1"><span class="pl-mi1">+</span>				// `-=`</span>
+ 				tok = MINUSEQ
+ 				lit = "-="
+ 			default:
+<span class="pl-mi1"><span class="pl-mi1">+</span>				// `-`</span>
+ 				s.back()
+ 				tok = int(ch)
+ 				lit = string(ch)
+ 			}
+ 		case '*':
+ 			s.next()
+ 			switch s.peek() {
+ 			case '*':
+<span class="pl-mi1"><span class="pl-mi1">+</span>				// `**`</span>
+ 				tok = POW
+ 				lit = "**"
+ 			case '=':
+<span class="pl-mi1"><span class="pl-mi1">+</span>				// `*=`</span>
+ 				tok = MULEQ
+ 				lit = "*="
+ 			default:
+<span class="pl-mi1"><span class="pl-mi1">+</span>				// `*`</span>
+ 				s.back()
+ 				tok = int(ch)
+ 				lit = string(ch)
+ 			}
+ 		case '/':
+ 			s.next()
+ 			switch s.peek() {
+ 			case '=':
+<span class="pl-mi1"><span class="pl-mi1">+</span>				// `/=`</span>
+ 				tok = DIVEQ
+ 				lit = "/="
+ 			default:
+<span class="pl-mi1"><span class="pl-mi1">+</span>				// `/`</span>
+ 				s.back()
+ 				tok = int(ch)
+ 				lit = string(ch)
+ 			}
+ 		case '&gt;':
+ 			s.next()
+ 			switch s.peek() {
+ 			case '=':
+<span class="pl-mi1"><span class="pl-mi1">+</span>				// `&gt;=`</span>
+ 				tok = GE
+ 				lit = "&gt;="
+ 			case '&gt;':
+<span class="pl-mi1"><span class="pl-mi1">+</span>				// `&gt;&gt;`</span>
+ 				tok = SHIFTRIGHT
+ 				lit = "&gt;&gt;"
+ 			default:
+<span class="pl-mi1"><span class="pl-mi1">+</span>				// `&gt;`</span>
+ 				s.back()
+ 				tok = int(ch)
+ 				lit = string(ch)
+ 			}
+ 		case '&lt;':
+ 			s.next()
+ 			switch s.peek() {
+ 			case '-':
+<span class="pl-mi1"><span class="pl-mi1">+</span>				// `&lt;-`</span>
+ 				tok = OPCHAN
+ 				lit = "&lt;-"
+ 			case '=':
+<span class="pl-mi1"><span class="pl-mi1">+</span>				// `&lt;=`</span>
+ 				tok = LE
+ 				lit = "&lt;="
+ 			case '&lt;':
+<span class="pl-mi1"><span class="pl-mi1">+</span>				// `&lt;&lt;`</span>
+ 				tok = SHIFTLEFT
+ 				lit = "&lt;&lt;"
+ 			default:
+<span class="pl-mi1"><span class="pl-mi1">+</span>				// `&lt;`</span>
+ 				s.back()
+ 				tok = int(ch)
+ 				lit = string(ch)
+ 			}
+ 		case '|':
+ 			s.next()
+ 			switch s.peek() {
+ 			case '|':
+<span class="pl-mi1"><span class="pl-mi1">+</span>				// `||`</span>
+ 				tok = OROR
+ 				lit = "||"
+ 			case '=':
+<span class="pl-mi1"><span class="pl-mi1">+</span>				// `|=`</span>
+ 				tok = OREQ
+ 				lit = "|="
+ 			default:
+<span class="pl-mi1"><span class="pl-mi1">+</span>				// `|`</span>
+ 				s.back()
+ 				tok = int(ch)
+ 				lit = string(ch)
+ 			}
+ 		case '&amp;':
+ 			s.next()
+ 			switch s.peek() {
+ 			case '&amp;':
+<span class="pl-mi1"><span class="pl-mi1">+</span>				// `&amp;&amp;`</span>
+ 				tok = ANDAND
+ 				lit = "&amp;&amp;"
+ 			case '=':
+<span class="pl-mi1"><span class="pl-mi1">+</span>				// `&amp;=`</span>
+ 				tok = ANDEQ
+ 				lit = "&amp;="
+ 			default:
+<span class="pl-mi1"><span class="pl-mi1">+</span>				// `&amp;`</span>
+ 				s.back()
+ 				tok = int(ch)
+ 				lit = string(ch)
+ 			}
+ 		case '.':
+ 			s.next()
+ 			if s.peek() == '.' {
+ 				s.next()
+ 				if s.peek() == '.' {
+<span class="pl-mi1"><span class="pl-mi1">+</span>					// `...`</span>
+ 					tok = VARARG
+ 				} else {
+<span class="pl-mi1"><span class="pl-mi1">+</span>					// `..` error</span>
+ 					err = fmt.Errorf("syntax error on '%v' at %v:%v", string(ch), pos.Line, pos.Column)
+ 					return
+ 				}
+ 			} else {
+<span class="pl-mi1"><span class="pl-mi1">+</span>				// `.`</span>
+ 				s.back()
+ 				tok = int(ch)
+ 				lit = string(ch)
+ 			}
+ 		case '\n', '(', ')', ':', ';', '%', '?', '{', '}', '[', ']', ',', '^':
+<span class="pl-mi1"><span class="pl-mi1">+</span>			// 这些不能后面接个字符，构成新的字符，所以直接返回 `int(ch)`</span>
+ 			tok = int(ch)
+ 			lit = string(ch)
+ 		default:
+<span class="pl-mi1"><span class="pl-mi1">+</span>			// error</span>
+ 			err = fmt.Errorf("syntax error on '%v' at %v:%v", string(ch), pos.Line, pos.Column)
+ 			tok = int(ch)
+ 			lit = string(ch)
+ 			return
+ 		}
+ 		s.next()
+ 	}
+ 	return
+ }
+
+ // isLetter returns true if the rune is a letter for identity.
+<span class="pl-mi1"><span class="pl-mi1">+</span>// 是否是字母：unicode.IsLetter || '_'</span>
+ func isLetter(ch rune) bool {
+ 	return unicode.IsLetter(ch) || ch == '_'
+ }
+
+ // isDigit returns true if the rune is a number.
+<span class="pl-mi1"><span class="pl-mi1">+</span>// 是否是数字的字符集：'0'~'9'</span>
+ func isDigit(ch rune) bool {
+ 	return '0' &lt;= ch &amp;&amp; ch &lt;= '9'
+ }
+
+ // isHex returns true if the rune is a hex digits.
+<span class="pl-mi1"><span class="pl-mi1">+</span>// 返回是否是16进制的字符：'0'~'9' || 'a'~'f' || 'A'~'F'</span>
+ func isHex(ch rune) bool {
+ 	return ('0' &lt;= ch &amp;&amp; ch &lt;= '9') || ('a' &lt;= ch &amp;&amp; ch &lt;= 'f') || ('A' &lt;= ch &amp;&amp; ch &lt;= 'F')
+ }
+
+ // isEOL returns true if the rune is at end-of-line or end-of-file.
+<span class="pl-mi1"><span class="pl-mi1">+</span>// 是否是文件末尾或者行的末尾: '\n' ch == -1</span>
+ func isEOL(ch rune) bool {
+ 	return ch == '\n' || ch == -1
+ }
+
+ // isBlank returns true if the rune is empty character..
+<span class="pl-mi1"><span class="pl-mi1">+</span>// 是否为空：' ', '\t', '\r'</span>
+ func isBlank(ch rune) bool {
+ 	return ch == ' ' || ch == '\t' || ch == '\r'
+ }
+
+ // peek returns current rune in the code.
+<span class="pl-mi1"><span class="pl-mi1">+</span>// 如果是文件末尾，那么返回EOF，否则返回当前位置的字符</span>
+ func (s *Scanner) peek() rune {
+ 	if s.reachEOF() {
+ 		return EOF
+ 	}
+ 	return s.src[s.offset]
+ }
+
+ // next moves offset to next.
+<span class="pl-mi1"><span class="pl-mi1">+</span>// 如果没有到达文件末尾，那么：</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span>//     游标加1</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span>//     且：如果当前位置是\n，那么</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span>//         s.lineHead = s.offset + 1</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span>//         s.line++</span>
+ func (s *Scanner) next() {
+ 	if !s.reachEOF() {
+ 		if s.peek() == '\n' {
+ 			s.lineHead = s.offset + 1
+ 			s.line++
+ 		}
+ 		s.offset++
+ 	}
+ }
+
+ // current returns the current offset.
+<span class="pl-mi1"><span class="pl-mi1">+</span>// 获取当前的游标</span>
+ func (s *Scanner) current() int {
+ 	return s.offset
+ }
+
+ // offset sets the offset value.
+<span class="pl-mi1"><span class="pl-mi1">+</span>// 设置当前游标</span>
+ func (s *Scanner) set(o int) {
+ 	s.offset = o
+ }
+
+ // back moves back offset once to top.
+<span class="pl-mi1"><span class="pl-mi1">+</span>// 游标后移一位</span>
+ func (s *Scanner) back() {
+ 	s.offset--
+ }
+
+ // reachEOF returns true if offset is at end-of-file.
+<span class="pl-mi1"><span class="pl-mi1">+</span>// 是否达到文件末尾：offset &gt;= len</span>
+ func (s *Scanner) reachEOF() bool {
+ 	return len(s.src) &lt;= s.offset
+ }
+
+ // pos returns the position of current.
+<span class="pl-mi1"><span class="pl-mi1">+</span>// 返回当前位置的 ast.Position，</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span>// Line：s.line + 1</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span>// Column： s.offset - s.lineHead + 1</span>
+ func (s *Scanner) pos() ast.Position {
+ 	return ast.Position{Line: s.line + 1, Column: s.offset - s.lineHead + 1}
+ }
+
+ // skipBlank moves position into non-black character.
+<span class="pl-mi1"><span class="pl-mi1">+</span>// 跳过blank：空字符，\t,\n</span>
+ func (s *Scanner) skipBlank() {
+ 	for isBlank(s.peek()) {
+ 		s.next()
+ 	}
+ }
+
+ // scanIdentifier returns identifier beginning at current position.
+<span class="pl-mi1"><span class="pl-mi1">+</span>// 返回从当前位置开始的，字母和数字的最长串</span>
+ func (s *Scanner) scanIdentifier() (string, error) {
+ 	var ret []rune
+ 	for {
+ 		if !isLetter(s.peek()) &amp;&amp; !isDigit(s.peek()) {
+ 			break
+ 		}
+ 		ret = append(ret, s.peek())
+ 		s.next()
+ 	}
+ 	return string(ret), nil
+ }
+
+ // scanNumber returns number beginning at current position.
+<span class="pl-mi1"><span class="pl-mi1">+</span>// 返回当前位置开始的数字</span>
+ func (s *Scanner) scanNumber() (string, error) {
+ 	var ret []rune
+ 	ch := s.peek()
+ 	ret = append(ret, ch)
+ 	s.next()
+ 	if ch == '0' &amp;&amp; s.peek() == 'x' {
+ 		ret = append(ret, s.peek())
+ 		s.next()
+ 		for isHex(s.peek()) {
+ 			ret = append(ret, s.peek())
+ 			s.next()
+ 		}
+ 	} else {
+ 		for isDigit(s.peek()) || s.peek() == '.' {
+ 			ret = append(ret, s.peek())
+ 			s.next()
+ 		}
+ 		if s.peek() == 'e' {
+ 			ret = append(ret, s.peek())
+ 			s.next()
+ 			if isDigit(s.peek()) || s.peek() == '+' || s.peek() == '-' {
+ 				ret = append(ret, s.peek())
+ 				s.next()
+ 				for isDigit(s.peek()) || s.peek() == '.' {
+ 					ret = append(ret, s.peek())
+ 					s.next()
+ 				}
+ 			}
+ 			for isDigit(s.peek()) || s.peek() == '.' {
+ 				ret = append(ret, s.peek())
+ 				s.next()
+ 			}
+ 		}
+ 		if isLetter(s.peek()) {
+ 			return "", errors.New("identifier starts immediately after numeric literal")
+ 		}
+ 	}
+ 	return string(ret), nil
+ }
+
+ // scanRawString returns raw-string starting at current position.
+<span class="pl-mi1"><span class="pl-mi1">+</span>// row-string，返回 当前位置开始的，` 之前的</span>
+ func (s *Scanner) scanRawString() (string, error) {
+ 	var ret []rune
+ 	for {
+ 		s.next()
+ 		if s.peek() == EOF {
+ 			return "", errors.New("unexpected EOF")
+ 		}
+ 		if s.peek() == '`' {
+ 			s.next()
+ 			break
+ 		}
+ 		ret = append(ret, s.peek())
+ 	}
+ 	return string(ret), nil
+ }
+
+ // scanString returns string starting at current position.
+ // This handles backslash escaping.
+<span class="pl-mi1"><span class="pl-mi1">+</span>// 扫描，直到遇到某一个字符，比如scanString('"'),就会返回当前位置开始的，"之前的字符串</span>
+ func (s *Scanner) scanString(l rune) (string, error) {
+ 	var ret []rune
+ eos:
+ 	for {
+ 		s.next()
+ 		switch s.peek() {
+ 		case EOL:
+ 			return "", errors.New("unexpected EOL")
+ 		case EOF:
+ 			return "", errors.New("unexpected EOF")
+ 		case l:
+ 			s.next()
+ 			break eos
+ 		case '\\':
+ 			s.next()
+ 			switch s.peek() {
+ 			case 'b':
+ 				ret = append(ret, '\b')
+ 				continue
+ 			case 'f':
+ 				ret = append(ret, '\f')
+ 				continue
+ 			case 'r':
+ 				ret = append(ret, '\r')
+ 				continue
+ 			case 'n':
+ 				ret = append(ret, '\n')
+ 				continue
+ 			case 't':
+ 				ret = append(ret, '\t')
+ 				continue
+ 			}
+ 			ret = append(ret, s.peek())
+ 			continue
+ 		default:
+ 			ret = append(ret, s.peek())
+ 		}
+ 	}
+ 	return string(ret), nil
+ }
+
+ // Lexer provides interface to parse codes.
+ type Lexer struct {
+ 	s     *Scanner
+ 	lit   string
+ 	pos   ast.Position
+ 	e     error
+ 	stmts []ast.Stmt
+ }
+
+ // Lex scans the token and literals.
+<span class="pl-mi1"><span class="pl-mi1">+</span>// 这个实现了xx接口，会被用来解析各个部分</span>
+ func (l *Lexer) Lex(lval *yySymType) int {
+<span class="pl-mi1"><span class="pl-mi1">+</span>	// 扫描一次</span>
+ 	tok, lit, pos, err := l.s.Scan()
+ 	if err != nil {
+ 		l.e = &amp;Error{Message: err.Error(), Pos: pos, Fatal: true}
+ 	}
+ 	lval.tok = ast.Token{Tok: tok, Lit: lit}
+ 	lval.tok.SetPosition(pos)
+ 	l.lit = lit
+ 	l.pos = pos
+ 	return tok
+ }
+
+ // Error sets parse error.
+ func (l *Lexer) Error(msg string) {
+ 	l.e = &amp;Error{Message: msg, Pos: l.pos, Fatal: false}
+ }
+
+ // Parse provides way to parse the code using Scanner.
+ func Parse(s *Scanner) ([]ast.Stmt, error) {
+ 	l := Lexer{s: s}
+ 	if yyParse(&amp;l) != 0 {
+ 		return nil, l.e
+ 	}
+<span class="pl-mi1"><span class="pl-mi1">+</span></span>
+ 	return l.stmts, l.e
+ }
+
+ // EnableErrorVerbose enabled verbose errors from the parser
+<span class="pl-mi1"><span class="pl-mi1">+</span>// 打开详细错误信息</span>
+ func EnableErrorVerbose() {
+ 	yyErrorVerbose = true
+ }
+
+ // ParseSrc provides way to parse the code from source.
+<span class="pl-mi1"><span class="pl-mi1">+</span>// 解析的入口</span>
+ func ParseSrc(src string) ([]ast.Stmt, error) {
+<span class="pl-mi1"><span class="pl-mi1">+</span>	// new一个Scanner</span>
+ 	scanner := &amp;Scanner{
+ 		src: []rune(src),
+ 	}
+<span class="pl-md"><span class="pl-md">-</span>	return Parse(scanner)</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span>	b, err := Parse(scanner)</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span>	return b, err</span>
+ }
+</pre></div>
+
+
+</div>
+
+</body>
+</html>
