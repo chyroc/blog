@@ -1,0 +1,199 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>Token、认证与授权 - Chyroc的博客</title>
+<meta property="og:title" content="blog.chyroc.cn" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Chyroc的博客" />
+<meta property="og:description" content="Chyroc的博客" />
+<link rel="canonical" href="blog.chyroc.cn" />
+<meta property="og:url" content="blog.chyroc.cn" />
+<meta property="og:site_name" content="blog.chyroc.cn" />
+<script type="application/ld+json">
+{"name":"blog.chyroc.cn","description":"Chyroc的博客","author":"Chyroc","@type":"WebSite","url":"blog.chyroc.cn","image":null,"publisher":null,"headline":"blog.chyroc.cn","dateModified":null,"datePublished":null,"sameAs":null,"mainEntityOfPage":null,"@context":"http://schema.org"}</script>
+
+
+<link href="http://blog.chyroc.cn/assets/css/style.css" rel="stylesheet">
+</head>
+<body>
+<div class="container-lg px-3 my-5 markdown-body">
+
+<h1>
+<a id="user-content-token认证与授权" class="anchor" href="#token%E8%AE%A4%E8%AF%81%E4%B8%8E%E6%8E%88%E6%9D%83" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Token、认证与授权</h1>
+<blockquote>
+<p>这篇文章是我在公司内部分享的paper（去掉了敏感信息之后），在这里贴一下~</p>
+</blockquote>
+<ul>
+<li>什么是认证和授权</li>
+<li>有哪些方式</li>
+<li>我们是怎么设计的</li>
+</ul>
+<hr>
+<h1>
+<a id="user-content-认证和授权" class="anchor" href="#%E8%AE%A4%E8%AF%81%E5%92%8C%E6%8E%88%E6%9D%83" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>认证和授权</h1>
+<table>
+<thead>
+<tr>
+<th>认证 <em>authentication</em>
+</th>
+<th>授权 <em>authorization</em>
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><del>X</del></td>
+<td><del>√</del></td>
+</tr>
+<tr>
+<td>X</td>
+<td>X</td>
+</tr>
+<tr>
+<td>√</td>
+<td>X</td>
+</tr>
+<tr>
+<td>√</td>
+<td>√</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>公开的数据/可以匿名访问的</li>
+<li>验证有效的user</li>
+<li>需要ACL系统验证</li>
+</ul>
+<hr>
+<h1>
+<a id="user-content-有哪些方式" class="anchor" href="#%E6%9C%89%E5%93%AA%E4%BA%9B%E6%96%B9%E5%BC%8F" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>有哪些方式</h1>
+<ul>
+<li>Cookie与Session</li>
+<li>Basic Auth</li>
+<li>JWT</li>
+<li>OAuth2</li>
+</ul>
+<hr>
+<h2>
+<a id="user-content-cookie与session" class="anchor" href="#cookie%E4%B8%8Esession" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Cookie与Session</h2>
+<ul>
+<li>Cookie：键值对；Set-Cookie</li>
+<li>Session：浏览器存储cookie，包含session-id；服务端验证session-id有效性，并获取user信息</li>
+<li>优点：简单</li>
+<li>缺点
+<ul>
+<li>对非浏览器端不友好</li>
+<li>CSRF：Cross Site Request Forgery，跨站请求伪造
+<a href="https://camo.githubusercontent.com/b7df7e125d2cb1b38500c8dcbb4bbb497fc8c6a6/68747470733a2f2f64326d787565667165616137736a2e636c6f756466726f6e742e6e65742f735f304339313334433041454636344643373238353746434142423644434141363541443938413343464632413144383138454538444332394430413546363534415f313532323832353132343738375f696d6167652e706e67" target="_blank" rel="nofollow"><img src="https://camo.githubusercontent.com/b7df7e125d2cb1b38500c8dcbb4bbb497fc8c6a6/68747470733a2f2f64326d787565667165616137736a2e636c6f756466726f6e742e6e65742f735f304339313334433041454636344643373238353746434142423644434141363541443938413343464632413144383138454538444332394430413546363534415f313532323832353132343738375f696d6167652e706e67" alt="" data-canonical-src="https://d2mxuefqeaa7sj.cloudfront.net/s_0C9134C0AEF64FC72857FCABB6DCAA65AD98A3CFF2A1D818EE8DC29D0A5F654A_1522825124787_image.png" style="max-width:100%;"></a>
+</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2>
+<a id="user-content-basic-auth" class="anchor" href="#basic-auth" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Basic Auth</h2>
+<ul>
+<li>Header: <code>Authorization: "Basic " + base64(username:password)</code>
+</li>
+<li>优点：简单</li>
+<li>缺点
+<ul>
+<li>明文传输用户名和密码</li>
+<li>无法提供更多有效信息，只有用户名</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2>
+<a id="user-content-jwt" class="anchor" href="#jwt" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>JWT</h2>
+<ul>
+<li>JWT：JSON Web Token</li>
+<li>由三段构成：header、payload、signature，三段都进行base64编码，由”.”连接起来
+<ul>
+<li>header：类型与摘要算法（{'typ': 'JWT','alg': 'HS256'}），指示其余部分如何解析与生成</li>
+<li>payload：Issuer/Audience/Expiration Time/Issued At，任何需要的业务信息</li>
+<li>signature：使用第一段的签名算法对前两段的数据进行签名</li>
+</ul>
+</li>
+<li>保证有效性：第三段信息对前两段信息进行摘要，保证前两段信息没有被篡改</li>
+<li>摘要算法可以是对称的，也可以是非对称的</li>
+</ul>
+<hr>
+<ul>
+<li>优点
+<ul>
+<li>不需要中心服务器，可以独立的验证有效性（非对称）</li>
+<li>不需要服务器存储</li>
+</ul>
+</li>
+<li>缺点
+<ul>
+<li>无法主动失效已经签发的jwt token</li>
+<li>过期需要重新登录</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2>
+<a id="user-content-oauth2" class="anchor" href="#oauth2" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>OAuth2</h2>
+<ul>
+<li>两种：access_token和refresh_token（optional）</li>
+<li>签发与验证、刷新</li>
+<li>与OAuth1对比
+<ul>
+<li>新增了refresh_token（optional）</li>
+<li>access_token 变短</li>
+<li>使用更简单</li>
+</ul>
+</li>
+</ul>
+<hr>
+<ul>
+<li>优点
+<ul>
+<li>使access_token有效期变短，access_token的泄露造成的危害性有时间限制</li>
+<li>可刷新，token过期的时候，不需要重新登录</li>
+</ul>
+</li>
+<li>缺点
+<ul>
+<li>refresh_token提高了客户端操作的复杂性</li>
+<li>客户端刷新操作复杂</li>
+</ul>
+</li>
+<li>access_token是否在服务端存储memory/redis/mysql？</li>
+</ul>
+<hr>
+<p><strong>时序图</strong></p>
+<p><a href="https://camo.githubusercontent.com/26232a6c961cac83bbb3d41b69acd47d42293205/68747470733a2f2f64326d787565667165616137736a2e636c6f756466726f6e742e6e65742f735f304339313334433041454636344643373238353746434142423644434141363541443938413343464632413144383138454538444332394430413546363534415f313532323831313431373739385f696d6167652e706e67" target="_blank" rel="nofollow"><img src="https://camo.githubusercontent.com/26232a6c961cac83bbb3d41b69acd47d42293205/68747470733a2f2f64326d787565667165616137736a2e636c6f756466726f6e742e6e65742f735f304339313334433041454636344643373238353746434142423644434141363541443938413343464632413144383138454538444332394430413546363534415f313532323831313431373739385f696d6167652e706e67" alt="" data-canonical-src="https://d2mxuefqeaa7sj.cloudfront.net/s_0C9134C0AEF64FC72857FCABB6DCAA65AD98A3CFF2A1D818EE8DC29D0A5F654A_1522811417798_image.png" style="max-width:100%;"></a></p>
+<hr>
+<p><strong>第三方授权时序图</strong></p>
+<p><a href="https://camo.githubusercontent.com/2a1dcb6a374234d40e2ab30fee130282c81e3cce/68747470733a2f2f64326d787565667165616137736a2e636c6f756466726f6e742e6e65742f735f304339313334433041454636344643373238353746434142423644434141363541443938413343464632413144383138454538444332394430413546363534415f313532323831373133363138375f696d6167652e706e67" target="_blank" rel="nofollow"><img src="https://camo.githubusercontent.com/2a1dcb6a374234d40e2ab30fee130282c81e3cce/68747470733a2f2f64326d787565667165616137736a2e636c6f756466726f6e742e6e65742f735f304339313334433041454636344643373238353746434142423644434141363541443938413343464632413144383138454538444332394430413546363534415f313532323831373133363138375f696d6167652e706e67" alt="" data-canonical-src="https://d2mxuefqeaa7sj.cloudfront.net/s_0C9134C0AEF64FC72857FCABB6DCAA65AD98A3CFF2A1D818EE8DC29D0A5F654A_1522817136187_image.png" style="max-width:100%;"></a></p>
+<hr>
+<h2>
+<a id="user-content--我们是怎么设计的" class="anchor" href="#-%E6%88%91%E4%BB%AC%E6%98%AF%E6%80%8E%E4%B9%88%E8%AE%BE%E8%AE%A1%E7%9A%84" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><del># 我们是怎么设计的</del>
+</h2>
+<h1>
+<a id="user-content-安全性" class="anchor" href="#%E5%AE%89%E5%85%A8%E6%80%A7" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>安全性</h1>
+<ul>
+<li>HTTPS</li>
+<li>弱口令/暴力破解</li>
+<li>二次验证  Two-factor Authentication</li>
+</ul>
+<hr>
+<h1>
+<a id="user-content-q--a" class="anchor" href="#q--a" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Q &amp; A</h1>
+<hr>
+<h1>
+<a id="user-content-谢谢大家" class="anchor" href="#%E8%B0%A2%E8%B0%A2%E5%A4%A7%E5%AE%B6" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>谢谢大家</h1>
+<hr>
+
+
+</div>
+
+</body>
+</html>
