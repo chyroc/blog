@@ -1,5 +1,6 @@
 {
     "name": "Chyroc的博客",
+    "scheme": "https",
     "host": "blog.chyroc.cn",
     "author": "Chyroc",
     "notes": [
