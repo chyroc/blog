@@ -1,0 +1,23 @@
+baseURL = "https://blog.chyroc.cn"
+languageCode = "zh-cn"
+title = "Chyroc的博客"
+theme = "xmin"
+
+[permalinks]
+    post = "/post/:year/:month/:day/:slug/"
+    note = "/note/:year/:month/:day/:slug/"
+
+[[menu.main]]
+    name = "主页"
+    url = "/"
+    weight = 1
+[[menu.main]]
+    name = "关于我"
+    url = "/about/"
+    weight = 2
+[[menu.main]]
+    name = "友链"
+    url = "/blogroll/"
+
+[params]
+    footer = "&copy; [Chyroc](https://chyroc.cn) [Theme By xmin](https://xmin.yihui.name/) 2018"

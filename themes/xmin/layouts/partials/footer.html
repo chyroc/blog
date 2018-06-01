@@ -1,0 +1,30 @@
+  <footer>
+  {{ partial "foot_custom.html" . }}
+  {{ with .Site.Params.footer }}
+  <hr/>
+  {{ . | markdownify }}
+  {{ end }}
+  <span id="reading-statistics"/><span>
+  </footer>
+
+{{ if (ne .Slug "") }}
+<div id="git-comments"></div>
+<link rel="stylesheet" href="https://imsun.github.io/gitment/style/default.css">
+<script src="https://imsun.github.io/gitment/dist/gitment.browser.js"></script>
+<script>
+  var gitment = new Gitment({
+    id: '{{ .Slug }}',
+    owner: 'Chyroc',
+    repo: 'chyroc.github.io',
+    oauth: {
+      client_id: '36628d87f0ace3c0f34c',
+      client_secret: '814e29f878a31ddf2a0f8f010c2bc3615750a998',
+    }
+  })
+  gitment.render('git-comments')
+</script>
+{{ end }}
+
+  </body>
+
+</html>
