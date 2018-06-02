@@ -12,12 +12,13 @@ theme = "xmin"
     url = "/"
     weight = 1
 [[menu.main]]
-    name = "关于我"
-    url = "/about/"
-    weight = 2
-[[menu.main]]
     name = "友链"
     url = "/blogroll/"
+    weight = 2
+[[menu.main]]
+    name = "关于"
+    url = "/about/"
+    weight = 3
 
 [params]
     footer = "&copy; [Chyroc](https://chyroc.cn) [Theme By xmin](https://xmin.yihui.name/) 2018"
