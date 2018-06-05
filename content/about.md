@@ -4,6 +4,7 @@ slug: about
 ---
 
 ## 关于我
+<wb:follow-button uid="3165377692" type="red_1" width="67" height="24" ></wb:follow-button>
 
 本科专业是飞行器动力工程，因缘际会开始写代码。
 
@@ -14,6 +15,7 @@ slug: about
 
 <script src="//cdn.jsdelivr.net/github-cards/latest/widget.js"></script>
 <script src="https://laike9m.github.io/zhihu-card/dist/widget.js"></script>
+<script src="http://tjs.sjs.sinajs.cn/open/api/js/wb.js" type="text/javascript" charset="utf-8"></script>
 
 ## 关于本博客
 
