@@ -24,3 +24,7 @@ slug: about
 * 基于Issue的博客评论系统：[gitment](https://github.com/imsun/gitment)
 * 知乎账户卡片：[zhihu-card](https://github.com/laike9m/zhihu-card)
 * GitHub账户卡片：[github-cards](https://github.com/lepture/github-cards)
+
+## 支持我
+
+我的BTC地址：19NA8sDf5ZR9VUFBBaTvyVurCYCpXZLhBy
