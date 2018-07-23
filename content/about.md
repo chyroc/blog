@@ -17,6 +17,16 @@ slug: about
 <script src="https://laike9m.github.io/zhihu-card/dist/widget.js"></script>
 <script src="http://tjs.sjs.sinajs.cn/open/api/js/wb.js" type="text/javascript" charset="utf-8"></script>
 
+## 写的代码
+
+* [个人项目和开源贡献统计](https://github.com/Chyroc/contribute)
+* [基于搜狗微信搜索的微信公众号爬虫接口](https://github.com/Chyroc/WechatSogou)
+* [展示在leetcode上做题的进度的徽标 / Show the progress badge on the leetcode](https://github.com/Chyroc/leetcode)
+* [access phpmyadmin from cli / 通过shell操作phpmyadmin](https://github.com/Chyroc/phpmyadmin-cli)
+* [list self github contribution / 开源项目贡献统计工具](https://github.com/Chyroc/github-contribution)
+* [用golang实现的简单web路由框架](https://github.com/Chyroc/gor)
+* [pics to gif / 照片转gif动图](https://github.com/Chyroc/pics-to-gif)
+
 ## 关于本博客
 
 * 博客的生成管理：[hugo](https://github.com/gohugoio/hugo)
