@@ -8,3 +8,16 @@ content/.Ulysses-favorites.plist
 content/posts/.Ulysses-Group.plist
 node_modules/
 repo/
+sitemap.xsl
+browserconfig.xml
+robots.txt
+safari-pinned-tab.svg
+aescbc.pem
+content/aescbc.pem
+favicon.ico
+manifest.json
+*.png
+img/
+dist/
+lib/
+page/
