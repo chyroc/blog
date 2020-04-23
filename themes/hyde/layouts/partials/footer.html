@@ -1,0 +1,42 @@
+
+<script async src="//cdn.bootcss.com/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script src="../../js/jquery-3.3.1.min.js"></script>
+<script src="../../js/code.js"></script>
+<script src="../../css/highlight.css"></script>
+
+<script src="../../js/instantclick.min.js" data-no-instant></script>
+<script data-no-instant>InstantClick.init();</script>
+
+<script>
+hljs.configure({languages: []});
+hljs.initHighlightingOnLoad();
+</script>
+
+
+  {{ with .Site.Params.footer }}
+  <hr/>
+  {{ . | markdownify }}
+  {{ end }}
+  <span id="reading-statistics"/><span>
+
+  
+{{ if (ne .Slug "") }}
+<div id="git-comments"></div>
+<link rel="stylesheet" href="https://imsun.github.io/gitment/style/default.css">
+<script src="https://imsun.github.io/gitment/dist/gitment.browser.js"></script>
+<script>
+  var gitment = new Gitment({
+    id: '{{ .Slug }}',
+    title: '{{ .Title }}',
+    owner: 'Chyroc',
+    repo: 'chyroc.github.io',
+    oauth: {
+      client_id: '36628d87f0ace3c0f34c',
+      client_secret: '814e29f878a31ddf2a0f8f010c2bc3615750a998',
+    }
+  })
+  gitment.render('git-comments')
+</script>
+{{ end }}
+
+
