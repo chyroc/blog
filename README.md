@@ -16,14 +16,12 @@ see [https://chyroc.cn](https://chyroc.cn)
 hugo version
 ```
 
-- 预览
+- 本地预览
 
 ```shell
 hugo server
 ```
 
-- 编译
+- 编译部署
 
-```shell
-( cd src && hugo && mv ./public/ ../docs )
-```
+通过 github 自动部署到 `gh-pages` 分支
