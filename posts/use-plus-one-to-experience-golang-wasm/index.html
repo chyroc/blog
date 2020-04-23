@@ -1,0 +1,71 @@
+<!doctype html><html xmlns=http://www.w3.org/1999/xhtml xml:lang=zh-cn lang=zh-cn><head><link href=https://gmpg.org/xfn/11 rel=profile><meta charset=utf-8><meta name=generator content="Hugo 0.68.3"><meta name=viewport content="width=device-width,initial-scale=1"><title>使用加 1 项目体验 golang 的 wasm &#183; Chyroc的博客</title><meta name=description content><link type=text/css rel=stylesheet href=https://chyroc.cn/css/print.css media=print><link type=text/css rel=stylesheet href=https://chyroc.cn/css/poole.css><link type=text/css rel=stylesheet href=https://chyroc.cn/css/syntax.css><link type=text/css rel=stylesheet href=https://chyroc.cn/css/hyde.css><link rel=stylesheet href="https://fonts.googleapis.com/css?family=Abril+Fatface|PT+Sans:400,400i,700"><link rel=apple-touch-icon-precomposed sizes=144x144 href=/apple-touch-icon-144-precomposed.png><link rel="shortcut icon" href=/favicon.png></head><body class=theme-base-08><aside class=sidebar><div class="container sidebar-sticky"><div class=sidebar-about><a href=https://chyroc.cn><h1>Chyroc的博客</h1></a><p class=lead></p></div><nav><ul class=sidebar-nav><li><a href=https://chyroc.cn>Home</a></li><li><a href=/>主页</a></li><li><a href=/blogroll/>友链</a></li><li><a href=/about/>关于</a></li></ul></nav></div></aside><main class="content container"><div class=post><h1>使用加 1 项目体验 golang 的 wasm</h1><time datetime=2018-06-20T17:45:48+0800 class=post-date>2018-06-20 17:45:48</time><h2 id=什么是-webassembly>什么是 WebAssembly</h2><p>WebAssembly（以下简称 wasm）是一种新的编码方式，可以在现代的网络浏览器中运行。啥意思，就是除了 JavaScript（以下简称 js），还有一种语言可以在浏览器里面运行了！</p><p>对于网络平台而言，WebAssembly 具有巨大的意义——它提供了一条途径，以使得以各种语言编写的代码都可以以接近原生的速度在 Web 中运行。在这种情况下，以前无法以此方式运行的客户端软件都将可以运行在 Web 中。</p><h2 id=编译支持-wasm-的-go>编译支持 wasm 的 go</h2><p>golang 的 release 版本（1.10）还不支持 wasm，但是在 github.com/golang/go 的 master 分支中已经包含 wasm 了，所以我们需要自己编译一个 go。</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash>git clone http://github.com/golang/go /path/go
+cd /path/go/src
+./make.bash
+</code></pre></div><p><code>/path/go/bin/</code>目录下会生成编译后的 go：<code>/path/go/bin/go</code></p><p>设置<code>GOROOT</code>为<code>/path/go/</code></p><h2 id=创建自己的-wasm-程序>创建自己的 wasm 程序</h2><p>参见项目：https://github.com/Chyroc/golang-wasm-example</p><h3 id=indexhtml>index.html</h3><p><code>index.html</code>引入了<code>wasm_exec.js</code>（这个是从<code>/path/go/misc/wasm/wasm_exec.js</code>复制来过的）和加载 wasm 的 js（这个参见参见<a href=https://developer.mozilla.org/zh-CN/docs/WebAssembly/Loading_and_running#%E4%BD%BF%E7%94%A8Fetch>文档</a>），总之这样我们的 wasm 就已经加载到我们的网页了</p><p>最后有一个显示数字的 span 块，和两个+和-的 button，我们待会写的 wasm 代码就是操作这个 span 块的</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-html data-lang=html>&lt;<span style=color:#f92672>html</span>&gt;
+&lt;<span style=color:#f92672>head</span>&gt;
+    &lt;<span style=color:#f92672>title</span>&gt;加1减1&lt;/<span style=color:#f92672>title</span>&gt;
+    &lt;<span style=color:#f92672>script</span> <span style=color:#a6e22e>src</span><span style=color:#f92672>=</span><span style=color:#e6db74>&#34;wasm_exec.js&#34;</span>&gt;&lt;/<span style=color:#f92672>script</span>&gt;
+    &lt;<span style=color:#f92672>script</span> <span style=color:#a6e22e>type</span><span style=color:#f92672>=</span><span style=color:#e6db74>&#34;text/javascript&#34;</span>&gt;
+        <span style=color:#66d9ef>function</span> <span style=color:#a6e22e>fetchAndInstantiate</span>(<span style=color:#a6e22e>url</span>, <span style=color:#a6e22e>importObject</span>) {
+            <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>fetch</span>(<span style=color:#a6e22e>url</span>).<span style=color:#a6e22e>then</span>(<span style=color:#a6e22e>response</span> =&gt;
+                    <span style=color:#a6e22e>response</span>.<span style=color:#a6e22e>arrayBuffer</span>()
+            ).<span style=color:#a6e22e>then</span>(<span style=color:#a6e22e>bytes</span> =&gt;
+                    <span style=color:#a6e22e>WebAssembly</span>.<span style=color:#a6e22e>instantiate</span>(<span style=color:#a6e22e>bytes</span>, <span style=color:#a6e22e>importObject</span>)
+            ).<span style=color:#a6e22e>then</span>(<span style=color:#a6e22e>results</span> =&gt;
+                    <span style=color:#a6e22e>results</span>.<span style=color:#a6e22e>instance</span>
+            );
+        }
+
+        <span style=color:#66d9ef>var</span> <span style=color:#a6e22e>go</span> <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> <span style=color:#a6e22e>Go</span>();
+        <span style=color:#66d9ef>var</span> <span style=color:#a6e22e>mod</span> <span style=color:#f92672>=</span> <span style=color:#a6e22e>fetchAndInstantiate</span>(<span style=color:#e6db74>&#34;./example.wasm&#34;</span>, <span style=color:#a6e22e>go</span>.<span style=color:#a6e22e>importObject</span>);
+        window.<span style=color:#a6e22e>onload</span> <span style=color:#f92672>=</span> <span style=color:#66d9ef>function</span> () {
+            <span style=color:#a6e22e>mod</span>.<span style=color:#a6e22e>then</span>(<span style=color:#66d9ef>function</span> (<span style=color:#a6e22e>instance</span>) {
+                <span style=color:#a6e22e>go</span>.<span style=color:#a6e22e>run</span>(<span style=color:#a6e22e>instance</span>);
+            });
+        };
+    &lt;/<span style=color:#f92672>script</span>&gt;
+&lt;/<span style=color:#f92672>head</span>&gt;
+&lt;<span style=color:#f92672>body</span>&gt;
+&lt;<span style=color:#f92672>br</span>&gt;
+&lt;<span style=color:#f92672>div</span>&gt;加1减1&lt;/<span style=color:#f92672>div</span>&gt;
+&lt;<span style=color:#f92672>br</span>&gt;
+&lt;<span style=color:#f92672>button</span> <span style=color:#a6e22e>id</span><span style=color:#f92672>=</span><span style=color:#e6db74>&#34;minus&#34;</span> <span style=color:#a6e22e>type</span><span style=color:#f92672>=</span><span style=color:#e6db74>&#34;button&#34;</span> <span style=color:#a6e22e>disabled</span><span style=color:#f92672>=</span><span style=color:#e6db74>true</span>&gt;-&lt;/<span style=color:#f92672>button</span>&gt;
+&lt;<span style=color:#f92672>span</span> <span style=color:#a6e22e>id</span><span style=color:#f92672>=</span><span style=color:#e6db74>&#34;number&#34;</span>&gt;0&lt;/<span style=color:#f92672>span</span>&gt;
+&lt;<span style=color:#f92672>button</span> <span style=color:#a6e22e>id</span><span style=color:#f92672>=</span><span style=color:#e6db74>&#34;plus&#34;</span> <span style=color:#a6e22e>type</span><span style=color:#f92672>=</span><span style=color:#e6db74>&#34;button&#34;</span> <span style=color:#a6e22e>disabled</span><span style=color:#f92672>=</span><span style=color:#e6db74>true</span>&gt;+&lt;/<span style=color:#f92672>button</span>&gt;
+&lt;/<span style=color:#f92672>body</span>&gt;
+&lt;/<span style=color:#f92672>html</span>&gt;
+</code></pre></div><h3 id=wasmgo>wasm.go</h3><p>第一行有 build tag：<code>// +build js,wasm</code>表示<code>GOARCH</code>是<code>wasm</code>，<code>GOOS</code>是<code>js</code></p><p>然后<code>syscall/js</code>包提供了操作网页的接口：</p><p><code>js.Global.Get("document").Call("getElementById", "number")</code>这几行获取到刚刚<code>index.html</code>中最后一个按钮和 span 块</p><p>全局变量<code>number</code>是我们最后操作的数字</p><p>然后对+和-按钮添加事件监听，监听到按了+，就将<code>number</code>加 1；监听到按了-，就将<code>number</code>减 1；并渲染 span 块。</p><p><code>plus.Set("disabled", false)</code>这两句会在页面 wasm 加载后将+和-按钮 disable 状态去掉，变成可点击状态</p><p>最后使用<code>select{}</code>阻塞 go 程序不退出</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#75715e>// +build js,wasm
+</span><span style=color:#75715e></span>
+<span style=color:#f92672>package</span> <span style=color:#a6e22e>main</span>
+
+<span style=color:#f92672>import</span> (
+	<span style=color:#e6db74>&#34;syscall/js&#34;</span>
+	<span style=color:#e6db74>&#34;strconv&#34;</span>
+)
+
+<span style=color:#66d9ef>func</span> <span style=color:#a6e22e>main</span>() {
+	<span style=color:#66d9ef>var</span> <span style=color:#a6e22e>numberDoc</span> = <span style=color:#a6e22e>js</span>.<span style=color:#a6e22e>Global</span>.<span style=color:#a6e22e>Get</span>(<span style=color:#e6db74>&#34;document&#34;</span>).<span style=color:#a6e22e>Call</span>(<span style=color:#e6db74>&#34;getElementById&#34;</span>, <span style=color:#e6db74>&#34;number&#34;</span>)
+	<span style=color:#66d9ef>var</span> <span style=color:#a6e22e>plus</span> = <span style=color:#a6e22e>js</span>.<span style=color:#a6e22e>Global</span>.<span style=color:#a6e22e>Get</span>(<span style=color:#e6db74>&#34;document&#34;</span>).<span style=color:#a6e22e>Call</span>(<span style=color:#e6db74>&#34;getElementById&#34;</span>, <span style=color:#e6db74>&#34;plus&#34;</span>)
+	<span style=color:#66d9ef>var</span> <span style=color:#a6e22e>minus</span> = <span style=color:#a6e22e>js</span>.<span style=color:#a6e22e>Global</span>.<span style=color:#a6e22e>Get</span>(<span style=color:#e6db74>&#34;document&#34;</span>).<span style=color:#a6e22e>Call</span>(<span style=color:#e6db74>&#34;getElementById&#34;</span>, <span style=color:#e6db74>&#34;minus&#34;</span>)
+	<span style=color:#66d9ef>var</span> <span style=color:#a6e22e>number</span> <span style=color:#66d9ef>int</span>
+
+	<span style=color:#a6e22e>plus</span>.<span style=color:#a6e22e>Call</span>(<span style=color:#e6db74>&#34;addEventListener&#34;</span>, <span style=color:#e6db74>&#34;click&#34;</span>, <span style=color:#a6e22e>js</span>.<span style=color:#a6e22e>NewCallback</span>(<span style=color:#66d9ef>func</span>(<span style=color:#a6e22e>args</span> []<span style=color:#a6e22e>js</span>.<span style=color:#a6e22e>Value</span>) {
+		println(<span style=color:#e6db74>&#34;press +&#34;</span>)
+		<span style=color:#a6e22e>number</span><span style=color:#f92672>++</span>
+		<span style=color:#a6e22e>numberDoc</span>.<span style=color:#a6e22e>Set</span>(<span style=color:#e6db74>&#34;innerHTML&#34;</span>, <span style=color:#a6e22e>strconv</span>.<span style=color:#a6e22e>Itoa</span>(<span style=color:#a6e22e>number</span>))
+	}))
+
+	<span style=color:#a6e22e>minus</span>.<span style=color:#a6e22e>Call</span>(<span style=color:#e6db74>&#34;addEventListener&#34;</span>, <span style=color:#e6db74>&#34;click&#34;</span>, <span style=color:#a6e22e>js</span>.<span style=color:#a6e22e>NewCallback</span>(<span style=color:#66d9ef>func</span>(<span style=color:#a6e22e>args</span> []<span style=color:#a6e22e>js</span>.<span style=color:#a6e22e>Value</span>) {
+		<span style=color:#a6e22e>number</span><span style=color:#f92672>--</span>
+		<span style=color:#a6e22e>numberDoc</span>.<span style=color:#a6e22e>Set</span>(<span style=color:#e6db74>&#34;innerHTML&#34;</span>, <span style=color:#a6e22e>strconv</span>.<span style=color:#a6e22e>Itoa</span>(<span style=color:#a6e22e>number</span>))
+		println(<span style=color:#e6db74>&#34;press -&#34;</span>)
+	}))
+
+	<span style=color:#a6e22e>plus</span>.<span style=color:#a6e22e>Set</span>(<span style=color:#e6db74>&#34;disabled&#34;</span>, <span style=color:#66d9ef>false</span>)
+	<span style=color:#a6e22e>minus</span>.<span style=color:#a6e22e>Set</span>(<span style=color:#e6db74>&#34;disabled&#34;</span>, <span style=color:#66d9ef>false</span>)
+
+	<span style=color:#66d9ef>select</span> {}
+}
+</code></pre></div><p>程序效果请访问：https://blog.chyroc.cn/golang-wasm-example/ 体验</p><h2 id=参考>参考</h2><ul><li><a href=https://blog.gopheracademy.com/advent-2017/go-wasm/>https://blog.gopheracademy.com/advent-2017/go-wasm/</a></li><li><a href=https://github.com/neelance/go/issues/29>https://github.com/neelance/go/issues/29</a></li><li><a href=https://blog.csdn.net/garfielder007/article/details/68215694>https://blog.csdn.net/garfielder007/article/details/68215694</a></li></ul></div><script async src="//cdn.bootcss.com/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML"></script><script src=../../js/jquery-3.3.1.min.js></script><script src=../../js/code.js></script><script src=../../css/highlight.css></script><script src=../../js/instantclick.min.js data-no-instant></script><script data-no-instant>InstantClick.init();</script><script>hljs.configure({languages:[]});hljs.initHighlightingOnLoad();</script><hr>© <a href=https://chyroc.cn>chyroc</a> <a href=https://github.com/spf13/hyde>Theme By hyde</a> 2020
+<span id=reading-statistics><span><div id=git-comments></div><link rel=stylesheet href=https://imsun.github.io/gitment/style/default.css><script src=https://imsun.github.io/gitment/dist/gitment.browser.js></script><script>var gitment=new Gitment({id:'use-plus-one-to-experience-golang-wasm',title:'使用加 1 项目体验 golang 的 wasm',owner:'chyroc',repo:'blog',oauth:{client_id:'36628d87f0ace3c0f34c',client_secret:'814e29f878a31ddf2a0f8f010c2bc3615750a998',}})
+gitment.render('git-comments')</script></main></body></html>

@@ -1,0 +1,457 @@
+<!doctype html><html xmlns=http://www.w3.org/1999/xhtml xml:lang=zh-cn lang=zh-cn><head><link href=https://gmpg.org/xfn/11 rel=profile><meta charset=utf-8><meta name=generator content="Hugo 0.68.3"><meta name=viewport content="width=device-width,initial-scale=1"><title>gopkg.in/validator.v2 源码阅读 &#183; Chyroc的博客</title><meta name=description content><link type=text/css rel=stylesheet href=https://chyroc.cn/css/print.css media=print><link type=text/css rel=stylesheet href=https://chyroc.cn/css/poole.css><link type=text/css rel=stylesheet href=https://chyroc.cn/css/syntax.css><link type=text/css rel=stylesheet href=https://chyroc.cn/css/hyde.css><link rel=stylesheet href="https://fonts.googleapis.com/css?family=Abril+Fatface|PT+Sans:400,400i,700"><link rel=apple-touch-icon-precomposed sizes=144x144 href=/apple-touch-icon-144-precomposed.png><link rel="shortcut icon" href=/favicon.png></head><body class=theme-base-08><aside class=sidebar><div class="container sidebar-sticky"><div class=sidebar-about><a href=https://chyroc.cn><h1>Chyroc的博客</h1></a><p class=lead></p></div><nav><ul class=sidebar-nav><li><a href=https://chyroc.cn>Home</a></li><li><a href=/>主页</a></li><li><a href=/blogroll/>友链</a></li><li><a href=/about/>关于</a></li></ul></nav></div></aside><main class="content container"><div class=post><h1>gopkg.in/validator.v2 源码阅读</h1><time datetime=2018-05-18T08:00:00+0800 class=post-date>2018-05-18 08:00:00</time><h2 id=说明>说明</h2><p>本篇文章是 go 的验证器 <code>gopkg.in/validator.v2</code> 的阅读笔记，源码地址是 <a href=https://github.com/go-validator/validator>https://github.com/go-validator/validator</a> 。</p><h2 id=这个包怎么用的>这个包怎么用的</h2><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#66d9ef>type</span> <span style=color:#a6e22e>NewUserRequest</span> <span style=color:#66d9ef>struct</span> {
+	<span style=color:#a6e22e>Username</span> <span style=color:#66d9ef>string</span> <span style=color:#e6db74>`validate:&#34;min=3,max=40,regexp=^[a-zA-Z]*$&#34;`</span>
+	<span style=color:#a6e22e>Name</span> <span style=color:#66d9ef>string</span>     <span style=color:#e6db74>`validate:&#34;nonzero&#34;`</span>
+	<span style=color:#a6e22e>Age</span> <span style=color:#66d9ef>int</span>         <span style=color:#e6db74>`validate:&#34;min=21&#34;`</span>
+	<span style=color:#a6e22e>Password</span> <span style=color:#66d9ef>string</span> <span style=color:#e6db74>`validate:&#34;min=8&#34;`</span>
+}
+
+<span style=color:#a6e22e>nur</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>NewUserRequest</span>{<span style=color:#a6e22e>Username</span>: <span style=color:#e6db74>&#34;something&#34;</span>, <span style=color:#a6e22e>Age</span>: <span style=color:#ae81ff>20</span>}
+<span style=color:#66d9ef>if</span> <span style=color:#a6e22e>errs</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>validator</span>.<span style=color:#a6e22e>Validate</span>(<span style=color:#a6e22e>nur</span>); <span style=color:#a6e22e>errs</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>nil</span> {
+	<span style=color:#75715e>// values not valid, deal with errors here
+</span><span style=color:#75715e></span>}
+</code></pre></div><p>使用<code>validate</code>作为 tag 的名字，然后以逗号分隔验证逻辑，然后对于这样的 struct 值，调用<code>validator.Validate(nur)</code>验证</p><p>本包有 6 个内置的验证函数，并且可以手动添加自定义的验证函数，具体有哪些我们待会再代码详解的时候再说。</p><p>总之，我们在定义 struct 的时候可以使用<code>validate</code>作为 tag 的名字添加一些验证规则，然后使用<code>validator.Validate(nur)</code>验证数据是否满足我们定义的规则，如果不满足的话，就会返回 err</p><h2 id=里面的逻辑是啥>里面的逻辑是啥</h2><p>显然第一步就是，使用<code>reflect</code>将每个 field 的 tag 取出来，我们规定你必须使用 validate 作为 tag 的名字，这样我们就能拿到规则了</p><p>然后我们规定多个规则使用逗号分隔，这样我们就可以对于一个 field，可以拿到一组规则了（可以是 0 个，1 个，任意多个）</p><p>接下来就是遍历获取到的规则，执行当前规则对于当前值的校验，很显然，这里有这几个因素：field 的值 + 规则</p><p>在本包里面，他把规则解释为一个函数，所以还需要有函数的参数（这里脑洞开大一点：其实不仅仅可以是函数，可以自定义语言？但是成本太大：开发成本和用户学习成本；同一个 field 的不同规则之间可以相互作用？）</p><p>ok，所以现在一个规则有这么几个因素：field 值 + 规则函数 + 规则参数</p><p>那接下来就很好办了，就是调用这个给定的规则函数，参数是 field 值 + 给定的规则参数，看看合不合法，也就是返回一个 error</p><p>甚至我们到这里已经可以猜出规则函数的函数签名了：<code>func(v interface{}, param string) error</code>，第一个参数是 field 值，第二个参数是规则参数</p><h2 id=具体代码详解>具体代码详解</h2><h3 id=1-遍历>1 遍历</h3><p>使用包的入口是 <code>validator.Validate</code>，也就是<code>func (mv *Validator) Validate(v interface{}) error</code></p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#a6e22e>sv</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>reflect</span>.<span style=color:#a6e22e>ValueOf</span>(<span style=color:#a6e22e>v</span>)
+<span style=color:#a6e22e>st</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>reflect</span>.<span style=color:#a6e22e>TypeOf</span>(<span style=color:#a6e22e>v</span>)
+</code></pre></div><p>这个方法里面使用<code>reflect</code>包遍历<code>reflect.Type.NumField()</code>，然后使用<code>reflect.Type.Field(i).Tag</code>获得了各个 field 的 tag</p><p>当然在处理反射的时候，有一些注意事项：</p><p>对于 reflect.Value.Kind() 为指针的处理方式，递归 .Elem().Interface()</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#66d9ef>if</span> <span style=color:#a6e22e>sv</span>.<span style=color:#a6e22e>Kind</span>() <span style=color:#f92672>==</span> <span style=color:#a6e22e>reflect</span>.<span style=color:#a6e22e>Ptr</span> <span style=color:#f92672>&amp;&amp;</span> !<span style=color:#a6e22e>sv</span>.<span style=color:#a6e22e>IsNil</span>() {
+	<span style=color:#66d9ef>return</span> <span style=color:#a6e22e>mv</span>.<span style=color:#a6e22e>Validate</span>(<span style=color:#a6e22e>sv</span>.<span style=color:#a6e22e>Elem</span>().<span style=color:#a6e22e>Interface</span>()) <span style=color:#75715e>// 递归
+</span><span style=color:#75715e></span>}
+</code></pre></div><p>并且这里的验证只支持结构体：</p><p>reflect.Value.Kind() 需要是 reflect.Struct 或者 reflect.Interface</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#66d9ef>if</span> <span style=color:#a6e22e>sv</span>.<span style=color:#a6e22e>Kind</span>() <span style=color:#f92672>!=</span> <span style=color:#a6e22e>reflect</span>.<span style=color:#a6e22e>Struct</span> <span style=color:#f92672>&amp;&amp;</span> <span style=color:#a6e22e>sv</span>.<span style=color:#a6e22e>Kind</span>() <span style=color:#f92672>!=</span> <span style=color:#a6e22e>reflect</span>.<span style=color:#a6e22e>Interface</span> {
+	<span style=color:#66d9ef>return</span> <span style=color:#a6e22e>ErrUnsupported</span>
+}
+</code></pre></div><p>ok，然后接下来就是遍历所有的 field 进行验证了，所有的验证规则都没有返回 err，那么就返回 nil</p><h3 id=2-每个-field-的处理>2 每个 field 的处理</h3><p>首先，只支持 exported 的字段：</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#66d9ef>if</span> !<span style=color:#a6e22e>unicode</span>.<span style=color:#a6e22e>IsUpper</span>(rune(<span style=color:#a6e22e>st</span>.<span style=color:#a6e22e>Field</span>(<span style=color:#a6e22e>i</span>).<span style=color:#a6e22e>Name</span>[<span style=color:#ae81ff>0</span>])) {
+	<span style=color:#66d9ef>continue</span>
+}
+</code></pre></div><p>处理 field 仍然是指针：</p><p>对于 reflect.Value.Field(i).Kind() 为指针的处理方式，一直取 .Elem()</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#a6e22e>f</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>sv</span>.<span style=color:#a6e22e>Field</span>(<span style=color:#a6e22e>i</span>)
+<span style=color:#66d9ef>for</span> <span style=color:#a6e22e>f</span>.<span style=color:#a6e22e>Kind</span>() <span style=color:#f92672>==</span> <span style=color:#a6e22e>reflect</span>.<span style=color:#a6e22e>Ptr</span> <span style=color:#f92672>&amp;&amp;</span> !<span style=color:#a6e22e>f</span>.<span style=color:#a6e22e>IsNil</span>() {
+	<span style=color:#a6e22e>f</span> = <span style=color:#a6e22e>f</span>.<span style=color:#a6e22e>Elem</span>()
+}
+</code></pre></div><p>然后获取 tag 的值（其实这里我认为应该用 lookup）</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#a6e22e>tag</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>st</span>.<span style=color:#a6e22e>Field</span>(<span style=color:#a6e22e>i</span>).<span style=color:#a6e22e>Tag</span>.<span style=color:#a6e22e>Get</span>(<span style=color:#a6e22e>mv</span>.<span style=color:#a6e22e>tagName</span>)
+</code></pre></div><p>跳过 -</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#66d9ef>if</span> <span style=color:#a6e22e>tag</span> <span style=color:#f92672>==</span> <span style=color:#e6db74>&#34;-&#34;</span> {
+	<span style=color:#66d9ef>continue</span>
+}
+</code></pre></div><p>然后用规则去验证，代码： <code>err := mv.Valid(f.Interface(), tag)</code></p><p>然后验证 TODO，代码 <code>mv.deepValidateCollection(f, fname, m)</code></p><p>结束，返回 err 或者 nil</p><h3 id=3-处理每个-tag-不为空的-field>3 处理每个 tag 不为空的 field</h3><p>调用<code>func (mv *Validator) Valid(val interface{}, tags string)</code></p><p>这个函数是干嘛的呢：这个函数的第一个参数不要求是 struct 了，根据提供的 tag 进行验证</p><p>跳过 -</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#a6e22e>v</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>reflect</span>.<span style=color:#a6e22e>ValueOf</span>(<span style=color:#a6e22e>val</span>)
+</code></pre></div><p>处理指针：对于 reflect.Value.Kind() 为指针的处理方式，递归 .Elem().Interface()</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#66d9ef>if</span> <span style=color:#a6e22e>v</span>.<span style=color:#a6e22e>Kind</span>() <span style=color:#f92672>==</span> <span style=color:#a6e22e>reflect</span>.<span style=color:#a6e22e>Ptr</span> <span style=color:#f92672>&amp;&amp;</span> !<span style=color:#a6e22e>v</span>.<span style=color:#a6e22e>IsNil</span>() {
+	<span style=color:#66d9ef>return</span> <span style=color:#a6e22e>mv</span>.<span style=color:#a6e22e>Valid</span>(<span style=color:#a6e22e>v</span>.<span style=color:#a6e22e>Elem</span>().<span style=color:#a6e22e>Interface</span>(), <span style=color:#a6e22e>tags</span>)
+}
+</code></pre></div><p>然后调用<code>func (mv *Validator) validateVar(v interface{}, tag string) error</code>处理</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#66d9ef>switch</span> <span style=color:#a6e22e>v</span>.<span style=color:#a6e22e>Kind</span>() {
+<span style=color:#66d9ef>case</span> <span style=color:#a6e22e>reflect</span>.<span style=color:#a6e22e>Invalid</span>:
+	<span style=color:#a6e22e>err</span> = <span style=color:#a6e22e>mv</span>.<span style=color:#a6e22e>validateVar</span>(<span style=color:#66d9ef>nil</span>, <span style=color:#a6e22e>tags</span>)
+<span style=color:#66d9ef>default</span>:
+	<span style=color:#a6e22e>err</span> = <span style=color:#a6e22e>mv</span>.<span style=color:#a6e22e>validateVar</span>(<span style=color:#a6e22e>val</span>, <span style=color:#a6e22e>tags</span>)
+}
+</code></pre></div><p>在 validateVar 中：首先将 tag 解析为 n 个规则（每个规则包括函数，函数名称，参数），然后遍历调用这些规则</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#66d9ef>for</span> <span style=color:#a6e22e>_</span>, <span style=color:#a6e22e>t</span> <span style=color:#f92672>:=</span> <span style=color:#66d9ef>range</span> <span style=color:#a6e22e>tags</span> {
+	<span style=color:#66d9ef>if</span> <span style=color:#a6e22e>err</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>t</span>.<span style=color:#a6e22e>Fn</span>(<span style=color:#a6e22e>v</span>, <span style=color:#a6e22e>t</span>.<span style=color:#a6e22e>Param</span>); <span style=color:#a6e22e>err</span> <span style=color:#f92672>!=</span> <span style=color:#66d9ef>nil</span> {
+		<span style=color:#a6e22e>errs</span> = append(<span style=color:#a6e22e>errs</span>, <span style=color:#a6e22e>err</span>)
+	}
+}
+</code></pre></div><h3 id=4-处理所有的-field>4 处理所有的 field</h3><p>调用<code>func (mv *Validator) deepValidateCollection(f reflect.Value, fname string, m ErrorMap)</code></p><p>刚刚处理了所有 tag 不为空的 field，但是还需要处理所有的 field，比如 <code>[]AxxxStruct</code>这个 field 的 tag 就是空，但是他里面的<code>AxxxStruct</code>的 tag 不为空</p><p>这个方法的最后一个参数一个 err 的 map，以在递归的过程中拿到所有的 error</p><p>在这个函数里面，需要处理三种情形：</p><h4 id=41-structinterfaceptr>4.1 struct，interface，ptr</h4><p>调用<code>func (mv *Validator) Validate(v interface{}) error</code>，已经在上面讲过了，就是入口函数</p><p>相当于：struct 的 struct 的 struct，递归调用 Validate 去处理</p><h4 id=42-arrayslice>4.2 array，slice</h4><p>对于每个元素递归调用 deepValidateCollection</p><h4 id=43-map>4.3 map</h4><p>对于 key 和 map 递归调用 deepValidateCollection</p><h2 id=代码详解注释>代码详解注释</h2><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-diff data-lang=diff>diff --git validator.go validator.go
+index a23f3ee..d1ed91c 100644
+<span style=color:#f92672>--- validator.go
+</span><span style=color:#f92672></span><span style=color:#a6e22e>+++ validator.go
+</span><span style=color:#a6e22e></span><span style=color:#75715e>@@ -1,369 +1,401 @@
+</span><span style=color:#75715e></span> // Package validator implements value validations
+ //
+ // Copyright 2014 Roberto Teixeira &lt;robteix@robteix.com&gt;
+ //
+ // Licensed under the Apache License, Version 2.0 (the &#34;License&#34;);
+ // you may not use this file except in compliance with the License.
+ // You may obtain a copy of the License at
+ //
+ //    http://www.apache.org/licenses/LICENSE-2.0
+ //
+ // Unless required by applicable law or agreed to in writing, software
+ // distributed under the License is distributed on an &#34;AS IS&#34; BASIS,
+ // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ // See the License for the specific language governing permissions and
+ // limitations under the License.
+
+ package validator
+
+ import (
+        &#34;errors&#34;
+        &#34;fmt&#34;
+        &#34;reflect&#34;
+        &#34;regexp&#34;
+        &#34;strings&#34;
+        &#34;unicode&#34;
+ )
+
+ // TextErr is an error that also implements the TextMarshaller interface for
+ // serializing out to various plain text encodings. Packages creating their
+ // own custom errors should use TextErr if they&#39;re intending to use serializing
+ // formats like json, msgpack etc.
+ type TextErr struct {
+        Err error
+ }
+
+ // Error implements the error interface.
+ func (t TextErr) Error() string {
+        return t.Err.Error()
+ }
+
+ // MarshalText implements the TextMarshaller
+ func (t TextErr) MarshalText() ([]byte, error) {
+        return []byte(t.Err.Error()), nil
+ }
+
+ var (
+        // ErrZeroValue is the error returned when variable has zero valud
+        // and nonzero was specified
+        ErrZeroValue = TextErr{errors.New(&#34;zero value&#34;)}
+        // ErrMin is the error returned when variable is less than mininum
+        // value specified
+        ErrMin = TextErr{errors.New(&#34;less than min&#34;)}
+        // ErrMax is the error returned when variable is more than
+        // maximum specified
+        ErrMax = TextErr{errors.New(&#34;greater than max&#34;)}
+        // ErrLen is the error returned when length is not equal to
+        // param specified
+        ErrLen = TextErr{errors.New(&#34;invalid length&#34;)}
+        // ErrRegexp is the error returned when the value does not
+        // match the provided regular expression parameter
+        ErrRegexp = TextErr{errors.New(&#34;regular expression mismatch&#34;)}
+        // ErrUnsupported is the error error returned when a validation rule
+        // is used with an unsupported variable type
+        ErrUnsupported = TextErr{errors.New(&#34;unsupported type&#34;)}
+        // ErrBadParameter is the error returned when an invalid parameter
+        // is provided to a validation rule (e.g. a string where an int was
+        // expected (max=foo,len=bar) or missing a parameter when one is required (len=))
+        ErrBadParameter = TextErr{errors.New(&#34;bad parameter&#34;)}
+        // ErrUnknownTag is the error returned when an unknown tag is found
+        ErrUnknownTag = TextErr{errors.New(&#34;unknown tag&#34;)}
+        // ErrInvalid is the error returned when variable is invalid
+        // (normally a nil pointer)
+        ErrInvalid = TextErr{errors.New(&#34;invalid value&#34;)}
+ )
+
+ // ErrorMap is a map which contains all errors from validating a struct.
+ type ErrorMap map[string]ErrorArray
+
+ // ErrorMap implements the Error interface so we can check error against nil.
+ // The returned error is if existent the first error which was added to the map.
+ func (err ErrorMap) Error() string {
+        for k, errs := range err {
+                if len(errs) &gt; 0 {
+                        return fmt.Sprintf(&#34;%s: %s&#34;, k, errs.Error())
+                }
+        }
+
+        return &#34;&#34;
+ }
+
+ // ErrorArray is a slice of errors returned by the Validate function.
+ type ErrorArray []error
+
+ // ErrorArray implements the Error interface and returns the first error as
+ // string if existent.
+ func (err ErrorArray) Error() string {
+        if len(err) &gt; 0 {
+                return err[0].Error()
+        }
+        return &#34;&#34;
+ }
+
+<span style=color:#a6e22e>+// 上面自定义了三个error： TextErr ErrorMap ErrorArray
+</span><span style=color:#a6e22e>+
+</span><span style=color:#a6e22e></span> // ValidationFunc is a function that receives the value of a
+ // field and a parameter used for the respective validation tag.
+ type ValidationFunc func(v interface{}, param string) error
+
+ // Validator implements a validator
+ type Validator struct {
+        // Tag name being used.
+<span style=color:#a6e22e>+       // 取field的哪个tag去验证，默认是validate
+</span><span style=color:#a6e22e></span>        tagName string
+        // validationFuncs is a map of ValidationFuncs indexed
+        // by their name.
+<span style=color:#a6e22e>+       // 验证函数
+</span><span style=color:#a6e22e></span>        validationFuncs map[string]ValidationFunc
+ }
+
+ // Helper validator so users can use the
+ // functions directly from the package
+<span style=color:#a6e22e>+// 默认验证器，tag是validate，验证函数有内置的5个：nonzero len min max regexp
+</span><span style=color:#a6e22e></span> var defaultValidator = NewValidator()
+
+ // NewValidator creates a new Validator
+ func NewValidator() *Validator {
+        return &amp;Validator{
+                tagName: &#34;validate&#34;,
+                validationFuncs: map[string]ValidationFunc{
+                        &#34;nonzero&#34;: nonzero,
+                        &#34;len&#34;:     length,
+                        &#34;min&#34;:     min,
+                        &#34;max&#34;:     max,
+                        &#34;regexp&#34;:  regex,
+                },
+        }
+ }
+
+ // SetTag allows you to change the tag name used in structs
+<span style=color:#a6e22e>+// 切换验证所使用的tag
+</span><span style=color:#a6e22e></span> func SetTag(tag string) {
+        defaultValidator.SetTag(tag)
+ }
+
+ // SetTag allows you to change the tag name used in structs
+ func (mv *Validator) SetTag(tag string) {
+        mv.tagName = tag
+ }
+
+ // WithTag creates a new Validator with the new tag name. It is
+ // useful to chain-call with Validate so we don&#39;t change the tag
+ // name permanently: validator.WithTag(&#34;foo&#34;).Validate(t)
+<span style=color:#a6e22e>+// 和SetTag一样，是链式调用，并且不会改变原来的验证器的tag值
+</span><span style=color:#a6e22e></span> func WithTag(tag string) *Validator {
+        return defaultValidator.WithTag(tag)
+ }
+
+ // WithTag creates a new Validator with the new tag name. It is
+ // useful to chain-call with Validate so we don&#39;t change the tag
+ // name permanently: validator.WithTag(&#34;foo&#34;).Validate(t)
+ func (mv *Validator) WithTag(tag string) *Validator {
+        v := mv.copy()
+        v.SetTag(tag)
+        return v
+ }
+
+ // Copy a validator
+<span style=color:#a6e22e>+// 克隆验证器
+</span><span style=color:#a6e22e></span> func (mv *Validator) copy() *Validator {
+        newFuncs := map[string]ValidationFunc{}
+        for k, f := range mv.validationFuncs {
+                newFuncs[k] = f
+        }
+        return &amp;Validator{
+                tagName:         mv.tagName,
+                validationFuncs: newFuncs,
+        }
+ }
+
+ // SetValidationFunc sets the function to be used for a given
+ // validation constraint. Calling this function with nil vf
+ // is the same as removing the constraint function from the list.
+<span style=color:#a6e22e>+// 添加自定义的验证函数，或者删除某一个验证函数（函数为nil的情况）
+</span><span style=color:#a6e22e></span> func SetValidationFunc(name string, vf ValidationFunc) error {
+        return defaultValidator.SetValidationFunc(name, vf)
+ }
+
+ // SetValidationFunc sets the function to be used for a given
+ // validation constraint. Calling this function with nil vf
+ // is the same as removing the constraint function from the list.
+ func (mv *Validator) SetValidationFunc(name string, vf ValidationFunc) error {
+        if name == &#34;&#34; {
+                return errors.New(&#34;name cannot be empty&#34;)
+        }
+        if vf == nil {
+                delete(mv.validationFuncs, name)
+                return nil
+        }
+        mv.validationFuncs[name] = vf
+        return nil
+ }
+
+ // Validate validates the fields of a struct based
+ // on &#39;validator&#39; tags and returns errors found indexed
+ // by the field name.
+<span style=color:#a6e22e>+//
+</span><span style=color:#a6e22e>+// 基于 validator 的tag对struct进行校验
+</span><span style=color:#a6e22e></span> func Validate(v interface{}) error {
+        return defaultValidator.Validate(v)
+ }
+
+ // Validate validates the fields of a struct based
+ // on &#39;validator&#39; tags and returns errors found indexed
+ // by the field name.
+ func (mv *Validator) Validate(v interface{}) error {
+        sv := reflect.ValueOf(v)
+        st := reflect.TypeOf(v)
+<span style=color:#a6e22e>+
+</span><span style=color:#a6e22e>+       // 对于 reflect.Value.Kind() 为指针的处理方式，递归 .Elem().Interface()
+</span><span style=color:#a6e22e></span>        if sv.Kind() == reflect.Ptr &amp;&amp; !sv.IsNil() {
+                return mv.Validate(sv.Elem().Interface())
+        }
+<span style=color:#a6e22e>+
+</span><span style=color:#a6e22e>+       // reflect.Value.Kind() 需要是 reflect.Struct 或者 reflect.Interface
+</span><span style=color:#a6e22e></span>        if sv.Kind() != reflect.Struct &amp;&amp; sv.Kind() != reflect.Interface {
+                return ErrUnsupported
+        }
+
+<span style=color:#f92672>-       nfields := sv.NumField()
+</span><span style=color:#f92672></span>        m := make(ErrorMap)
+<span style=color:#f92672>-       for i := 0; i &lt; nfields; i++ {
+</span><span style=color:#f92672></span><span style=color:#a6e22e>+       // 遍历 field
+</span><span style=color:#a6e22e>+       // reflect.Type.NumField()
+</span><span style=color:#a6e22e>+       for i := 0; i &lt; sv.NumField(); i++ {
+</span><span style=color:#a6e22e>+               // reflect.Type.Field(i)
+</span><span style=color:#a6e22e>+               //                      .Name
+</span><span style=color:#a6e22e></span>                fname := st.Field(i).Name
+                if !unicode.IsUpper(rune(fname[0])) {
+<span style=color:#a6e22e>+                       // 只处理exported的field
+</span><span style=color:#a6e22e></span>                        continue
+                }
+
+<span style=color:#a6e22e>+               // 对于 reflect.Value.Field(i).Kind() 为指针的处理方式，一直取 .Elem()
+</span><span style=color:#a6e22e></span>                f := sv.Field(i)
+<span style=color:#f92672>-               // deal with pointers
+</span><span style=color:#f92672></span>                for f.Kind() == reflect.Ptr &amp;&amp; !f.IsNil() {
+                        f = f.Elem()
+                }
+<span style=color:#a6e22e>+               // 获取tag： reflect.Type.Field(i).Tag.Get(name)
+</span><span style=color:#a6e22e></span>                tag := st.Field(i).Tag.Get(mv.tagName)
+                if tag == &#34;-&#34; {
+<span style=color:#a6e22e>+                       // 跳过 `-`
+</span><span style=color:#a6e22e></span>                        continue
+                }
+                var errs ErrorArray
+
+<span style=color:#a6e22e>+               // 处理tag不为空的
+</span><span style=color:#a6e22e></span>                if tag != &#34;&#34; {
+<span style=color:#a6e22e>+                       // reflect.Value.Field(i).Interface() 对应的field的值 ，以及tag的名字，使用.Valid进行校验
+</span><span style=color:#a6e22e></span>                        err := mv.Valid(f.Interface(), tag)
+                        if errors, ok := err.(ErrorArray); ok {
+                                errs = errors
+                        } else {
+                                if err != nil {
+                                        errs = ErrorArray{err}
+                                }
+                        }
+                }
+
+<span style=color:#a6e22e>+               // TODO
+</span><span style=color:#a6e22e></span>                mv.deepValidateCollection(f, fname, m) // no-op if field is not a struct, interface, array, slice or map
+
+                if len(errs) &gt; 0 {
+                        m[st.Field(i).Name] = errs
+                }
+        }
+
+        if len(m) &gt; 0 {
+                return m
+        }
+        return nil
+ }
+
+ func (mv *Validator) deepValidateCollection(f reflect.Value, fname string, m ErrorMap) {
+        switch f.Kind() {
+        case reflect.Struct, reflect.Interface, reflect.Ptr:
+<span style=color:#a6e22e>+               // struct的struct的struct，递归调用Validate去处理
+</span><span style=color:#a6e22e></span>                e := mv.Validate(f.Interface())
+                if e, ok := e.(ErrorMap); ok &amp;&amp; len(e) &gt; 0 {
+                        for j, k := range e {
+                                m[fname+&#34;.&#34;+j] = k
+                        }
+                }
+        case reflect.Array, reflect.Slice:
+<span style=color:#a6e22e>+               // 对于每个元素递归调用deepValidateCollection
+</span><span style=color:#a6e22e></span>                for i := 0; i &lt; f.Len(); i++ {
+                        mv.deepValidateCollection(f.Index(i), fmt.Sprintf(&#34;%s[%d]&#34;, fname, i), m)
+                }
+        case reflect.Map:
+<span style=color:#a6e22e>+               // 对于key和map递归调用deepValidateCollection
+</span><span style=color:#a6e22e></span>                for _, key := range f.MapKeys() {
+                        mv.deepValidateCollection(key, fmt.Sprintf(&#34;%s[%+v](key)&#34;, fname, key.Interface()), m) // validate the map key
+                        value := f.MapIndex(key)
+                        mv.deepValidateCollection(value, fmt.Sprintf(&#34;%s[%+v](value)&#34;, fname, key.Interface()), m)
+                }
+        }
+ }
+
+ // Valid validates a value based on the provided
+ // tags and returns errors found or nil.
+<span style=color:#a6e22e>+// 这个验证的范围更大，可以在所有类型上验证，并且可以指定tag的值
+</span><span style=color:#a6e22e></span> func Valid(val interface{}, tags string) error {
+        return defaultValidator.Valid(val, tags)
+ }
+
+ // Valid validates a value based on the provided
+ // tags and returns errors found or nil.
+ func (mv *Validator) Valid(val interface{}, tags string) error {
+        if tags == &#34;-&#34; {
+<span style=color:#a6e22e>+               // 跳过 -
+</span><span style=color:#a6e22e></span>                return nil
+        }
+        v := reflect.ValueOf(val)
+<span style=color:#a6e22e>+       // 对于 reflect.Value.Kind() 为指针的处理方式，递归 .Elem().Interface()
+</span><span style=color:#a6e22e></span>        if v.Kind() == reflect.Ptr &amp;&amp; !v.IsNil() {
+                return mv.Valid(v.Elem().Interface(), tags)
+        }
+        var err error
+        switch v.Kind() {
+        case reflect.Invalid:
+                err = mv.validateVar(nil, tags)
+        default:
+                err = mv.validateVar(val, tags)
+        }
+        return err
+ }
+
+ // validateVar validates one single variable
+ func (mv *Validator) validateVar(v interface{}, tag string) error {
+        tags, err := mv.parseTags(tag)
+        if err != nil {
+                // unknown tag found, give up.
+                return err
+        }
+        errs := make(ErrorArray, 0, len(tags))
+        for _, t := range tags {
+                if err := t.Fn(v, t.Param); err != nil {
+                        errs = append(errs, err)
+                }
+        }
+        if len(errs) &gt; 0 {
+                return errs
+        }
+        return nil
+ }
+
+ // tag represents one of the tag items
+<span style=color:#a6e22e>+// 一个tag计算式，有名字，函数，参数
+</span><span style=color:#a6e22e></span> type tag struct {
+        Name  string         // name of the tag
+        Fn    ValidationFunc // validation function to call
+        Param string         // parameter to send to the validation function
+ }
+
+ // separate by no escaped commas
+ var sepPattern *regexp.Regexp = regexp.MustCompile(`((?:^|[^\\])(?:\\\\)*),`)
+
+ func splitUnescapedComma(str string) []string {
+        ret := []string{}
+        indexes := sepPattern.FindAllStringIndex(str, -1)
+        last := 0
+        for _, is := range indexes {
+                ret = append(ret, str[last:is[1]-1])
+                last = is[1]
+        }
+        ret = append(ret, str[last:])
+        return ret
+ }
+
+ // parseTags parses all individual tags found within a struct tag.
+ func (mv *Validator) parseTags(t string) ([]tag, error) {
+        tl := splitUnescapedComma(t)
+<span style=color:#a6e22e>+       fmt.Printf(&#34;tl %v\n&#34;, tl)
+</span><span style=color:#a6e22e></span>        tags := make([]tag, 0, len(tl))
+        for _, i := range tl {
+                i = strings.Replace(i, `\,`, &#34;,&#34;, -1)
+                tg := tag{}
+                v := strings.SplitN(i, &#34;=&#34;, 2)
+                tg.Name = strings.Trim(v[0], &#34; &#34;)
+                if tg.Name == &#34;&#34; {
+                        return []tag{}, ErrUnknownTag
+                }
+                if len(v) &gt; 1 {
+                        tg.Param = strings.Trim(v[1], &#34; &#34;)
+                }
+                var found bool
+                if tg.Fn, found = mv.validationFuncs[tg.Name]; !found {
+                        return []tag{}, ErrUnknownTag
+                }
+                tags = append(tags, tg)
+
+        }
+        return tags, nil
+ }
+</code></pre></div></div><script async src="//cdn.bootcss.com/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML"></script><script src=../../js/jquery-3.3.1.min.js></script><script src=../../js/code.js></script><script src=../../css/highlight.css></script><script src=../../js/instantclick.min.js data-no-instant></script><script data-no-instant>InstantClick.init();</script><script>hljs.configure({languages:[]});hljs.initHighlightingOnLoad();</script><hr>© <a href=https://chyroc.cn>chyroc</a> <a href=https://github.com/spf13/hyde>Theme By hyde</a> 2020
+<span id=reading-statistics><span><div id=git-comments></div><link rel=stylesheet href=https://imsun.github.io/gitment/style/default.css><script src=https://imsun.github.io/gitment/dist/gitment.browser.js></script><script>var gitment=new Gitment({id:'source-validator-v2',title:'gopkg.in\/validator.v2 源码阅读',owner:'chyroc',repo:'blog',oauth:{client_id:'36628d87f0ace3c0f34c',client_secret:'814e29f878a31ddf2a0f8f010c2bc3615750a998',}})
+gitment.render('git-comments')</script></main></body></html>

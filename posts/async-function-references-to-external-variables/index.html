@@ -1,0 +1,56 @@
+<!doctype html><html xmlns=http://www.w3.org/1999/xhtml xml:lang=zh-cn lang=zh-cn><head><link href=https://gmpg.org/xfn/11 rel=profile><meta charset=utf-8><meta name=generator content="Hugo 0.68.3"><meta name=viewport content="width=device-width,initial-scale=1"><title>异步与函数引用外部变量的问题 &#183; Chyroc的博客</title><meta name=description content><link type=text/css rel=stylesheet href=https://chyroc.cn/css/print.css media=print><link type=text/css rel=stylesheet href=https://chyroc.cn/css/poole.css><link type=text/css rel=stylesheet href=https://chyroc.cn/css/syntax.css><link type=text/css rel=stylesheet href=https://chyroc.cn/css/hyde.css><link rel=stylesheet href="https://fonts.googleapis.com/css?family=Abril+Fatface|PT+Sans:400,400i,700"><link rel=apple-touch-icon-precomposed sizes=144x144 href=/apple-touch-icon-144-precomposed.png><link rel="shortcut icon" href=/favicon.png></head><body class=theme-base-08><aside class=sidebar><div class="container sidebar-sticky"><div class=sidebar-about><a href=https://chyroc.cn><h1>Chyroc的博客</h1></a><p class=lead></p></div><nav><ul class=sidebar-nav><li><a href=https://chyroc.cn>Home</a></li><li><a href=/>主页</a></li><li><a href=/blogroll/>友链</a></li><li><a href=/about/>关于</a></li></ul></nav></div></aside><main class="content container"><div class=post><h1>异步与函数引用外部变量的问题</h1><time datetime=2017-12-13T16:27:56+0800 class=post-date>2017-12-13 16:27:56</time><p>原因就是因为是异步的，循环会首先执行结束，再去执行函数</p><p>如果循环次数比较少的话，那么函数所引用的外部变量就会变成最后一个值，在函数<code>f1</code>中，就是全部是<code>c</code></p><p>所以可以想象的是，如果循环特别多的话，那么会有一部分函数引用的变量是一样的，结果就是输出很多个 x，再输出很多个 x+1&mldr;，如函数<code>f3</code></p><p>解决这个问题的方法就是，不要在函数内部直接引用外部变量，而是显式的传递参数，如函数<code>f2</code></p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#f92672>package</span> <span style=color:#a6e22e>main</span>
+
+<span style=color:#f92672>import</span> (
+	<span style=color:#e6db74>&#34;fmt&#34;</span>
+	<span style=color:#e6db74>&#34;sync&#34;</span>
+)
+
+<span style=color:#66d9ef>func</span> <span style=color:#a6e22e>f1</span>() {
+	<span style=color:#a6e22e>wg</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>sync</span>.<span style=color:#a6e22e>WaitGroup</span>{}
+	<span style=color:#a6e22e>wg</span>.<span style=color:#a6e22e>Add</span>(<span style=color:#ae81ff>3</span>)
+
+	<span style=color:#a6e22e>s</span> <span style=color:#f92672>:=</span> []<span style=color:#66d9ef>string</span>{<span style=color:#e6db74>&#34;a&#34;</span>, <span style=color:#e6db74>&#34;b&#34;</span>, <span style=color:#e6db74>&#34;c&#34;</span>}
+	<span style=color:#66d9ef>for</span> <span style=color:#a6e22e>_</span>, <span style=color:#a6e22e>i</span> <span style=color:#f92672>:=</span> <span style=color:#66d9ef>range</span> <span style=color:#a6e22e>s</span> {
+		<span style=color:#66d9ef>go</span> <span style=color:#66d9ef>func</span>() {
+			<span style=color:#a6e22e>fmt</span>.<span style=color:#a6e22e>Printf</span>(<span style=color:#e6db74>&#34;%s\n&#34;</span>, <span style=color:#a6e22e>i</span>) <span style=color:#75715e>// &lt;--- 打印的都是c，也就是打印了3个c
+</span><span style=color:#75715e></span>			<span style=color:#a6e22e>wg</span>.<span style=color:#a6e22e>Done</span>()
+		}()
+	}
+
+	<span style=color:#a6e22e>wg</span>.<span style=color:#a6e22e>Wait</span>()
+}
+
+<span style=color:#66d9ef>func</span> <span style=color:#a6e22e>f2</span>() {
+	<span style=color:#a6e22e>wg</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>sync</span>.<span style=color:#a6e22e>WaitGroup</span>{}
+	<span style=color:#a6e22e>wg</span>.<span style=color:#a6e22e>Add</span>(<span style=color:#ae81ff>3</span>)
+
+	<span style=color:#a6e22e>s</span> <span style=color:#f92672>:=</span> []<span style=color:#66d9ef>string</span>{<span style=color:#e6db74>&#34;a&#34;</span>, <span style=color:#e6db74>&#34;b&#34;</span>, <span style=color:#e6db74>&#34;c&#34;</span>}
+	<span style=color:#66d9ef>for</span> <span style=color:#a6e22e>_</span>, <span style=color:#a6e22e>i</span> <span style=color:#f92672>:=</span> <span style=color:#66d9ef>range</span> <span style=color:#a6e22e>s</span> {
+		<span style=color:#66d9ef>go</span> <span style=color:#66d9ef>func</span>(<span style=color:#a6e22e>t</span> <span style=color:#66d9ef>string</span>) {
+			<span style=color:#a6e22e>fmt</span>.<span style=color:#a6e22e>Printf</span>(<span style=color:#e6db74>&#34;%s\n&#34;</span>, <span style=color:#a6e22e>t</span>) <span style=color:#75715e>// &lt;--- a, b, c
+</span><span style=color:#75715e></span>			<span style=color:#a6e22e>wg</span>.<span style=color:#a6e22e>Done</span>()
+		}(<span style=color:#a6e22e>i</span>)
+	}
+
+	<span style=color:#a6e22e>wg</span>.<span style=color:#a6e22e>Wait</span>()
+}
+
+<span style=color:#66d9ef>func</span> <span style=color:#a6e22e>f3</span>() {
+	<span style=color:#a6e22e>wg</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>sync</span>.<span style=color:#a6e22e>WaitGroup</span>{}
+
+	<span style=color:#a6e22e>i</span> <span style=color:#f92672>:=</span> <span style=color:#ae81ff>0</span>
+
+	<span style=color:#66d9ef>for</span> {
+		<span style=color:#a6e22e>i</span><span style=color:#f92672>++</span>
+		<span style=color:#a6e22e>wg</span>.<span style=color:#a6e22e>Add</span>(<span style=color:#ae81ff>1</span>)
+		<span style=color:#66d9ef>go</span> <span style=color:#66d9ef>func</span>() {
+			<span style=color:#a6e22e>fmt</span>.<span style=color:#a6e22e>Printf</span>(<span style=color:#e6db74>&#34;%s\n&#34;</span>, <span style=color:#a6e22e>i</span>) <span style=color:#75715e>// &lt;--- 连续打印几个相同的数字，然后跳跃继续
+</span><span style=color:#75715e></span>			<span style=color:#a6e22e>wg</span>.<span style=color:#a6e22e>Done</span>()
+		}()
+	}
+
+	<span style=color:#a6e22e>wg</span>.<span style=color:#a6e22e>Wait</span>()
+}
+</code></pre></div></div><script async src="//cdn.bootcss.com/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML"></script><script src=../../js/jquery-3.3.1.min.js></script><script src=../../js/code.js></script><script src=../../css/highlight.css></script><script src=../../js/instantclick.min.js data-no-instant></script><script data-no-instant>InstantClick.init();</script><script>hljs.configure({languages:[]});hljs.initHighlightingOnLoad();</script><hr>© <a href=https://chyroc.cn>chyroc</a> <a href=https://github.com/spf13/hyde>Theme By hyde</a> 2020
+<span id=reading-statistics><span><div id=git-comments></div><link rel=stylesheet href=https://imsun.github.io/gitment/style/default.css><script src=https://imsun.github.io/gitment/dist/gitment.browser.js></script><script>var gitment=new Gitment({id:'async-function-references-to-external-variables',title:'异步与函数引用外部变量的问题',owner:'chyroc',repo:'blog',oauth:{client_id:'36628d87f0ace3c0f34c',client_secret:'814e29f878a31ddf2a0f8f010c2bc3615750a998',}})
+gitment.render('git-comments')</script></main></body></html>

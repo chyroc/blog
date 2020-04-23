@@ -1,0 +1,134 @@
+<!doctype html><html xmlns=http://www.w3.org/1999/xhtml xml:lang=zh-cn lang=zh-cn><head><link href=https://gmpg.org/xfn/11 rel=profile><meta charset=utf-8><meta name=generator content="Hugo 0.68.3"><meta name=viewport content="width=device-width,initial-scale=1"><title>gopher-reading-list 阅读笔记 &#183; Chyroc的博客</title><meta name=description content><link type=text/css rel=stylesheet href=https://chyroc.cn/css/print.css media=print><link type=text/css rel=stylesheet href=https://chyroc.cn/css/poole.css><link type=text/css rel=stylesheet href=https://chyroc.cn/css/syntax.css><link type=text/css rel=stylesheet href=https://chyroc.cn/css/hyde.css><link rel=stylesheet href="https://fonts.googleapis.com/css?family=Abril+Fatface|PT+Sans:400,400i,700"><link rel=apple-touch-icon-precomposed sizes=144x144 href=/apple-touch-icon-144-precomposed.png><link rel="shortcut icon" href=/favicon.png></head><body class=theme-base-08><aside class=sidebar><div class="container sidebar-sticky"><div class=sidebar-about><a href=https://chyroc.cn><h1>Chyroc的博客</h1></a><p class=lead></p></div><nav><ul class=sidebar-nav><li><a href=https://chyroc.cn>Home</a></li><li><a href=/>主页</a></li><li><a href=/blogroll/>友链</a></li><li><a href=/about/>关于</a></li></ul></nav></div></aside><main class="content container"><div class=post><h1>gopher-reading-list 阅读笔记</h1><time datetime=2018-03-06T08:00:00+0800 class=post-date>2018-03-06 08:00:00</time><h2 id=github---cdarwingo-koans-koans-for-go1阅读有感><a href=https://github.com/cdarwin/go-koans>GitHub - cdarwin/go-koans: koans for go</a>阅读有感</h2><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#f92672>package</span> <span style=color:#a6e22e>go_koans</span>
+
+<span style=color:#f92672>import</span> (
+    <span style=color:#e6db74>&#34;testing&#34;</span>
+    <span style=color:#e6db74>&#34;fmt&#34;</span>
+)
+
+<span style=color:#66d9ef>func</span> <span style=color:#a6e22e>TestNote</span>(<span style=color:#a6e22e>t</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>testing</span>.<span style=color:#a6e22e>T</span>) {
+    <span style=color:#75715e>// basic
+</span><span style=color:#75715e></span>    {
+        <span style=color:#a6e22e>assert</span>(<span style=color:#ae81ff>5</span>^<span style=color:#ae81ff>2</span> <span style=color:#f92672>==</span> <span style=color:#ae81ff>7</span>)
+        <span style=color:#75715e>// 乘方是：math.Pow()，这个是按位与
+</span><span style=color:#75715e></span>    }
+
+    <span style=color:#75715e>// string
+</span><span style=color:#75715e></span>    {
+        <span style=color:#a6e22e>assert</span>(<span style=color:#e6db74>&#34;abc&#34;</span>[<span style=color:#ae81ff>0</span>] <span style=color:#f92672>==</span> uint8(<span style=color:#e6db74>&#39;a&#39;</span>))
+        <span style=color:#a6e22e>assert</span>(<span style=color:#a6e22e>fmt</span>.<span style=color:#a6e22e>Sprintf</span>(<span style=color:#e6db74>&#34;hello %q&#34;</span>, <span style=color:#e6db74>&#34;world&#34;</span>) <span style=color:#f92672>==</span> <span style=color:#e6db74>&#34;hello \&#34;world\&#34;&#34;</span>)
+        <span style=color:#a6e22e>assert</span>(<span style=color:#a6e22e>fmt</span>.<span style=color:#a6e22e>Sprintf</span>(<span style=color:#e6db74>&#34;your balance: %d and %0.2f&#34;</span>, <span style=color:#ae81ff>3</span>, <span style=color:#ae81ff>4.5589</span>) <span style=color:#f92672>==</span> <span style=color:#e6db74>&#34;your balance: 3 and 4.56&#34;</span>)
+        <span style=color:#75715e>// %q 会加上双引号
+</span><span style=color:#75715e></span>        <span style=color:#75715e>// %0.2f 会四舍五入
+</span><span style=color:#75715e></span>    }
+
+    <span style=color:#75715e>// array alice
+</span><span style=color:#75715e></span>    {
+        <span style=color:#a6e22e>assert</span>(cap([<span style=color:#ae81ff>4</span>]<span style=color:#66d9ef>string</span>{<span style=color:#e6db74>&#34;apple&#34;</span>, <span style=color:#e6db74>&#34;orange&#34;</span>, <span style=color:#e6db74>&#34;mango&#34;</span>}) <span style=color:#f92672>==</span> <span style=color:#ae81ff>4</span>) <span style=color:#75715e>// it can hold no more
+</span><span style=color:#75715e></span>        <span style=color:#a6e22e>assert</span>(cap([]<span style=color:#66d9ef>string</span>{<span style=color:#e6db74>&#34;apple&#34;</span>, <span style=color:#e6db74>&#34;orange&#34;</span>, <span style=color:#e6db74>&#34;mango&#34;</span>}) <span style=color:#f92672>==</span> <span style=color:#ae81ff>3</span>)  <span style=color:#75715e>// it can hold no more
+</span><span style=color:#75715e></span>        <span style=color:#75715e>// array slice在计算cap的不同
+</span><span style=color:#75715e></span>
+        <span style=color:#a6e22e>f</span> <span style=color:#f92672>:=</span> []<span style=color:#66d9ef>string</span>{<span style=color:#e6db74>&#34;apple&#34;</span>, <span style=color:#e6db74>&#34;orange&#34;</span>, <span style=color:#e6db74>&#34;mango&#34;</span>}
+        <span style=color:#a6e22e>f</span>[<span style=color:#ae81ff>0</span>] = <span style=color:#e6db74>&#34;change&#34;</span>
+        <span style=color:#a6e22e>assert</span>(<span style=color:#a6e22e>f</span>[<span style=color:#ae81ff>0</span>] <span style=color:#f92672>==</span> <span style=color:#e6db74>&#34;change&#34;</span>)
+        <span style=color:#75715e>// slice会引用计算
+</span><span style=color:#75715e></span>
+        <span style=color:#a6e22e>p</span> <span style=color:#f92672>:=</span> []<span style=color:#66d9ef>string</span>{<span style=color:#e6db74>&#34;baby&#34;</span>, <span style=color:#e6db74>&#34;baby&#34;</span>, <span style=color:#e6db74>&#34;lemon&#34;</span>}
+        <span style=color:#a6e22e>assert</span>(cap(<span style=color:#a6e22e>p</span>) <span style=color:#f92672>==</span> <span style=color:#ae81ff>3</span>)
+        <span style=color:#a6e22e>p</span> = append(<span style=color:#a6e22e>p</span>, <span style=color:#e6db74>&#34;baby!&#34;</span>)
+        <span style=color:#a6e22e>assert</span>(cap(<span style=color:#a6e22e>p</span>) <span style=color:#f92672>==</span> <span style=color:#ae81ff>6</span>)
+        <span style=color:#75715e>// append 会扩展一倍
+</span><span style=color:#75715e></span>    }
+
+    <span style=color:#75715e>// ControlFlow
+</span><span style=color:#75715e></span>    {
+        <span style=color:#66d9ef>var</span> <span style=color:#a6e22e>str</span> <span style=color:#66d9ef>string</span>
+        <span style=color:#66d9ef>switch</span> {
+        <span style=color:#66d9ef>case</span> <span style=color:#66d9ef>false</span>:
+            <span style=color:#a6e22e>str</span> = <span style=color:#e6db74>&#34;first&#34;</span>
+        <span style=color:#66d9ef>case</span> <span style=color:#66d9ef>true</span>:
+            <span style=color:#a6e22e>str</span> = <span style=color:#e6db74>&#34;second&#34;</span>
+        }
+        <span style=color:#a6e22e>assert</span>(<span style=color:#a6e22e>str</span> <span style=color:#f92672>==</span> <span style=color:#e6db74>&#34;second&#34;</span>)
+        <span style=color:#75715e>// switch 在没有选项的时候，默认是true
+</span><span style=color:#75715e></span>    }
+
+    <span style=color:#75715e>// struct
+</span><span style=color:#75715e></span>    {
+        <span style=color:#66d9ef>var</span> <span style=color:#a6e22e>bob</span> <span style=color:#66d9ef>struct</span> {
+            <span style=color:#a6e22e>name</span> <span style=color:#66d9ef>string</span>
+            <span style=color:#a6e22e>age</span>  <span style=color:#66d9ef>int</span>
+        }
+        <span style=color:#a6e22e>bob</span>.<span style=color:#a6e22e>name</span> = <span style=color:#e6db74>&#34;bob&#34;</span>
+        <span style=color:#a6e22e>bob</span>.<span style=color:#a6e22e>age</span> = <span style=color:#ae81ff>30</span>
+
+        <span style=color:#66d9ef>type</span> <span style=color:#a6e22e>person</span> <span style=color:#66d9ef>struct</span> {
+            <span style=color:#a6e22e>name</span> <span style=color:#66d9ef>string</span>
+            <span style=color:#a6e22e>age</span>  <span style=color:#66d9ef>int</span>
+        }
+        <span style=color:#66d9ef>var</span> <span style=color:#a6e22e>john</span> = <span style=color:#a6e22e>person</span>{
+            <span style=color:#e6db74>&#34;bob&#34;</span>,
+            <span style=color:#ae81ff>30</span>,
+        }
+        <span style=color:#a6e22e>assert</span>(<span style=color:#a6e22e>bob</span> <span style=color:#f92672>==</span> <span style=color:#a6e22e>john</span>) <span style=color:#75715e>// assuredly, bob is certainly not john.. yet
+</span><span style=color:#75715e></span>        <span style=color:#75715e>// struct只要结构和数据一样，就相同，不需要使用同一个type
+</span><span style=color:#75715e></span>    }
+
+    <span style=color:#75715e>// Allocation
+</span><span style=color:#75715e></span>    {
+        <span style=color:#a6e22e>slice</span> <span style=color:#f92672>:=</span> make([]<span style=color:#66d9ef>int</span>, <span style=color:#ae81ff>3</span>)
+        <span style=color:#a6e22e>assert</span>(len(<span style=color:#a6e22e>slice</span>) <span style=color:#f92672>==</span> <span style=color:#ae81ff>3</span>) <span style=color:#75715e>// make() creates slices of a given length
+</span><span style=color:#75715e></span>        <span style=color:#75715e>// make创建的array的长度是3
+</span><span style=color:#75715e></span>    }
+}
+</code></pre></div><h2 id=frequently-asked-questions-faq2阅读有感><a href=https://golang.org/doc/faq>Frequently Asked Questions (FAQ)</a>阅读有感</h2><p>使用 default，完成非阻塞的 channel：</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go>   <span style=color:#66d9ef>select</span> {
+	<span style=color:#66d9ef>case</span> <span style=color:#a6e22e>msg</span> <span style=color:#f92672>:=</span> <span style=color:#f92672>&lt;-</span><span style=color:#a6e22e>messages</span>:
+		<span style=color:#a6e22e>fmt</span>.<span style=color:#a6e22e>Println</span>(<span style=color:#e6db74>&#34;received message&#34;</span>, <span style=color:#a6e22e>msg</span>)
+	<span style=color:#66d9ef>case</span> <span style=color:#a6e22e>sig</span> <span style=color:#f92672>:=</span> <span style=color:#f92672>&lt;-</span><span style=color:#a6e22e>signals</span>:
+		<span style=color:#a6e22e>fmt</span>.<span style=color:#a6e22e>Println</span>(<span style=color:#e6db74>&#34;received signal&#34;</span>, <span style=color:#a6e22e>sig</span>)
+	<span style=color:#66d9ef>default</span>:
+		<span style=color:#a6e22e>fmt</span>.<span style=color:#a6e22e>Println</span>(<span style=color:#e6db74>&#34;no activity&#34;</span>)
+	}
+</code></pre></div><p>通过 range 循环 channel</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>main</span>() {
+    <span style=color:#a6e22e>queue</span> <span style=color:#f92672>:=</span> make(<span style=color:#66d9ef>chan</span> <span style=color:#66d9ef>string</span>, <span style=color:#ae81ff>2</span>)
+    <span style=color:#a6e22e>queue</span> <span style=color:#f92672>&lt;-</span> <span style=color:#e6db74>&#34;one&#34;</span>
+    <span style=color:#a6e22e>queue</span> <span style=color:#f92672>&lt;-</span> <span style=color:#e6db74>&#34;two&#34;</span>
+    close(<span style=color:#a6e22e>queue</span>)
+
+    <span style=color:#66d9ef>for</span> <span style=color:#a6e22e>elem</span> <span style=color:#f92672>:=</span> <span style=color:#66d9ef>range</span> <span style=color:#a6e22e>queue</span> {
+        <span style=color:#a6e22e>fmt</span>.<span style=color:#a6e22e>Println</span>(<span style=color:#a6e22e>elem</span>)
+    }
+}
+</code></pre></div><h2 id=6-tips-for-using-strings-in-go---calhounio3阅读有感><a href=https://www.calhoun.io/6-tips-for-using-strings-in-go/>6 Tips for Using Strings in Go - Calhoun.io</a>阅读有感</h2><p>使用<code>bytes/Buffer</code>或者<code>strings.Join</code>拼接字符串比<code>s+=""</code>快</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>main</span>() {
+    <span style=color:#66d9ef>var</span> <span style=color:#a6e22e>b</span> <span style=color:#a6e22e>bytes</span>.<span style=color:#a6e22e>Buffer</span>
+    <span style=color:#66d9ef>for</span> <span style=color:#a6e22e>i</span> <span style=color:#f92672>:=</span> <span style=color:#ae81ff>0</span>; <span style=color:#a6e22e>i</span> &lt; <span style=color:#ae81ff>1000</span>; <span style=color:#a6e22e>i</span><span style=color:#f92672>++</span> {
+        <span style=color:#a6e22e>b</span>.<span style=color:#a6e22e>WriteString</span>(<span style=color:#a6e22e>randString</span>())
+    }
+    <span style=color:#a6e22e>fmt</span>.<span style=color:#a6e22e>Println</span>(<span style=color:#a6e22e>b</span>.<span style=color:#a6e22e>String</span>())
+}
+</code></pre></div><p>int 不能简单的使用<code>string(i)</code>转成 string</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#a6e22e>strconv</span>.<span style=color:#a6e22e>Itoa</span>(<span style=color:#a6e22e>i</span>)
+</code></pre></div><p>创建随机字符串</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#f92672>package</span> <span style=color:#a6e22e>main</span>
+
+<span style=color:#f92672>import</span> (
+    <span style=color:#e6db74>&#34;fmt&#34;</span>
+    <span style=color:#e6db74>&#34;math/rand&#34;</span>
+    <span style=color:#e6db74>&#34;time&#34;</span>
+)
+
+<span style=color:#66d9ef>func</span> <span style=color:#a6e22e>main</span>() {
+    <span style=color:#a6e22e>fmt</span>.<span style=color:#a6e22e>Println</span>(<span style=color:#a6e22e>RandString</span>(<span style=color:#ae81ff>10</span>))
+}
+
+<span style=color:#66d9ef>var</span> <span style=color:#a6e22e>source</span> = <span style=color:#a6e22e>rand</span>.<span style=color:#a6e22e>NewSource</span>(<span style=color:#a6e22e>time</span>.<span style=color:#a6e22e>Now</span>().<span style=color:#a6e22e>UnixNano</span>())
+
+<span style=color:#66d9ef>const</span> <span style=color:#a6e22e>charset</span> = <span style=color:#e6db74>&#34;abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789&#34;</span>
+
+<span style=color:#66d9ef>func</span> <span style=color:#a6e22e>RandString</span>(<span style=color:#a6e22e>length</span> <span style=color:#66d9ef>int</span>) <span style=color:#66d9ef>string</span> {
+    <span style=color:#a6e22e>b</span> <span style=color:#f92672>:=</span> make([]<span style=color:#66d9ef>byte</span>, <span style=color:#a6e22e>length</span>)
+    <span style=color:#66d9ef>for</span> <span style=color:#a6e22e>i</span> <span style=color:#f92672>:=</span> <span style=color:#66d9ef>range</span> <span style=color:#a6e22e>b</span> {
+        <span style=color:#a6e22e>b</span>[<span style=color:#a6e22e>i</span>] = <span style=color:#a6e22e>charset</span>[<span style=color:#a6e22e>source</span>.<span style=color:#a6e22e>Int63</span>()<span style=color:#f92672>%</span>int64(len(<span style=color:#a6e22e>charset</span>))]
+    }
+    <span style=color:#66d9ef>return</span> string(<span style=color:#a6e22e>b</span>)
+}
+</code></pre></div><h2 id=参考>参考</h2><ul><li><a href=https://github.com/enocom/gopher-reading-list>https://github.com/enocom/gopher-reading-list</a></li></ul></div><script async src="//cdn.bootcss.com/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML"></script><script src=../../js/jquery-3.3.1.min.js></script><script src=../../js/code.js></script><script src=../../css/highlight.css></script><script src=../../js/instantclick.min.js data-no-instant></script><script data-no-instant>InstantClick.init();</script><script>hljs.configure({languages:[]});hljs.initHighlightingOnLoad();</script><hr>© <a href=https://chyroc.cn>chyroc</a> <a href=https://github.com/spf13/hyde>Theme By hyde</a> 2020
+<span id=reading-statistics><span><div id=git-comments></div><link rel=stylesheet href=https://imsun.github.io/gitment/style/default.css><script src=https://imsun.github.io/gitment/dist/gitment.browser.js></script><script>var gitment=new Gitment({id:'read-gopher-reading-list',title:'gopher-reading-list 阅读笔记',owner:'chyroc',repo:'blog',oauth:{client_id:'36628d87f0ace3c0f34c',client_secret:'814e29f878a31ddf2a0f8f010c2bc3615750a998',}})
+gitment.render('git-comments')</script></main></body></html>

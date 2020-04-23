@@ -1,0 +1,72 @@
+<!doctype html><html xmlns=http://www.w3.org/1999/xhtml xml:lang=zh-cn lang=zh-cn><head><link href=https://gmpg.org/xfn/11 rel=profile><meta charset=utf-8><meta name=generator content="Hugo 0.68.3"><meta name=viewport content="width=device-width,initial-scale=1"><title>uber-zap 源码阅读 &#183; Chyroc的博客</title><meta name=description content><link type=text/css rel=stylesheet href=https://chyroc.cn/css/print.css media=print><link type=text/css rel=stylesheet href=https://chyroc.cn/css/poole.css><link type=text/css rel=stylesheet href=https://chyroc.cn/css/syntax.css><link type=text/css rel=stylesheet href=https://chyroc.cn/css/hyde.css><link rel=stylesheet href="https://fonts.googleapis.com/css?family=Abril+Fatface|PT+Sans:400,400i,700"><link rel=apple-touch-icon-precomposed sizes=144x144 href=/apple-touch-icon-144-precomposed.png><link rel="shortcut icon" href=/favicon.png></head><body class=theme-base-08><aside class=sidebar><div class="container sidebar-sticky"><div class=sidebar-about><a href=https://chyroc.cn><h1>Chyroc的博客</h1></a><p class=lead></p></div><nav><ul class=sidebar-nav><li><a href=https://chyroc.cn>Home</a></li><li><a href=/>主页</a></li><li><a href=/blogroll/>友链</a></li><li><a href=/about/>关于</a></li></ul></nav></div></aside><main class="content container"><div class=post><h1>uber-zap 源码阅读</h1><time datetime=2018-10-15T20:04:11+0800 class=post-date>2018-10-15 20:04:11</time><p><a href=https://github.com/uber-go/zap>zap</a>是 Uber 开发的一个高性能、强类型、分 level 的 go 语言日志库。</p><p>阅读笔记：https://github.com/Chyroc/zap/pull/1/files</p><p>为了实现她的高性能，zap 做了这些优化</p><ul><li>不使用<code>encoding/json</code>和<code>fmt.Fprintf</code>，这些都会使用 reflect，比较慢</li><li>自定义<code>Buffer</code>结构，代替 build-in 的<code>bytes.Buffer</code></li><li>大量使用<code>sync.Pool</code></li></ul><h2 id=buffer-package>buffer package</h2><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#66d9ef>type</span> <span style=color:#a6e22e>Buffer</span> <span style=color:#66d9ef>struct</span> {
+	<span style=color:#a6e22e>bs</span>   []<span style=color:#66d9ef>byte</span>
+	<span style=color:#a6e22e>pool</span> <span style=color:#a6e22e>Pool</span>
+}
+</code></pre></div><p><strong>在<code>Buffer</code>上定义各个类型数据的 append</strong></p><p>使用 <code>sync.Pool</code> 复用可能的对象，<code>[]byte</code>的初始大小为<code>_size</code>（1024），对一些小对象，能够避免 alloc</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>NewPool</span>() <span style=color:#a6e22e>Pool</span> {
+	<span style=color:#66d9ef>return</span> <span style=color:#a6e22e>Pool</span>{<span style=color:#a6e22e>p</span>: <span style=color:#f92672>&amp;</span><span style=color:#a6e22e>sync</span>.<span style=color:#a6e22e>Pool</span>{
+		<span style=color:#a6e22e>New</span>: <span style=color:#66d9ef>func</span>() <span style=color:#66d9ef>interface</span>{} {
+			<span style=color:#66d9ef>return</span> <span style=color:#f92672>&amp;</span><span style=color:#a6e22e>Buffer</span>{<span style=color:#a6e22e>bs</span>: make([]<span style=color:#66d9ef>byte</span>, <span style=color:#ae81ff>0</span>, <span style=color:#a6e22e>_size</span>)}
+		},
+	}}
+}
+</code></pre></div><h2 id=打印带有颜色文字>打印带有颜色文字</h2><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#66d9ef>const</span> (
+	<span style=color:#a6e22e>Black</span> = <span style=color:#66d9ef>iota</span> <span style=color:#f92672>+</span> <span style=color:#ae81ff>30</span>
+	<span style=color:#a6e22e>Red</span>
+	<span style=color:#a6e22e>Green</span>
+	<span style=color:#a6e22e>Yellow</span>
+	<span style=color:#a6e22e>Blue</span>
+	<span style=color:#a6e22e>Magenta</span>
+	<span style=color:#a6e22e>Cyan</span>
+	<span style=color:#a6e22e>White</span>
+)
+
+<span style=color:#a6e22e>fmt</span>.<span style=color:#a6e22e>Printf</span>(<span style=color:#e6db74>&#34;\x1b[%dm%s\x1b[0m&#34;</span>, <span style=color:#a6e22e>c</span>, <span style=color:#a6e22e>s</span>)
+</code></pre></div><h2 id=jsonencoder>jsonEncoder</h2><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#66d9ef>type</span> <span style=color:#a6e22e>jsonEncoder</span> <span style=color:#66d9ef>struct</span> {
+	<span style=color:#f92672>*</span><span style=color:#a6e22e>EncoderConfig</span>
+	<span style=color:#a6e22e>buf</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>buffer</span>.<span style=color:#a6e22e>Buffer</span>
+
+	<span style=color:#a6e22e>spaced</span> <span style=color:#66d9ef>bool</span>
+	<span style=color:#a6e22e>openNamespaces</span> <span style=color:#66d9ef>int</span>
+
+	<span style=color:#a6e22e>reflectBuf</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>buffer</span>.<span style=color:#a6e22e>Buffer</span>
+	<span style=color:#a6e22e>reflectEnc</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>json</span>.<span style=color:#a6e22e>Encoder</span>
+}
+</code></pre></div><p>这个结构是整个 zap encode 数据的核心，</p><ul><li><code>buf</code>就是上面介绍的自定义<code>Buffer</code>，</li><li><code>spaced</code>控制是否打印可选的空格，如<code>"a": true</code>这里的空格是否有</li><li><code>openNamespaces</code>记录做大括号的数量，以便右边添加对应数量的右大括号</li><li><code>reflectBuf</code>和<code>buf</code>类型一致，但是这里会配合<code>reflectEnc</code>使用<code>json.Encoder</code>解析 interface 数据（实际上，就是<code>.Any</code>的数据）</li></ul><h2 id=field>Field</h2><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#66d9ef>type</span> <span style=color:#a6e22e>Field</span> <span style=color:#66d9ef>struct</span> {
+	<span style=color:#a6e22e>Key</span>       <span style=color:#66d9ef>string</span>
+	<span style=color:#a6e22e>Type</span>      <span style=color:#a6e22e>FieldType</span>
+	<span style=color:#a6e22e>Integer</span>   <span style=color:#66d9ef>int64</span>
+	<span style=color:#a6e22e>String</span>    <span style=color:#66d9ef>string</span>
+	<span style=color:#a6e22e>Interface</span> <span style=color:#66d9ef>interface</span>{} <span style=color:#75715e>//存储数据
+</span><span style=color:#75715e></span>}
+</code></pre></div><p>Field 结构是每个数据的载体</p><ul><li>Key 是键值</li><li>Type 是类型，和 Integer/String/Interface 配合使用，具体在下面有列出来</li></ul><h3 id=key-的可选值>Key 的可选值</h3><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#66d9ef>const</span> (
+	<span style=color:#a6e22e>UnknownType</span>         <span style=color:#a6e22e>FieldType</span> = <span style=color:#66d9ef>iota</span> <span style=color:#75715e>// 未使用
+</span><span style=color:#75715e></span>	<span style=color:#a6e22e>ArrayMarshalerType</span>                   <span style=color:#75715e>// 存于 Interface
+</span><span style=color:#75715e></span>	<span style=color:#a6e22e>ObjectMarshalerType</span>                  <span style=color:#75715e>// 存于 Interface
+</span><span style=color:#75715e></span>	<span style=color:#a6e22e>BinaryType</span>                           <span style=color:#75715e>// 存于 Interface
+</span><span style=color:#75715e></span>	<span style=color:#a6e22e>BoolType</span>                             <span style=color:#75715e>// 存于 Integer
+</span><span style=color:#75715e></span>	<span style=color:#a6e22e>ByteStringType</span>                       <span style=color:#75715e>// 存于 Interface
+</span><span style=color:#75715e></span>	<span style=color:#a6e22e>Complex128Type</span>                       <span style=color:#75715e>// 存于 Interface
+</span><span style=color:#75715e></span>	<span style=color:#a6e22e>Complex64Type</span>                        <span style=color:#75715e>// 存于 Interface
+</span><span style=color:#75715e></span>	<span style=color:#a6e22e>DurationType</span>                         <span style=color:#75715e>// 存于 Integer
+</span><span style=color:#75715e></span>	<span style=color:#a6e22e>Float64Type</span>                          <span style=color:#75715e>// 存于 Integer
+</span><span style=color:#75715e></span>	<span style=color:#a6e22e>Float32Type</span>                          <span style=color:#75715e>// 存于 Integer
+</span><span style=color:#75715e></span>	<span style=color:#a6e22e>Int64Type</span>                            <span style=color:#75715e>// 存于 Integer
+</span><span style=color:#75715e></span>	<span style=color:#a6e22e>Int32Type</span>                            <span style=color:#75715e>// 存于 Integer
+</span><span style=color:#75715e></span>	<span style=color:#a6e22e>Int16Type</span>                            <span style=color:#75715e>// 存于 Integer
+</span><span style=color:#75715e></span>	<span style=color:#a6e22e>Int8Type</span>                             <span style=color:#75715e>// 存于 Integer
+</span><span style=color:#75715e></span>	<span style=color:#a6e22e>StringType</span>                           <span style=color:#75715e>// 存于 String
+</span><span style=color:#75715e></span>	<span style=color:#a6e22e>TimeType</span>                             <span style=color:#75715e>// 秒存于 Integer，Location存于interface
+</span><span style=color:#75715e></span>	<span style=color:#a6e22e>Uint64Type</span>                           <span style=color:#75715e>// 存于 Integer
+</span><span style=color:#75715e></span>	<span style=color:#a6e22e>Uint32Type</span>                           <span style=color:#75715e>// 存于 Integer
+</span><span style=color:#75715e></span>	<span style=color:#a6e22e>Uint16Type</span>                           <span style=color:#75715e>// 存于 Integer
+</span><span style=color:#75715e></span>	<span style=color:#a6e22e>Uint8Type</span>                            <span style=color:#75715e>// 存于 Integer
+</span><span style=color:#75715e></span>	<span style=color:#a6e22e>UintptrType</span>                          <span style=color:#75715e>// 存于 Integer
+</span><span style=color:#75715e></span>	<span style=color:#a6e22e>ReflectType</span>                          <span style=color:#75715e>// 存于 Interface
+</span><span style=color:#75715e></span>	<span style=color:#a6e22e>NamespaceType</span>                        <span style=color:#75715e>// 没有 value
+</span><span style=color:#75715e></span>	<span style=color:#a6e22e>StringerType</span>                         <span style=color:#75715e>// 存于 Interface
+</span><span style=color:#75715e></span>	<span style=color:#a6e22e>ErrorType</span>                            <span style=color:#75715e>// 存于 Interface
+</span><span style=color:#75715e></span>	<span style=color:#a6e22e>SkipType</span>                             <span style=color:#75715e>// 没有value
+</span><span style=color:#75715e></span>)
+</code></pre></div><h3 id=func-f-field-addtoenc-objectencoder>func (f Field) AddTo(enc ObjectEncoder)</h3><p>在 Field 上定义的 AddTo 方法会将 Field 的数据 encode 到 enc 上</p><ul><li>对于<code>UnknownType</code>，panic</li><li>zap 定义了很多类型的 slice 的<code>MarshalLogArray(ArrayEncoder) error</code>方法，比如[]string/[]int 等等；然后对于对于 ArrayMarshalerType，通过调用 MarshalLogArray 方法将数据添加在<code>[</code> / <code>]</code>之间</li><li>zap 给几个复合类型定义了<code>MarshalLogObject(ObjectEncoder) error</code>方法；然后对于 ObjectMarshalerType，通过调用 MarshalLogObject 将数据添加在<code>{</code> / <code>}</code>之间</li><li>上面说到，自定义了 Buffer 实现了很多数据类型的 Append 方法，一些 string/int 等 build-in 类型通过 Buffer 即可完成 append</li><li>对于<code>TimeType</code>时间类型，编码为 int（production）或者字符串（development）</li><li>对于<code>ReflectType</code>任意类型，使用 json 的 encode 编码，所以这边尽量少用 any，然后会降低到使用 reflect</li><li>对于<code>NamespaceType</code>，这个是嵌套类型，可以将一个 object 放在另外一个 object 下，另外会将 jsonEncoder 中的 openNamespaces 加 1，最后会闭合大括号</li><li>对于<code>StringerType</code>，这个是针对实现了<code>String() string</code>接口的，会将方法返回值添加在<code>"</code> / <code>"</code>之间</li><li>跳过<code>SkipType</code>类型</li></ul></div><script async src="//cdn.bootcss.com/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML"></script><script src=../../js/jquery-3.3.1.min.js></script><script src=../../js/code.js></script><script src=../../css/highlight.css></script><script src=../../js/instantclick.min.js data-no-instant></script><script data-no-instant>InstantClick.init();</script><script>hljs.configure({languages:[]});hljs.initHighlightingOnLoad();</script><hr>© <a href=https://chyroc.cn>chyroc</a> <a href=https://github.com/spf13/hyde>Theme By hyde</a> 2020
+<span id=reading-statistics><span><div id=git-comments></div><link rel=stylesheet href=https://imsun.github.io/gitment/style/default.css><script src=https://imsun.github.io/gitment/dist/gitment.browser.js></script><script>var gitment=new Gitment({id:'source-code-uber-zap',title:'uber-zap 源码阅读',owner:'chyroc',repo:'blog',oauth:{client_id:'36628d87f0ace3c0f34c',client_secret:'814e29f878a31ddf2a0f8f010c2bc3615750a998',}})
+gitment.render('git-comments')</script></main></body></html>

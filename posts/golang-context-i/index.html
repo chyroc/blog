@@ -1,0 +1,119 @@
+<!doctype html><html xmlns=http://www.w3.org/1999/xhtml xml:lang=zh-cn lang=zh-cn><head><link href=https://gmpg.org/xfn/11 rel=profile><meta charset=utf-8><meta name=generator content="Hugo 0.68.3"><meta name=viewport content="width=device-width,initial-scale=1"><title>Golang 中的 context 之传值（一） &#183; Chyroc的博客</title><meta name=description content><link type=text/css rel=stylesheet href=https://chyroc.cn/css/print.css media=print><link type=text/css rel=stylesheet href=https://chyroc.cn/css/poole.css><link type=text/css rel=stylesheet href=https://chyroc.cn/css/syntax.css><link type=text/css rel=stylesheet href=https://chyroc.cn/css/hyde.css><link rel=stylesheet href="https://fonts.googleapis.com/css?family=Abril+Fatface|PT+Sans:400,400i,700"><link rel=apple-touch-icon-precomposed sizes=144x144 href=/apple-touch-icon-144-precomposed.png><link rel="shortcut icon" href=/favicon.png></head><body class=theme-base-08><aside class=sidebar><div class="container sidebar-sticky"><div class=sidebar-about><a href=https://chyroc.cn><h1>Chyroc的博客</h1></a><p class=lead></p></div><nav><ul class=sidebar-nav><li><a href=https://chyroc.cn>Home</a></li><li><a href=/>主页</a></li><li><a href=/blogroll/>友链</a></li><li><a href=/about/>关于</a></li></ul></nav></div></aside><main class="content container"><div class=post><h1>Golang 中的 context 之传值（一）</h1><time datetime=2018-04-29T08:00:00+0800 class=post-date>2018-04-29 08:00:00</time><blockquote><p>前几天在工作中使用 context 的时候，对于 metadata 和 context.Value 有一些疑惑，顺便探索了一下 go 的 context，在这里分享一下</p></blockquote><blockquote><p>现在是 2018-04-29 19:49，正在北京开往家的动车上，窗外已经是黑黑的一片了，11 点到家，写一会文章吧</p></blockquote><h2 id=context-包>context 包</h2><p>这里说的 context 包指的是 golang(1.7+)中的标准库 context，文档在这里：https://godoc.org/context 。</p><p>context 包定义了 Context 类型，他可以在携带 deadlines 和 cancelatin 信号，也可以携带其他的请求值。</p><p>发送到 server 的请求应该创建一个 context，服务器处理请求的时候也应该接受一个 context。在程序的函数调用链中，必须传递 context，也可以基于一个 context，使用 WithCancel, WithDeadline, WithTimeout, or WithValue 等函数创建一个新的 context 传递下去。当一个 context 被 canceled 的时候，那么所有通过改 context 派生的 context 都应该被 cancel</p><p>WithCancel, WithDeadline, and WithTimeout 这三个函数使用一个 context(the parent) 作为参数，然后创建一个新的 context（the child）和 CancelFunc 函数。调用 CancelFunc 函数将会取消该 child 和他的 children，移除 parent 到 child 的应用，然后停止任何相关的 timeers。吐过调用这个函数失败的话，会导致 child 和他的 children 知道 parent cancel 的时候或者 timer fired 的时候才会取消。go vet 工具会检查 CancelFuncs 对否在所有的控制分支上使用了。</p><p>context 的使用规则</p><ul><li>context 应该作为函数参数传递，而不是 struct 的一个 field</li><li>context 应该是函数的第一个参数</li><li>不要传递 nil context，即使是不使用，如果不知道用啥，用 context.TODO 吧</li><li>只使用 context 传递请求上下文，而不是为了传递可选参数</li><li>context 可能会被同一个函数在不同的 goroutine 中使用，他是并发安全的</li></ul><h2 id=context-接口>context 接口</h2><p>以下是 context 的接口定义</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#66d9ef>type</span> <span style=color:#a6e22e>Context</span> <span style=color:#66d9ef>interface</span> {
+    <span style=color:#75715e>// 返回当前context应该被cancel的时间
+</span><span style=color:#75715e></span>    <span style=color:#75715e>// 如果 ok==false 的话，那么当前context没有deadline
+</span><span style=color:#75715e></span>    <span style=color:#a6e22e>Deadline</span>() (<span style=color:#a6e22e>deadline</span> <span style=color:#a6e22e>time</span>.<span style=color:#a6e22e>Time</span>, <span style=color:#a6e22e>ok</span> <span style=color:#66d9ef>bool</span>)
+
+    <span style=color:#75715e>// 返回了一个chan，当 当前context被cancel的时候，这个chan就会被close
+</span><span style=color:#75715e></span>    <span style=color:#75715e>// 如果这个context永远也不会被cancel的时候，会返回一个nil
+</span><span style=color:#75715e></span>    <span style=color:#75715e>//
+</span><span style=color:#75715e></span>    <span style=color:#75715e>// WithCancel会在cancel的遍历Done
+</span><span style=color:#75715e></span>    <span style=color:#75715e>// WithDeadline
+</span><span style=color:#75715e></span>    <span style=color:#75715e>// WithTimeout
+</span><span style=color:#75715e></span>    <span style=color:#75715e>//
+</span><span style=color:#75715e></span>    <span style=color:#75715e>// Done是为了在select中使用提供的
+</span><span style=color:#75715e></span>    <span style=color:#75715e>//
+</span><span style=color:#75715e></span>    <span style=color:#75715e>//  // Stream generates values with DoSomething and sends them to out
+</span><span style=color:#75715e></span>    <span style=color:#75715e>//  // until DoSomething returns an error or ctx.Done is closed.
+</span><span style=color:#75715e></span>    <span style=color:#75715e>//  func Stream(ctx context.Context, out chan&lt;- Value) error {
+</span><span style=color:#75715e></span>    <span style=color:#75715e>//          for {
+</span><span style=color:#75715e></span>    <span style=color:#75715e>//                  v, err := DoSomething(ctx)
+</span><span style=color:#75715e></span>    <span style=color:#75715e>//                  if err != nil {
+</span><span style=color:#75715e></span>    <span style=color:#75715e>//                          return err
+</span><span style=color:#75715e></span>    <span style=color:#75715e>//                  }
+</span><span style=color:#75715e></span>    <span style=color:#75715e>//                  select {
+</span><span style=color:#75715e></span>    <span style=color:#75715e>//                  case &lt;-ctx.Done():
+</span><span style=color:#75715e></span>    <span style=color:#75715e>//                          return ctx.Err()
+</span><span style=color:#75715e></span>    <span style=color:#75715e>//                  case out &lt;- v:
+</span><span style=color:#75715e></span>    <span style=color:#75715e>//                  }
+</span><span style=color:#75715e></span>    <span style=color:#75715e>//          }
+</span><span style=color:#75715e></span>    <span style=color:#75715e>//  }
+</span><span style=color:#75715e></span>    <span style=color:#75715e>//
+</span><span style=color:#75715e></span>    <span style=color:#75715e>// See https://blog.golang.org/pipelines for more examples of how to use
+</span><span style=color:#75715e></span>    <span style=color:#75715e>// a Done channel for cancelation.
+</span><span style=color:#75715e></span>    <span style=color:#a6e22e>Done</span>() <span style=color:#f92672>&lt;-</span><span style=color:#66d9ef>chan</span> <span style=color:#66d9ef>struct</span>{}
+
+    <span style=color:#75715e>// 如果Done还没有被close，返回nil
+</span><span style=color:#75715e></span>    <span style=color:#75715e>// 如果Done已经被clode了，返回一个non-nil的err，有几个err：
+</span><span style=color:#75715e></span>    <span style=color:#75715e>// Canceled： context是被cancel的
+</span><span style=color:#75715e></span>    <span style=color:#75715e>// DeadlineExceeded： context的deadline过了
+</span><span style=color:#75715e></span>    <span style=color:#75715e>// 如果Err返回了一个non-nil，那么以后返回的结果也都是一样的
+</span><span style=color:#75715e></span>    <span style=color:#a6e22e>Err</span>() <span style=color:#66d9ef>error</span>
+
+    <span style=color:#75715e>// 返回指定的key的值，如果没有，返回nil
+</span><span style=color:#75715e></span>    <span style=color:#75715e>//
+</span><span style=color:#75715e></span>    <span style=color:#75715e>// 一个key指定了context中唯一的value。
+</span><span style=color:#75715e></span>    <span style=color:#75715e>// key可以是任何可以比较的类型，(golint不允许使用string)
+</span><span style=color:#75715e></span>    <span style=color:#75715e>// 各个包应该定义自己的非导出的类型所谓key，以避免重叠
+</span><span style=color:#75715e></span>    <span style=color:#a6e22e>Value</span>(<span style=color:#a6e22e>key</span> <span style=color:#66d9ef>interface</span>{}) <span style=color:#66d9ef>interface</span>{}
+}
+</code></pre></div><h2 id=context-是如何实现-k-v-键值对存储的>context 是如何实现 k-v 键值对存储的</h2><h3 id=什么是-contextk-v-存储>什么是 contextk-v 存储</h3><p>通过下面这样的代码可以在 goroutine 之间安全的传递数据</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#66d9ef>type</span> <span style=color:#a6e22e>key</span> = <span style=color:#66d9ef>struct</span>{}
+<span style=color:#a6e22e>ctx</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>context</span>.<span style=color:#a6e22e>Background</span>()
+<span style=color:#a6e22e>ctx</span> = <span style=color:#a6e22e>context</span>.<span style=color:#a6e22e>WithValue</span>(<span style=color:#a6e22e>ctx</span>, <span style=color:#a6e22e>key</span>{}, <span style=color:#e6db74>&#34;this is value&#34;</span>)
+<span style=color:#a6e22e>fmt</span>.<span style=color:#a6e22e>Printf</span>(<span style=color:#e6db74>&#34;value: %v\n&#34;</span>, <span style=color:#a6e22e>ctx</span>.<span style=color:#a6e22e>Value</span>(<span style=color:#a6e22e>key</span>{}))
+</code></pre></div><h3 id=简析>简析</h3><p>context 值的实现和 cancel 等的实现是基于不同的 struct 的，这些 struct 都和接口 Context 组合了，所以都<strong>实现</strong>了接口 Context（参见<a href=http://blog.chyroc.cn/articles/2017-8-3-247632972.html>这篇我的博文</a>）</p><p>这种思想是可以借鉴的，即先定义一个 interface，然后不同的 struct 组合这个 interface，然后实现不同的方法</p><p>context 的 k-v 对存储是一个树状的结构，每个节点都存储一对 k-v，并指向父 context</p><h3 id=代码解析>代码解析</h3><p>下面结合 k-v 实现的代码看一下</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#75715e>// 定义存储k-v的struct，是一个树结构
+</span><span style=color:#75715e></span><span style=color:#66d9ef>type</span> <span style=color:#a6e22e>valueCtx</span> <span style=color:#66d9ef>struct</span> {
+    <span style=color:#a6e22e>Context</span>
+    <span style=color:#a6e22e>key</span>, <span style=color:#a6e22e>val</span> <span style=color:#66d9ef>interface</span>{}
+}
+
+<span style=color:#75715e>// String接口
+</span><span style=color:#75715e>// 其中的c.Context是通过`%v`格式化的，所以这个函数实际上是一个递归函数
+</span><span style=color:#75715e>// 这里使用%v作为递归的方法而不是c.Context.String()，是因为Context接口没有定义String方法，而valueCtx没有定义，这一点值得学习
+</span><span style=color:#75715e></span><span style=color:#66d9ef>func</span> (<span style=color:#a6e22e>c</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>valueCtx</span>) <span style=color:#a6e22e>String</span>() <span style=color:#66d9ef>string</span> {
+    <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>fmt</span>.<span style=color:#a6e22e>Sprintf</span>(<span style=color:#e6db74>&#34;%v.WithValue(%#v, %#v)\n&#34;</span>, <span style=color:#a6e22e>c</span>.<span style=color:#a6e22e>Context</span>, <span style=color:#a6e22e>c</span>.<span style=color:#a6e22e>key</span>, <span style=color:#a6e22e>c</span>.<span style=color:#a6e22e>val</span>)
+}
+
+<span style=color:#75715e>// 取值方法
+</span><span style=color:#75715e>// 先判断当前context中是否有该存储的值
+</span><span style=color:#75715e>// 没有就使用父context取，也是一个递归函数
+</span><span style=color:#75715e></span><span style=color:#66d9ef>func</span> (<span style=color:#a6e22e>c</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>valueCtx</span>) <span style=color:#a6e22e>Value</span>(<span style=color:#a6e22e>key</span> <span style=color:#66d9ef>interface</span>{}) <span style=color:#66d9ef>interface</span>{} {
+    <span style=color:#66d9ef>if</span> <span style=color:#a6e22e>c</span>.<span style=color:#a6e22e>key</span> <span style=color:#f92672>==</span> <span style=color:#a6e22e>key</span> {
+        <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>c</span>.<span style=color:#a6e22e>val</span>
+    }
+    <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>c</span>.<span style=color:#a6e22e>Context</span>.<span style=color:#a6e22e>Value</span>(<span style=color:#a6e22e>key</span>)
+}
+
+<span style=color:#75715e>// 赋值方法
+</span><span style=color:#75715e>// 实际上是返回一个struct，这个struct里面有key和val的field，作为k-v的存储载体
+</span><span style=color:#75715e>// 然后为了保留意见设置的数据，需要把老context传下去
+</span><span style=color:#75715e>// 所以大概是这么个格式：{{{context.TODO(), key1, val1}, key2, val2}, key3, val3}
+</span><span style=color:#75715e>// 所以如果在同一个key上设置了两个值，那么旧的值永远不会取出来，因为会先取到后设置的值；所以也可以直接理解为一个map（实际上复杂度不是O(1)的）
+</span><span style=color:#75715e></span><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>WithValue</span>(<span style=color:#a6e22e>parent</span> <span style=color:#a6e22e>Context</span>, <span style=color:#a6e22e>key</span>, <span style=color:#a6e22e>val</span> <span style=color:#66d9ef>interface</span>{}) <span style=color:#a6e22e>Context</span> {
+    <span style=color:#66d9ef>if</span> <span style=color:#a6e22e>key</span> <span style=color:#f92672>==</span> <span style=color:#66d9ef>nil</span> {
+        panic(<span style=color:#e6db74>&#34;nil key&#34;</span>)
+    }
+
+    <span style=color:#66d9ef>if</span> !<span style=color:#a6e22e>reflect</span>.<span style=color:#a6e22e>TypeOf</span>(<span style=color:#a6e22e>key</span>).<span style=color:#a6e22e>Comparable</span>() {
+        panic(<span style=color:#e6db74>&#34;key is not comparable&#34;</span>)
+    }
+
+    <span style=color:#66d9ef>return</span> <span style=color:#f92672>&amp;</span><span style=color:#a6e22e>valueCtx</span>{<span style=color:#a6e22e>parent</span>, <span style=color:#a6e22e>key</span>, <span style=color:#a6e22e>val</span>}
+}
+</code></pre></div><h2 id=context-中的-value-存储与-medatada>context 中的 value 存储与 medatada</h2><p>在 grpc 中，client 与 server 之间通过 context 传递上下文数据的时候，不能使用 context.WithValue。</p><p>因为 server 端无法获取到 client 自定义的 key（是这个 key 本身的原因还是 grpc 做了限制？）</p><p>那么如何在 client 与 server 之间传递数据呢？可以使用 grpc 提供的 medadata 接口:</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#f92672>package</span> <span style=color:#a6e22e>main</span>
+
+<span style=color:#f92672>import</span> (
+    <span style=color:#e6db74>&#34;context&#34;</span>
+    <span style=color:#e6db74>&#34;fmt&#34;</span>
+    <span style=color:#e6db74>&#34;google.golang.org/grpc/metadata&#34;</span>
+)
+
+<span style=color:#66d9ef>func</span> <span style=color:#a6e22e>main</span>() {
+    <span style=color:#75715e>// client
+</span><span style=color:#75715e></span>    <span style=color:#a6e22e>md</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>metadata</span>.<span style=color:#a6e22e>Pairs</span>(
+        <span style=color:#e6db74>&#34;k1&#34;</span>, <span style=color:#e6db74>&#34;v1&#34;</span>,
+        <span style=color:#e6db74>&#34;k2&#34;</span>, <span style=color:#e6db74>&#34;v2&#34;</span>,
+    )
+    <span style=color:#a6e22e>ctx</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>metadata</span>.<span style=color:#a6e22e>NewOutgoingContext</span>(<span style=color:#a6e22e>context</span>.<span style=color:#a6e22e>Background</span>(), <span style=color:#a6e22e>md</span>)
+
+    <span style=color:#75715e>// server
+</span><span style=color:#75715e></span>    <span style=color:#a6e22e>md2</span>, <span style=color:#a6e22e>ok</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>metadata</span>.<span style=color:#a6e22e>FromIncomingContext</span>(<span style=color:#a6e22e>ctx</span>)
+    <span style=color:#66d9ef>if</span> !<span style=color:#a6e22e>ok</span> {
+        panic(<span style=color:#e6db74>&#34;no metadata&#34;</span>)
+    }
+
+    <span style=color:#a6e22e>fmt</span>.<span style=color:#a6e22e>Printf</span>(<span style=color:#e6db74>&#34;k1 %v\n&#34;</span>, <span style=color:#a6e22e>md2</span>[<span style=color:#e6db74>&#34;k1&#34;</span>])
+    <span style=color:#a6e22e>fmt</span>.<span style=color:#a6e22e>Printf</span>(<span style=color:#e6db74>&#34;k2 %v\n&#34;</span>, <span style=color:#a6e22e>md2</span>[<span style=color:#e6db74>&#34;k2&#34;</span>])
+}
+</code></pre></div><p>这里使用了<code>metadata.NewOutgoingContext</code>传递数据，<code>metadata.FromIncomingContext</code>获取数据。</p><p>这里其实就是通过 context.WithValue 实现的，只不过 key 分别是指定的<code>mdOutgoingKey{}</code>，<code>mdIncomingKey{}</code></p><p><code>mdOutgoingKey{}</code>，<code>mdIncomingKey{}</code>之间的区别就是，在 client 端发送数据的时候选用<code>metadata.NewOutgoingContext</code>，在 server 接受数据的时候，选用<code>metadata.FromIncomingContext</code></p><h2 id=参考文章>参考文章</h2><ul><li><a href=https://github.com/grpc/grpc-go/issues/156>https://github.com/grpc/grpc-go/issues/156</a></li><li><a href=https://talks.golang.org/2014/gotham-context.slide#1>https://talks.golang.org/2014/gotham-context.slide#1</a></li></ul></div><script async src="//cdn.bootcss.com/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML"></script><script src=../../js/jquery-3.3.1.min.js></script><script src=../../js/code.js></script><script src=../../css/highlight.css></script><script src=../../js/instantclick.min.js data-no-instant></script><script data-no-instant>InstantClick.init();</script><script>hljs.configure({languages:[]});hljs.initHighlightingOnLoad();</script><hr>© <a href=https://chyroc.cn>chyroc</a> <a href=https://github.com/spf13/hyde>Theme By hyde</a> 2020
+<span id=reading-statistics><span><div id=git-comments></div><link rel=stylesheet href=https://imsun.github.io/gitment/style/default.css><script src=https://imsun.github.io/gitment/dist/gitment.browser.js></script><script>var gitment=new Gitment({id:'golang-context-i',title:'Golang 中的 context 之传值（一）',owner:'chyroc',repo:'blog',oauth:{client_id:'36628d87f0ace3c0f34c',client_secret:'814e29f878a31ddf2a0f8f010c2bc3615750a998',}})
+gitment.render('git-comments')</script></main></body></html>
