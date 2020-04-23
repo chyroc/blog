@@ -1,7 +1,29 @@
-Chyroc Blog
+chyroc blog
 
-文章源文件分支
+see [https://chyroc.cn](https://chyroc.cn)
 
-todo
-https://media.chyroc.cn/img/man-command-highlight.png
-https://user-images.githubusercontent.com/15604894/33938299-fdef3ea0-e041-11e7-93e4-fc177aeb5255.jpg
+![](https://media.chyroc.cn/img/fuckyou.gif)
+
+## 预览、编译
+
+- 安装 hugo
+
+使用 `hugo@v0.54.0` 版本
+
+- hugo 版本
+
+```shell
+hugo version
+```
+
+- 预览
+
+```shell
+hugo server
+```
+
+- 编译
+
+```shell
+make
+```
