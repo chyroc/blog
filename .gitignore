@@ -2,7 +2,6 @@
 .python-version
 .DS_Store
 public/
-docs/
 content/.Ulysses-Group.plist
 content/.Ulysses-favorites.plist
 content/posts/.Ulysses-Group.plist

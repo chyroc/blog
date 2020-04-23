@@ -25,5 +25,5 @@ hugo server
 - 编译
 
 ```shell
-make
+( cd src && hugo && mv ./public/ ../docs )
 ```

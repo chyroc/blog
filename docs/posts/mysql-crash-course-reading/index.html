@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="zh-cn" lang="zh-cn">
+<head>
+  <link href="https://gmpg.org/xfn/11" rel="profile">
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+  <meta name="generator" content="Hugo 0.54.0" />
+
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>《MySQL 必知必会》阅读小记 &middot; Chyroc的博客</title>
+  <meta name="description" content="" />
+
+  
+  <link type="text/css" rel="stylesheet" href="https://chyroc.cn/css/print.css" media="print">
+  <link type="text/css" rel="stylesheet" href="https://chyroc.cn/css/poole.css">
+  <link type="text/css" rel="stylesheet" href="https://chyroc.cn/css/syntax.css">
+  <link type="text/css" rel="stylesheet" href="https://chyroc.cn/css/hyde.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Abril+Fatface|PT+Sans:400,400i,700">
+
+
+  
+  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/apple-touch-icon-144-precomposed.png">
+  <link rel="shortcut icon" href="/favicon.png">
+
+  
+  
+</head>
+
+  <body class="theme-base-08 ">
+  <aside class="sidebar">
+  <div class="container sidebar-sticky">
+    <div class="sidebar-about">
+      <a href="https://chyroc.cn"><h1>Chyroc的博客</h1></a>
+      <p class="lead">
+      
+      </p>
+    </div>
+
+    <nav>
+      <ul class="sidebar-nav">
+        <li><a href="https://chyroc.cn">Home</a> </li>
+        <li><a href="/"> 主页 </a></li><li><a href="/blogroll/"> 友链 </a></li><li><a href="/about/"> 关于 </a></li>
+      </ul>
+    </nav>
+  </div>
+</aside>
+
+    <main class="content container">
+    <div class="post">
+  <h1>《MySQL 必知必会》阅读小记</h1>
+  <time datetime=2018-09-04T14:03:12&#43;0800 class="post-date">2018-09-04 14:03:12</time>
+  
+
+<p>database：以有组织的方式存储数据</p>
+
+<p>SQL: structured query language</p>
+
+<h2 id="一般命令">一般命令</h2>
+
+<ul>
+<li>连接 <code>mysql -uroot -h127.0.0.1</code></li>
+
+<li><p>显示数据库 <code>show databases</code></p></li>
+
+<li><p>切换数据库 <code>use database</code></p></li>
+
+<li><p>显示表 <code>show tables</code></p></li>
+
+<li><p>显示列 <code>show columns from table</code> == <code>desc table</code></p></li>
+
+<li><p>显示创建数据库语句 <code>show create database xx</code></p></li>
+
+<li><p>显示创建表语句 <code>show create table xx</code></p></li>
+
+<li><p>显示权限 <code>show grants</code></p></li>
+
+<li><p>显示服务器状态 <code>show status</code></p></li>
+</ul>
+
+<h2 id="简单查询">简单查询</h2>
+
+<ul>
+<li><code>select &lt;column&gt; from &lt;table&gt;</code></li>
+<li>（不建议使用）使用<code>*</code>查询所有列</li>
+<li>只返回不同的值
+
+<ul>
+<li><code>select distinct &lt;column&gt; from &lt;table&gt;</code></li>
+<li>应用于所有列 <code>select distinct &lt;c1&gt;, &lt;c2&gt; from &lt;table&gt;</code> 那么 c1 和 c2 都一样，才不会查出来</li>
+</ul></li>
+<li>限定查询的个数
+
+<ul>
+<li><code>limit 1</code>返回一个</li>
+<li><code>limit 20, 30</code> 从第 20 个开始，返回 30 个</li>
+</ul></li>
+<li>排序
+
+<ul>
+<li>默认升序(<code>asc</code>)，可以使用<code>desc</code>指定降序</li>
+<li>可以指定多列 <code>order by &lt;c1&gt;, &lt;c2&gt;, ...</code></li>
+<li>可以为多列分别指定降序/升序 <code>order by &lt;c1&gt; desc, &lt;c2&gt;</code></li>
+</ul></li>
+<li>过滤条件 filter condition
+
+<ul>
+<li><code>where &lt;clause&gt;</code></li>
+<li><em>同时使用<code>where</code> / <code>order by</code>，应该把<code>where</code>放在前面</em></li>
+<li>操作符 <code>=</code> / <code>&lt;&gt;</code> / <code>!=</code> / <code>&gt;</code> / <code>&gt;=</code> / <code>&lt;</code> / <code>&lt;=</code> / <code>between</code></li>
+<li>空值检测 <code>is null</code> / <code>is not null</code></li>
+<li><code>and</code> / <code>or</code>，注意：<em><code>and</code>优先级比<code>or</code>高，建议使用括号</em></li>
+<li><code>in</code></li>
+<li>比<code>or</code>快</li>
+<li>可以包含其他<code>select</code>语句，动态创建 where 子句</li>
+<li><code>not</code></li>
+</ul></li>
+<li>通配符
+
+<ul>
+<li><code>like</code>：<code>where xxx like xxx</code></li>
+<li><code>%</code> 匹配*任意字符*出现<strong>任意次数</strong></li>
+<li><code>_</code>匹配*任意字符*出现<strong>一次</strong></li>
+<li>将<code>%</code> / <code>_</code>放在开头就无法使用上索引</li>
+</ul></li>
+<li>正则表达式
+
+<ul>
+<li><code>regexp</code>: <code>where xx regexp xxx</code></li>
+<li>略</li>
+</ul></li>
+</ul>
+
+<h2 id="计算字段">计算字段</h2>
+
+<ul>
+<li>拼接 <code>concat( c1, '(', c2, ')' )</code></li>
+<li>文本处理函数
+
+<ul>
+<li>去除空格 <code>RTrim</code> / <code>LTrim</code> / <code>Trim</code></li>
+<li>长度 <code>Length</code></li>
+<li>大小写 <code>Upper</code> / <code>Lower</code></li>
+<li>略</li>
+</ul></li>
+<li>时间日期处理函数
+
+<ul>
+<li>当前日期 <code>CurDate</code></li>
+<li>当前时间 <code>CurTime</code></li>
+<li>当前日期+时间 <code>Now</code></li>
+<li>略</li>
+</ul></li>
+<li>数值处理函数
+
+<ul>
+<li>绝对数 <code>Abs</code></li>
+<li>指数 <code>Exp</code></li>
+<li>圆周率 <code>Pi</code></li>
+<li>随机数 <code>Rand</code></li>
+<li>平方根 <code>Sqrt</code></li>
+<li>略</li>
+</ul></li>
+<li>聚集函数
+
+<ul>
+<li>某列平均数 <code>avg(c)</code>，会忽略<code>NULL</code></li>
+<li>行数 <code>count</code>：<code>count(*)</code> / <code>count(c)</code> 如果写列名，<code>NULL</code>会忽略不计算</li>
+<li>列最大值 <code>max</code></li>
+<li>列最小值 <code>min</code></li>
+<li>列的和 <code>sum</code> 忽略<code>NULL</code></li>
+<li>可以和<code>distinct</code>结合，<code>min(distinct column)</code>返回不同价格的平均数</li>
+</ul></li>
+<li>别名 <code>concat(...) as column_alias</code></li>
+<li>计算 <code>select t1 * t2</code>，支持 <code>+</code> / <code>-</code> / <code>*</code> / <code>/</code></li>
+</ul>
+
+<h2 id="group">group</h2>
+
+<h3 id="注意">注意</h3>
+
+<ul>
+<li><code>group by</code>子句可以包含任意数目的列，使得能够对分组进行嵌套</li>
+
+<li><p>如果在<code>group by</code>子句嵌套了分组，数据将在最后规定的分组上进行汇总</p></li>
+
+<li><p><code>select</code>如果使用了表达式，那么<code>group by</code>也需要使用相同的表达式，不能使用<code>as</code></p></li>
+
+<li><p><code>select</code>子句的每个列都需要在<code>group by</code>子句中给出</p></li>
+
+<li><p><code>NULL</code>值作为一个单独的一个 group</p></li>
+
+<li><p><code>group by</code>必须在<code>where</code>后，在<code>order by</code>前</p></li>
+</ul>
+
+<h3 id="过滤-group">过滤 group</h3>
+
+<ul>
+<li>使用<code>having</code></li>
+<li><code>having</code>过滤 group，<code>where</code>过滤行，所有的 where 都可以替换为 having</li>
+<li><code>having</code>在分组完成后过滤，<code>where</code>在数据分组前过滤</li>
+<li><code>select id,count(*) as s from t group by id having count(*) &gt;= 2</code></li>
+</ul>
+
+<h2 id="子查询">子查询</h2>
+
+<ul>
+<li><code>select a from t_a where id in (select id from t_b)</code></li>
+<li><code>select name, (select count(*) from t_b where t_a.user_id = t_b.user_id) from t_a</code></li>
+</ul>
+
+<h2 id="join">join</h2>
+
+<p>inner join</p>
+
+<ul>
+<li><p>只有<code>t1.id = t2.id</code>的数据才会被筛选出来，也就说可能有点数据不会出来</p></li>
+
+<li><p><code>select c1, t1.c, t2.c from t_1, t_2 where t1.id = t2.id</code></p></li>
+
+<li><p><code>select c1, t1.c, t2.c from t1 inner join t2 on t1.id = t2.id</code></p></li>
+
+<li><p><code>select c1, t1.c, t2.c from t1 join t2 on t1.id = t2.id</code></p></li>
+
+<li><p>使用<code>a join b</code> / <code>on a.id = b.id</code></p></li>
+
+<li><p>多表 <code>select t1.c, t2.c, t3.c from t1, t2, t3 where t1.id=t2.id and t2.id=t3.id</code></p></li>
+</ul>
+
+<p>表别名</p>
+
+<ul>
+<li><code>select xx from table_1 as a, table_2 as b where a.id=b.id</code></li>
+</ul>
+
+<p>自 join</p>
+
+<ul>
+<li><code>select id, name from t1 where id = (select id from t1 where t2_id = 'xxx')</code></li>
+<li><code>select t1.id, t1.name from table_1 as t1, table_1 as t2 where t1.id = t2.id and t2.t2_id='xxx'</code></li>
+</ul>
+
+<p>outer join</p>
+
+<ul>
+<li><p>包括<code>left join</code> / `right join</p>
+
+<ul>
+<li>left join<code>表示左边的表全部返回，右边的表根据</code>on`子句查询</li>
+<li><code>right join</code>表示右边的表全部返回，左边的表根据<code>on</code>子句查询</li>
+</ul></li>
+
+<li><p>a 表数据全部返回 <code>select a.id, b.name from a left join b on a.id = b.id</code></p></li>
+
+<li><p>b 表数据全部返回 <code>select a.id, b.name from a right join b on a.id = b.id</code></p></li>
+</ul>
+
+<h2 id="组合查询">组合查询</h2>
+
+<ul>
+<li><code>select id, name form a where xxx union select id, name from a where yyy</code></li>
+<li><code>union</code>至少需要 2 条 select 语句，语句之间使用<code>union</code>连接</li>
+<li>每个查询需要有相同的列，次序无所谓</li>
+<li>列的类型不必相同，但是需要兼容</li>
+<li>返回的数据会消除重复的行，如果需要返回重复的行，请使用<code>union all</code></li>
+<li><code>order by</code>在所有的查询的最后</li>
+</ul>
+
+<h2 id="全文本搜索">全文本搜索</h2>
+
+<p>略</p>
+
+<h2 id="插入-更新-删除">插入/更新/删除</h2>
+
+<h3 id="插入">插入</h3>
+
+<ul>
+<li>单个 <code>insert into table c1, c2 values (d1, d2)</code></li>
+<li>多条 <code>insert into table c1, c2 values (d1, d2), (d3, d4), (d5, d6)</code></li>
+<li>查询插入 <code>insert into table c1, c2 select c1, c2 from table_2</code></li>
+</ul>
+
+<h3 id="更新">更新</h3>
+
+<ul>
+<li><code>update table set c1 = d1, c2 = d2 where id='1'</code></li>
+<li><code>update ignore table ...</code></li>
+</ul>
+
+<h3 id="删除">删除</h3>
+
+<ul>
+<li><code>delete from a where id = '1'</code></li>
+<li><code>truncate a</code></li>
+</ul>
+
+<h2 id="创建-更新表">创建/更新表</h2>
+
+<ul>
+<li>创建表</li>
+</ul>
+
+<pre><code class="language-sql">create table name (
+    id INT NOT NULL AUTO_INCREMENT,
+    column_1 INT NULL,
+    column_2 VARCHAR(32) NOT NULL,
+    column_3 CHAR(2) DEFAULT 'hh',
+    PRIMARY KEY (id)
+)
+    ENGINE=InnoDB;
+</code></pre>
+
+<ul>
+<li>如果不指定<code>NULL</code>/<code>NOT NULL</code>，默认是<code>NULL</code></li>
+<li>主键 <code>primary key</code></li>
+<li>改表
+
+<ul>
+<li>加一行 <code>alter table name add column column_4 INT</code></li>
+<li>删一行 <code>alter table name drop column column_4</code></li>
+<li>删除表 <code>drop table name</code></li>
+<li>重命名表 <code>rename table name</code></li>
+</ul></li>
+</ul>
+
+<h2 id="视图-存储过程-游标-触发器">视图/存储过程/游标/触发器</h2>
+
+<p>略</p>
+
+<h2 id="事务">事务</h2>
+
+<ul>
+<li><p>术语 <code>transaction</code>  / <code>rollback</code> / <code>commit</code> / <code>savepoint</code></p></li>
+
+<li><p>开始事务 <code>start transaction</code></p></li>
+
+<li><p>提交/回滚 <code>commit</code> / <code>rollback</code></p></li>
+
+<li><p>保留点</p>
+
+<ul>
+<li><code>savepoint name_1</code></li>
+<li><code>rollback to name_1</code></li>
+</ul></li>
+</ul>
+
+</div>
+
+
+<script async src="//cdn.bootcss.com/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script src="../../js/jquery-3.3.1.min.js"></script>
+<script src="../../js/code.js"></script>
+<script src="../../css/highlight.css"></script>
+
+<script src="../../js/instantclick.min.js" data-no-instant></script>
+<script data-no-instant>InstantClick.init();</script>
+
+<script>
+hljs.configure({languages: []});
+hljs.initHighlightingOnLoad();
+</script>
+
+
+  
+  <hr/>
+  &copy; <a href="https://chyroc.cn">chyroc</a> <a href="https://github.com/spf13/hyde">Theme By hyde</a> 2020
+  
+  <span id="reading-statistics"/><span>
+
+  
+
+<div id="git-comments"></div>
+<link rel="stylesheet" href="https://imsun.github.io/gitment/style/default.css">
+<script src="https://imsun.github.io/gitment/dist/gitment.browser.js"></script>
+<script>
+  var gitment = new Gitment({
+    id: 'mysql-crash-course-reading',
+    title: '《MySQL 必知必会》阅读小记',
+    owner: 'Chyroc',
+    repo: 'chyroc.github.io',
+    oauth: {
+      client_id: '36628d87f0ace3c0f34c',
+      client_secret: '814e29f878a31ddf2a0f8f010c2bc3615750a998',
+    }
+  })
+  gitment.render('git-comments')
+</script>
+
+
+
+
+
+
+    </main>
+
+    
+      
+    
+  </body>
+</html>

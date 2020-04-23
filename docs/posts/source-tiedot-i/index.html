@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="zh-cn" lang="zh-cn">
+<head>
+  <link href="https://gmpg.org/xfn/11" rel="profile">
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+  <meta name="generator" content="Hugo 0.54.0" />
+
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>tiedot 阅读笔记（一） &middot; Chyroc的博客</title>
+  <meta name="description" content="" />
+
+  
+  <link type="text/css" rel="stylesheet" href="https://chyroc.cn/css/print.css" media="print">
+  <link type="text/css" rel="stylesheet" href="https://chyroc.cn/css/poole.css">
+  <link type="text/css" rel="stylesheet" href="https://chyroc.cn/css/syntax.css">
+  <link type="text/css" rel="stylesheet" href="https://chyroc.cn/css/hyde.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Abril+Fatface|PT+Sans:400,400i,700">
+
+
+  
+  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/apple-touch-icon-144-precomposed.png">
+  <link rel="shortcut icon" href="/favicon.png">
+
+  
+  
+</head>
+
+  <body class="theme-base-08 ">
+  <aside class="sidebar">
+  <div class="container sidebar-sticky">
+    <div class="sidebar-about">
+      <a href="https://chyroc.cn"><h1>Chyroc的博客</h1></a>
+      <p class="lead">
+      
+      </p>
+    </div>
+
+    <nav>
+      <ul class="sidebar-nav">
+        <li><a href="https://chyroc.cn">Home</a> </li>
+        <li><a href="/"> 主页 </a></li><li><a href="/blogroll/"> 友链 </a></li><li><a href="/about/"> 关于 </a></li>
+      </ul>
+    </nav>
+  </div>
+</aside>
+
+    <main class="content container">
+    <div class="post">
+  <h1>tiedot 阅读笔记（一）</h1>
+  <time datetime=2018-01-22T08:00:00&#43;0800 class="post-date">2018-01-22 08:00:00</time>
+  
+
+<h1 id="tiedot">tiedot</h1>
+
+<p>Tiedot 是一个完全使用 go 实现的文档型的 NoSQL，项目地址是：<a href="https://github.com/HouzuoGuo/tiedot">GitHub - HouzuoGuo/tiedot</a></p>
+
+<h2 id="项目结构">项目结构</h2>
+
+<p>使用命令<code>tree -L 1</code>查看目录结构：</p>
+
+<pre><code class="language-zsh">.
+├── Dockerfile
+├── LICENSE
+├── README.md
+├── benchmark
+├── data
+├── db
+├── dberr
+├── distributable
+├── doc
+├── docker-compose.yml
+├── examples
+├── extra
+├── gommap
+├── httpapi
+├── main.go
+├── tdlog
+├── test-and-coverage-report.sh
+└── vendor
+</code></pre>
+
+<h2 id="如何存储数据">如何存储数据</h2>
+
+<h3 id="文件结构与条件编译">文件结构与条件编译</h3>
+
+<p>存储数据的代码全部在 data 里面，这篇文章先只关注这个
+<code>tree data | grep -v '_test.go'</code>
+数据：</p>
+
+<pre><code class="language-zsh">data
+├── collection.go
+├── collection32.go
+├── collection64.go
+├── config.go
+├── file.go
+├── hash32.go
+├── hash64.go
+├── hashtable.go
+├── partition.go
+</code></pre>
+
+<p>其中<code>*32.go</code>和<code>*64.go</code>是针对不同的 os 进行兼容的代码，可以通过文件头部<code>build tag</code>指定编译条件：</p>
+
+<pre><code class="language-golang">// *32.go
+// +build 386 arm
+
+// *64.go
+// +build !386,!arm
+</code></pre>
+
+<h2 id="如何存储字节数据-下面两个数据的基础">如何存储字节数据（下面两个数据的基础）</h2>
+
+<p>代码：<a href="https://github.com/HouzuoGuo/tiedot/blob/master/data/file.go">tiedot/file.go</a>
+这部分代码借鉴了：<a href="https://github.com/edsrzf/mmap-go">edsrzf/mmap-go</a>，主要的作用就是将数据从文件读入内存。
+其中定义了一个数据结构：</p>
+
+<pre><code class="language-golang">type DataFile struct {
+	Path   string // 文件路径，没什么好解释的
+	Used   int // 已经使用的大小，单位字节。但是这个还有一个作用，下面会介绍
+	Size   int // 文件大小
+	Growth int // 当使用的数据大小超过了文件的大小的时候，就需要增加文件的大小。这个数据就是一次所增加的大小
+	Fh     *os.File // 文件指针，没什么好解释的
+	Buf gommap.MMap // 重点，内存数据，字节数组！下面操作数据，都是通过操作这个字段来实现的。
+}
+</code></pre>
+
+<h3 id="从-buf-中读取数据">从<code>Buf</code>中读取数据</h3>
+
+<p>如果数据是数字的话：</p>
+
+<pre><code class="language-golang">room, _ := binary.Varint(col.Buf[id+1: id+11])
+</code></pre>
+
+<p>如果就是字节的话：</p>
+
+<pre><code class="language-golang">docCopy := make([]byte, length)
+copy(docCopy, col.Buf[x:y])
+</code></pre>
+
+<h3 id="写入数据到-buf">写入数据到<code>Buf</code></h3>
+
+<p>如果数据是数字的话：</p>
+
+<pre><code class="language-golang">binary.PutVarint(Buf[x:y], int64Data)
+</code></pre>
+
+<p>如果就是字节的话：</p>
+
+<pre><code class="language-golang">copy(Buf[x:y], data)
+</code></pre>
+
+<h2 id="如何存储-doc-文档">如何存储 doc(文档)</h2>
+
+<p>在 tiedot 里面定义了一个叫做<code>Collection</code>的东西，这个将作为 doc 的数据载体，<code>Collection</code>内嵌了<code>DataFile</code>数据接口。
+它实现了这么几个方法，前四个是增删查改，第五个是一个 map 函数。
+<img src="tie2/0005C20E-CAD8-4196-815D-40BC5FDDC460.png" alt="" /></p>
+
+<h3 id="insert-doc">insert doc</h3>
+
+<p>函数签名</p>
+
+<pre><code class="language-golang">Insert(data []byte) (id int, err error)
+</code></pre>
+
+<p><code>Collection</code>中的<code>Buf</code>数据以<code>doc</code>组成，<code>doc</code>是不连续的，每一个<code>doc</code>的数据结构是：</p>
+
+<pre><code class="language-plain">+------------------------------------+
+| flag | doc length |    doc data    |
+0------1-----------11-----...------end
+</code></pre>
+
+<ul>
+<li>第 1 个字节存储当前字节开始是否是一个 doc</li>
+<li>第 2 个到 11 个字节（共 10 个）存储本 doc 的长度，假设为<code>len</code></li>
+<li>然后第 12 个到<code>11+len</code>个字节存储的是 doc 的数据
+问题</li>
+<li>返回的 id 如何确定
+Id 就是这个 doc 的其实的字节序号，使用<code>Used</code>来确定。
+所以在 insert 完数据之后，需要将本 doc 的大小加入到里面：</li>
+</ul>
+
+<pre><code class="language-golang">col.Used += docSize
+</code></pre>
+
+<ul>
+<li>分配的大小如何确定
+参数大小的两倍，剩余的部分，使用空白填充。
+好处是更新的时候，如果新的 doc 的大小不超过旧的两倍，那么就不需要重新分配地址和 id</li>
+</ul>
+
+<h3 id="update-doc">update doc</h3>
+
+<p>函数签名</p>
+
+<pre><code class="language-golang">Update(id int, data []byte) (newID int, err error)
+</code></pre>
+
+<p>分两种情况</p>
+
+<ul>
+<li>新 doc 大小小于原来分配的大小
+直接更新元老的数据就行</li>
+
+<li><p>新 doc 大小大于原来分配的大小
+先删除，再插入</p>
+
+<h3 id="delete-doc">delete doc</h3>
+
+<p>函数签名</p></li>
+</ul>
+
+<pre><code class="language-golang">Delete(id int) error
+</code></pre>
+
+<p>将标志位置为<code>0</code>就行了</p>
+
+<h3 id="read-doc">read doc</h3>
+
+<pre><code class="language-golang">Read(id int) []byte
+</code></pre>
+
+<p>先读出来 doc length 这个数据（2-11 字节）
+然后用这个数据长度去读 buf 的数据（第 12 个到<code>11+len</code>个字节）</p>
+
+<h2 id="如何存储-index-索引-哈希表">如何存储 index(索引，哈希表)</h2>
+
+<h3 id="总览">总览</h3>
+
+<p>使用了 bucket 和 entry 实现了一个哈希表，每一个 bucket 拥有固定数量的 entry，每一个 entry 存储了一对键值对。
+当一个 bucket 满了的时候，会有一个新的 bucket 链接到这个 bucket 后面，形成一个 bucket 链。
+因为是索引，所以没有修改接口，只有增删查。
+<img src="tie2/7DABA9B8-AAF4-41F4-957B-AAABDE87167E.png" alt="" /></p>
+
+<h3 id="bucket">bucket</h3>
+
+<p>结构是</p>
+
+<pre><code class="language-plain">+----------------------------------------------------+
+| next bucket addr | entry1 | entry2 | ... | entry16 |
+0 ---------------- 10------31-------52-------------346
+</code></pre>
+
+<h3 id="entry">entry</h3>
+
+<p>结构是，共 21 字节</p>
+
+<pre><code class="language-plain">+--------------------+
+| flag | key | value |
+0------1----11------21
+</code></pre>
+
+<ul>
+<li>第 1 字节：是否是一个 entry</li>
+<li>2-11 字节：key 值，一个 int</li>
+<li>12-21 字节：value 值，一个 int</li>
+</ul>
+
+<p>因为一个 bucket 会有若干个 entry，所以知道了 bucket 的地址，那么就可以计算出所有的 entry 的地址：</p>
+
+<pre><code class="language-golang">entryAddr := bucket*ht.BucketSize + BucketHeader + entry*EntrySize
+// ht.BucketSize = BucketHeader + conf.PerBucket*EntrySize = 10 + 16 * 21 = 346 字节
+// BucketHeader 记录了下一个bucket的地址，10 字节
+// entry 第几个entry，从0开始
+// EntrySize entry大小，21字节
+</code></pre>
+
+<ul>
+<li>1-10：指向下一个 bucket 的地址</li>
+<li>11-31：21 个字节，是一个 entry</li>
+<li>……：每 21 个字节是一个 entry，连续的</li>
+</ul>
+
+<h3 id="哈希函数-hashkey">哈希函数 HashKey</h3>
+
+<p>函数签名</p>
+
+<pre><code class="language-golang">HashKey(key int) int
+</code></pre>
+
+<p>返回值是一个<code>0-65535</code>之间的整数（这个也是 bucket 初始化的时候的范围）</p>
+
+<h3 id="增">增</h3>
+
+<p>函数签名</p>
+
+<pre><code class="language-golang">Put(key, val int)
+</code></pre>
+
+<ul>
+<li>使用<code>HashKey</code>计算 key 的哈希作为 bucket（序号）</li>
+<li>循环这个 bucket 的所有 entry，看看是不是还有空的（通过标志位判断），有就写入数据，entry 循环是<code>entry++</code></li>
+<li>如果 entry 到达了 16，也就是一个 bucket 所能容纳的 entry 的极限，就会找到下一个 bucket，继续循环，这里使用了<code>nextBucket(bucket int) int</code>，从前 10 个字节取下一个 bucket 的地址</li>
+<li>如果是最后一个 bucket，那么就需要新添加一个，使用函数<code>growBucket(bucket int)</code></li>
+</ul>
+
+<h3 id="删">删</h3>
+
+<p>通过哈希表找到那个数据，然后将标志位置为 0</p>
+
+<h3 id="查">查</h3>
+
+<p>一样的</p>
+
+<h2 id="doc-与-index-的结合">doc 与 index 的结合</h2>
+
+<p>数据结构</p>
+
+<pre><code class="language-golang">type Partition struct {
+	// 是这个par对应的doc存储地方
+	col *Collection
+
+	// 哈希表
+	lookup *HashTable
+
+	// 访问 doc 加锁
+	DataLock *sync.RWMutex // guard against concurrent document updates
+}
+</code></pre>
+
+<p>方法</p>
+
+<p><img src="tie2/EB46196A-441E-4DEA-AC84-6E8C4C1F49CE.png" alt="" /></p>
+
+<h3 id="增-1">增</h3>
+
+<p>函数签名</p>
+
+<pre><code class="language-go">Insert(id int, data []byte) (physID int, err error)
+</code></pre>
+
+<p>第一个参数 id 是一个随机数，在生成之后是不变的（也就是更新 doc 仍然不变）
+* 先将数据插入 col，返回一个真实数据的 id
+* 然后把 doc id 和真实 id 存在哈希表</p>
+
+<h3 id="删-1">删</h3>
+
+<p>函数签名</p>
+
+<pre><code class="language-go">Delete(id int) (err error)
+</code></pre>
+
+<ul>
+<li>通过哈希表找到对应的真实 id</li>
+<li>删除真实 id 所在的数据</li>
+<li>删除真实 id 和 doc id 对应的哈希表数据</li>
+</ul>
+
+<h3 id="查-1">查</h3>
+
+<p>函数签名</p>
+
+<pre><code class="language-go">Read(id int) ([]byte, error)
+</code></pre>
+
+<ul>
+<li>通过 doc id 找到真实 id</li>
+<li>然后通过它查询数据</li>
+</ul>
+
+<h3 id="改">改</h3>
+
+<p>函数签名</p>
+
+<pre><code class="language-go">Update(id int, data []byte) (err error)
+</code></pre>
+
+<ul>
+<li>找到真实 id</li>
+<li>更新数据</li>
+<li>如果返回的真实 id 和获取的不一致，需要将 doc id 与真实 id 的对应关系更新一下</li>
+</ul>
+
+</div>
+
+
+<script async src="//cdn.bootcss.com/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+<script src="../../js/jquery-3.3.1.min.js"></script>
+<script src="../../js/code.js"></script>
+<script src="../../css/highlight.css"></script>
+
+<script src="../../js/instantclick.min.js" data-no-instant></script>
+<script data-no-instant>InstantClick.init();</script>
+
+<script>
+hljs.configure({languages: []});
+hljs.initHighlightingOnLoad();
+</script>
+
+
+  
+  <hr/>
+  &copy; <a href="https://chyroc.cn">chyroc</a> <a href="https://github.com/spf13/hyde">Theme By hyde</a> 2020
+  
+  <span id="reading-statistics"/><span>
+
+  
+
+<div id="git-comments"></div>
+<link rel="stylesheet" href="https://imsun.github.io/gitment/style/default.css">
+<script src="https://imsun.github.io/gitment/dist/gitment.browser.js"></script>
+<script>
+  var gitment = new Gitment({
+    id: 'source-tiedot-i',
+    title: 'tiedot 阅读笔记（一）',
+    owner: 'Chyroc',
+    repo: 'chyroc.github.io',
+    oauth: {
+      client_id: '36628d87f0ace3c0f34c',
+      client_secret: '814e29f878a31ddf2a0f8f010c2bc3615750a998',
+    }
+  })
+  gitment.render('git-comments')
+</script>
+
+
+
+
+
+
+    </main>
+
+    
+      
+    
+  </body>
+</html>
