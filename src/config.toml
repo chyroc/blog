@@ -1,11 +1,11 @@
 baseURL = "https://chyroc.cn"
 languageCode = "zh-cn"
 title = "Chyroc的博客"
-theme = "hyde"
+theme = "xmin"
 
 [params]
     themeColor = "theme-base-08"
-    footer = "&copy; [chyroc](https://chyroc.cn) [Theme By hyde](https://github.com/spf13/hyde) 2020"
+    footer = "&copy; [chyroc](https://chyroc.cn) [Theme By hyde](https://themes.gohugo.io/hugo-xmin/) 2021"
 
 [permalinks]
     post = "/post/:year/:month/:day/:slug/"
