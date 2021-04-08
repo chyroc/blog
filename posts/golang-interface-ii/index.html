@@ -1,86 +1,86 @@
-<!doctype html><html xmlns=http://www.w3.org/1999/xhtml xml:lang=zh-cn lang=zh-cn><head><link href=https://gmpg.org/xfn/11 rel=profile><meta charset=utf-8><meta name=generator content="Hugo 0.68.3"><meta name=viewport content="width=device-width,initial-scale=1"><title>golang 的 interface(第二篇) - 接口的作用 &#183; Chyroc的博客</title><meta name=description content><link type=text/css rel=stylesheet href=https://chyroc.cn/css/print.css media=print><link type=text/css rel=stylesheet href=https://chyroc.cn/css/poole.css><link type=text/css rel=stylesheet href=https://chyroc.cn/css/syntax.css><link type=text/css rel=stylesheet href=https://chyroc.cn/css/hyde.css><link rel=stylesheet href="https://fonts.googleapis.com/css?family=Abril+Fatface|PT+Sans:400,400i,700"><link rel=apple-touch-icon-precomposed sizes=144x144 href=/apple-touch-icon-144-precomposed.png><link rel="shortcut icon" href=/favicon.png></head><body class=theme-base-08><aside class=sidebar><div class="container sidebar-sticky"><div class=sidebar-about><a href=https://chyroc.cn><h1>Chyroc的博客</h1></a><p class=lead></p></div><nav><ul class=sidebar-nav><li><a href=https://chyroc.cn>Home</a></li><li><a href=/>主页</a></li><li><a href=/blogroll/>友链</a></li><li><a href=/about/>关于</a></li></ul></nav></div></aside><main class="content container"><div class=post><h1>golang 的 interface(第二篇) - 接口的作用</h1><time datetime=2017-08-04T16:40:04+0800 class=post-date>2017-08-04 16:40:04</time><p>在<a href=../golang-interface-i/>golang 的 interface(第一篇) - 接口的定义与实现</a>里面，我稍微讲了一下我理解的什么是接口，怎么定义接口，怎么实现接口，本文将会讲一讲接口的作用。</p><h2 id=接口作为参数代表什么>接口作为参数代表什么</h2><p>如果一个函数的参数类型是一个接口，代表：在使用这个函数的时候，可以传进来一个实现了这个接口的类型。</p><p>比如一个接口的参数类型是「跑」(runType)，不管他是跑到哪里，跑多久，是要一个对象可以跑，那这个对象就可以使用这个函数。</p><h2 id=接口作为参数可以做什么>接口作为参数可以做什么</h2><p>将对象一般行为抽象出来，作为接口，例如：</p><p><code>io.Writer</code></p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#66d9ef>type</span> <span style=color:#a6e22e>Writer</span> <span style=color:#66d9ef>interface</span> {
-	<span style=color:#a6e22e>Write</span>(<span style=color:#a6e22e>p</span> []<span style=color:#66d9ef>byte</span>) (<span style=color:#a6e22e>n</span> <span style=color:#66d9ef>int</span>, <span style=color:#a6e22e>err</span> <span style=color:#66d9ef>error</span>)
+<!doctype html><html lang=zh-cn><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>golang 的 interface(第二篇) - 接口的作用 | Chyroc的博客</title><link rel=stylesheet href=/css/style.css><link href=//cdn.bootcss.com/highlight.js/9.12.0/styles/github.min.css rel=stylesheet></head><body><nav><ul class=menu><li><a href=/>主页</a></li><li><a href=/blogroll/>友链</a></li><li><a href=/about/>关于</a></li></ul><hr></nav><div class=article-meta><h1><span class=title>golang 的 interface(第二篇) - 接口的作用</span></h1><h2 class=date>2017/08/04</h2></div><main><p>在<a href=../golang-interface-i/>golang 的 interface(第一篇) - 接口的定义与实现</a>里面，我稍微讲了一下我理解的什么是接口，怎么定义接口，怎么实现接口，本文将会讲一讲接口的作用。</p><h2 id=接口作为参数代表什么>接口作为参数代表什么</h2><p>如果一个函数的参数类型是一个接口，代表：在使用这个函数的时候，可以传进来一个实现了这个接口的类型。</p><p>比如一个接口的参数类型是「跑」(runType)，不管他是跑到哪里，跑多久，是要一个对象可以跑，那这个对象就可以使用这个函数。</p><h2 id=接口作为参数可以做什么>接口作为参数可以做什么</h2><p>将对象一般行为抽象出来，作为接口，例如：</p><p><code>io.Writer</code></p><pre><code class=language-go>type Writer interface {
+	Write(p []byte) (n int, err error)
 }
-</code></pre></div><p>代表了所有可以写入字节的抽象，比如：文件，缓冲，http，hasher。</p><p>只要一个类型实现了<code>io.Writer</code>接口，那他就可以去写。（具体怎么写在这个接口实现的方法里详细定义了。）</p><p>我觉得自己对这个还不理解，感觉自己说了很多废话。</p><p>现在有一个方法，输入一些字节和一个对象，就会调用这个对象的写方法，叫做<code>Print</code>。</p><p>所以，屏幕可以定义自己的展现字符的方式，日志可以定义自己存储日志的格式，http server 可以定义网络返回的数据的格式，等等等等，只要这个独特的对象定义了自己的写方法，那么他就可以药药药切克闹。。</p><h2 id=sort-包示例说明>sort 包示例说明</h2><p>在 golang 内置的 sort 包里面，定义了一个<code>Interface</code>：</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#66d9ef>type</span> <span style=color:#a6e22e>Interface</span> <span style=color:#66d9ef>interface</span> {
-	<span style=color:#a6e22e>Len</span>() <span style=color:#66d9ef>int</span>
-	<span style=color:#a6e22e>Less</span>(<span style=color:#a6e22e>i</span>, <span style=color:#a6e22e>j</span> <span style=color:#66d9ef>int</span>) <span style=color:#66d9ef>bool</span>
-	<span style=color:#a6e22e>Swap</span>(<span style=color:#a6e22e>i</span>, <span style=color:#a6e22e>j</span> <span style=color:#66d9ef>int</span>)
+</code></pre><p>代表了所有可以写入字节的抽象，比如：文件，缓冲，http，hasher。</p><p>只要一个类型实现了<code>io.Writer</code>接口，那他就可以去写。（具体怎么写在这个接口实现的方法里详细定义了。）</p><p>我觉得自己对这个还不理解，感觉自己说了很多废话。</p><p>现在有一个方法，输入一些字节和一个对象，就会调用这个对象的写方法，叫做<code>Print</code>。</p><p>所以，屏幕可以定义自己的展现字符的方式，日志可以定义自己存储日志的格式，http server 可以定义网络返回的数据的格式，等等等等，只要这个独特的对象定义了自己的写方法，那么他就可以药药药切克闹。。</p><h2 id=sort-包示例说明>sort 包示例说明</h2><p>在 golang 内置的 sort 包里面，定义了一个<code>Interface</code>：</p><pre><code class=language-go>type Interface interface {
+	Len() int
+	Less(i, j int) bool
+	Swap(i, j int)
 }
-</code></pre></div><p>好奇怪，竟然名字就是叫做<code>Interface</code>。</p><p>然后还定义了一个函数，接受作为参数，并将其排序</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>Sort</span>(<span style=color:#a6e22e>data</span> <span style=color:#a6e22e>Interface</span>)
-</code></pre></div><p>所以，对于任何数据类型，你定义的乱七八糟的东西。你想要对他排序？</p><p>没问题，只要你去为这个数据类型实现<code>Interface</code>的接口</p><h3 id=字符串数组-sort-示例>字符串数组 sort 示例</h3><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#66d9ef>type</span> <span style=color:#a6e22e>personName</span> []<span style=color:#66d9ef>string</span>
+</code></pre><p>好奇怪，竟然名字就是叫做<code>Interface</code>。</p><p>然后还定义了一个函数，接受作为参数，并将其排序</p><pre><code class=language-go>func Sort(data Interface)
+</code></pre><p>所以，对于任何数据类型，你定义的乱七八糟的东西。你想要对他排序？</p><p>没问题，只要你去为这个数据类型实现<code>Interface</code>的接口</p><h3 id=字符串数组-sort-示例>字符串数组 sort 示例</h3><pre><code class=language-go>type personName []string
 
-<span style=color:#66d9ef>func</span> (<span style=color:#a6e22e>pn</span> <span style=color:#a6e22e>personName</span>) <span style=color:#a6e22e>Len</span>() <span style=color:#66d9ef>int</span> {
-	<span style=color:#66d9ef>return</span> len(<span style=color:#a6e22e>pn</span>)
-}
-
-<span style=color:#66d9ef>func</span> (<span style=color:#a6e22e>pn</span> <span style=color:#a6e22e>personName</span>) <span style=color:#a6e22e>Less</span>(<span style=color:#a6e22e>i</span>, <span style=color:#a6e22e>j</span> <span style=color:#66d9ef>int</span>) <span style=color:#66d9ef>bool</span> {
-	<span style=color:#66d9ef>return</span> <span style=color:#a6e22e>pn</span>[<span style=color:#a6e22e>i</span>] &lt; <span style=color:#a6e22e>pn</span>[<span style=color:#a6e22e>j</span>]
+func (pn personName) Len() int {
+	return len(pn)
 }
 
-<span style=color:#66d9ef>func</span> (<span style=color:#a6e22e>pn</span> <span style=color:#a6e22e>personName</span>) <span style=color:#a6e22e>Swap</span>(<span style=color:#a6e22e>i</span>, <span style=color:#a6e22e>j</span> <span style=color:#66d9ef>int</span>) {
-	<span style=color:#a6e22e>pn</span>[<span style=color:#a6e22e>i</span>], <span style=color:#a6e22e>pn</span>[<span style=color:#a6e22e>j</span>] = <span style=color:#a6e22e>pn</span>[<span style=color:#a6e22e>j</span>], <span style=color:#a6e22e>pn</span>[<span style=color:#a6e22e>i</span>]
-}
-</code></pre></div><p>上面先定义了一个字符串数组<code>personName</code>，然后实现了<code>sort</code>包里面的<code>Interface</code>接口，所以可以用<code>sort.Sort</code>对他进行排序了</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>main</span>() {
-	<span style=color:#a6e22e>pn</span> <span style=color:#f92672>:=</span><span style=color:#a6e22e>personName</span>{<span style=color:#e6db74>&#34;chen&#34;</span>,<span style=color:#e6db74>&#34;zhao&#34;</span>,<span style=color:#e6db74>&#34;qian&#34;</span>,<span style=color:#e6db74>&#34;sun&#34;</span>,<span style=color:#e6db74>&#34;li&#34;</span>}
-	<span style=color:#a6e22e>sort</span>.<span style=color:#a6e22e>Sort</span>(<span style=color:#a6e22e>pn</span>)
-
-	<span style=color:#a6e22e>fmt</span>.<span style=color:#a6e22e>Println</span>(<span style=color:#a6e22e>pn</span>)
-}
-</code></pre></div><h3 id=自定义-struct-sort-示例>自定义 struct sort 示例</h3><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#66d9ef>type</span> <span style=color:#a6e22e>Person</span> <span style=color:#66d9ef>struct</span> {
-	<span style=color:#a6e22e>Name</span> <span style=color:#66d9ef>string</span>
-	<span style=color:#a6e22e>Age</span>  <span style=color:#66d9ef>int</span>
+func (pn personName) Less(i, j int) bool {
+	return pn[i] &lt; pn[j]
 }
 
-<span style=color:#66d9ef>type</span> <span style=color:#a6e22e>Human</span> []<span style=color:#a6e22e>Person</span>
+func (pn personName) Swap(i, j int) {
+	pn[i], pn[j] = pn[j], pn[i]
+}
+</code></pre><p>上面先定义了一个字符串数组<code>personName</code>，然后实现了<code>sort</code>包里面的<code>Interface</code>接口，所以可以用<code>sort.Sort</code>对他进行排序了</p><pre><code class=language-go>func main() {
+	pn :=personName{&quot;chen&quot;,&quot;zhao&quot;,&quot;qian&quot;,&quot;sun&quot;,&quot;li&quot;}
+	sort.Sort(pn)
 
-<span style=color:#66d9ef>func</span> (<span style=color:#a6e22e>h</span> <span style=color:#a6e22e>Human</span>) <span style=color:#a6e22e>Len</span>() <span style=color:#66d9ef>int</span> {
-	<span style=color:#66d9ef>return</span> len(<span style=color:#a6e22e>h</span>)
+	fmt.Println(pn)
+}
+</code></pre><h3 id=自定义-struct-sort-示例>自定义 struct sort 示例</h3><pre><code class=language-go>type Person struct {
+	Name string
+	Age  int
 }
 
-<span style=color:#66d9ef>func</span> (<span style=color:#a6e22e>h</span> <span style=color:#a6e22e>Human</span>) <span style=color:#a6e22e>Less</span>(<span style=color:#a6e22e>i</span>, <span style=color:#a6e22e>j</span> <span style=color:#66d9ef>int</span>) <span style=color:#66d9ef>bool</span> {
-	<span style=color:#a6e22e>p1</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>h</span>[<span style=color:#a6e22e>i</span>]
-	<span style=color:#a6e22e>p2</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>h</span>[<span style=color:#a6e22e>j</span>]
-	<span style=color:#66d9ef>if</span> <span style=color:#a6e22e>p1</span>.<span style=color:#a6e22e>Age</span> &lt; <span style=color:#a6e22e>p2</span>.<span style=color:#a6e22e>Age</span> {
-		<span style=color:#66d9ef>return</span> <span style=color:#66d9ef>true</span>
-	} <span style=color:#66d9ef>else</span> <span style=color:#66d9ef>if</span> <span style=color:#a6e22e>p1</span>.<span style=color:#a6e22e>Age</span> <span style=color:#f92672>==</span> <span style=color:#a6e22e>p2</span>.<span style=color:#a6e22e>Age</span> {
-		<span style=color:#66d9ef>return</span> <span style=color:#a6e22e>p1</span>.<span style=color:#a6e22e>Name</span> <span style=color:#f92672>&lt;=</span> <span style=color:#a6e22e>p2</span>.<span style=color:#a6e22e>Name</span>
+type Human []Person
+
+func (h Human) Len() int {
+	return len(h)
+}
+
+func (h Human) Less(i, j int) bool {
+	p1 := h[i]
+	p2 := h[j]
+	if p1.Age &lt; p2.Age {
+		return true
+	} else if p1.Age == p2.Age {
+		return p1.Name &lt;= p2.Name
 	}
-	<span style=color:#66d9ef>return</span> <span style=color:#66d9ef>false</span>
+	return false
 }
 
-<span style=color:#66d9ef>func</span> (<span style=color:#a6e22e>h</span> <span style=color:#a6e22e>Human</span>) <span style=color:#a6e22e>Swap</span>(<span style=color:#a6e22e>i</span>, <span style=color:#a6e22e>j</span> <span style=color:#66d9ef>int</span>) {
-	<span style=color:#a6e22e>h</span>[<span style=color:#a6e22e>i</span>], <span style=color:#a6e22e>h</span>[<span style=color:#a6e22e>j</span>] = <span style=color:#a6e22e>h</span>[<span style=color:#a6e22e>j</span>], <span style=color:#a6e22e>h</span>[<span style=color:#a6e22e>i</span>]
+func (h Human) Swap(i, j int) {
+	h[i], h[j] = h[j], h[i]
 }
-</code></pre></div><p>嗯，上面定义了一个人类的对象，然后他们排序的时候先比较年龄，再比较名字。</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>main</span>() {
-	<span style=color:#a6e22e>h</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>Human</span>{
-		<span style=color:#a6e22e>Person</span>{<span style=color:#a6e22e>Name</span>: <span style=color:#e6db74>&#34;chen&#34;</span>, <span style=color:#a6e22e>Age</span>: <span style=color:#ae81ff>24</span>},
-		<span style=color:#a6e22e>Person</span>{<span style=color:#a6e22e>Name</span>: <span style=color:#e6db74>&#34;zhao&#34;</span>, <span style=color:#a6e22e>Age</span>: <span style=color:#ae81ff>24</span>},
-		<span style=color:#a6e22e>Person</span>{<span style=color:#a6e22e>Name</span>: <span style=color:#e6db74>&#34;qian&#34;</span>, <span style=color:#a6e22e>Age</span>: <span style=color:#ae81ff>26</span>},
+</code></pre><p>嗯，上面定义了一个人类的对象，然后他们排序的时候先比较年龄，再比较名字。</p><pre><code class=language-go>func main() {
+	h := Human{
+		Person{Name: &quot;chen&quot;, Age: 24},
+		Person{Name: &quot;zhao&quot;, Age: 24},
+		Person{Name: &quot;qian&quot;, Age: 26},
 	}
-	<span style=color:#a6e22e>sort</span>.<span style=color:#a6e22e>Sort</span>(<span style=color:#a6e22e>h</span>)
+	sort.Sort(h)
 
-	<span style=color:#a6e22e>fmt</span>.<span style=color:#a6e22e>Println</span>(<span style=color:#a6e22e>h</span>)
+	fmt.Println(h)
 }
-</code></pre></div><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-plain data-lang=plain>[{chen 24} {zhao 24} {qian 26}]
-</code></pre></div><h3 id=怎么实现逆向排序>怎么实现逆向排序</h3><h4 id=sort-逆向排序>sort 逆向排序</h4><p>这个函数支持输入一并返回一个``接口，但是返回的那个的接口的方法被修改了</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>Reverse</span>(<span style=color:#a6e22e>data</span> <span style=color:#a6e22e>Interface</span>) <span style=color:#a6e22e>Interface</span> {
-	<span style=color:#66d9ef>return</span> <span style=color:#f92672>&amp;</span><span style=color:#a6e22e>reverse</span>{<span style=color:#a6e22e>data</span>}
+</code></pre><pre><code class=language-plain>[{chen 24} {zhao 24} {qian 26}]
+</code></pre><h3 id=怎么实现逆向排序>怎么实现逆向排序</h3><h4 id=sort-逆向排序>sort 逆向排序</h4><p>这个函数支持输入一并返回一个``接口，但是返回的那个的接口的方法被修改了</p><pre><code class=language-go>func Reverse(data Interface) Interface {
+	return &amp;reverse{data}
 }
-</code></pre></div><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#66d9ef>type</span> <span style=color:#a6e22e>reverse</span> <span style=color:#66d9ef>struct</span> {
-	<span style=color:#a6e22e>Interface</span>
+</code></pre><pre><code class=language-go>type reverse struct {
+	Interface
 }
-</code></pre></div><p>在 sort 里面，定义了这样一个未导出的接口<code>reverse</code>，他使用了一个 <strong>重要的概念：组合</strong> ，他本身并没有声明任何方法，但是呢，他内嵌了一个<code>Interface</code>接口，所以他就自动声明了<code>Interface</code>接口的所有方法！！</p><p>所以，如果你在你的代码里面对一个数据类型实现了<code>Interface</code>接口，那么实际上，你也隐式地实现了未导出的接口<code>reverse</code>接口。</p><p>更为神奇的是：他在你实现了这些接口之后，改变了你所定义的意义。</p><p>看一看 sort 里的实现：</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#66d9ef>func</span> (<span style=color:#a6e22e>r</span> <span style=color:#a6e22e>reverse</span>) <span style=color:#a6e22e>Less</span>(<span style=color:#a6e22e>i</span>, <span style=color:#a6e22e>j</span> <span style=color:#66d9ef>int</span>) <span style=color:#66d9ef>bool</span> {
-	<span style=color:#66d9ef>return</span> <span style=color:#a6e22e>r</span>.<span style=color:#a6e22e>Interface</span>.<span style=color:#a6e22e>Less</span>(<span style=color:#a6e22e>j</span>, <span style=color:#a6e22e>i</span>)
+</code></pre><p>在 sort 里面，定义了这样一个未导出的接口<code>reverse</code>，他使用了一个 <strong>重要的概念：组合</strong> ，他本身并没有声明任何方法，但是呢，他内嵌了一个<code>Interface</code>接口，所以他就自动声明了<code>Interface</code>接口的所有方法！！</p><p>所以，如果你在你的代码里面对一个数据类型实现了<code>Interface</code>接口，那么实际上，你也隐式地实现了未导出的接口<code>reverse</code>接口。</p><p>更为神奇的是：他在你实现了这些接口之后，改变了你所定义的意义。</p><p>看一看 sort 里的实现：</p><pre><code class=language-go>func (r reverse) Less(i, j int) bool {
+	return r.Interface.Less(j, i)
 }
-</code></pre></div><p>哈哈哈😁，Less 反过来了</p><p>使用：</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#66d9ef>func</span> <span style=color:#a6e22e>main</span>() {
-	<span style=color:#a6e22e>h</span> <span style=color:#f92672>:=</span> <span style=color:#a6e22e>Human</span>{
-		<span style=color:#a6e22e>Person</span>{<span style=color:#a6e22e>Name</span>: <span style=color:#e6db74>&#34;chen&#34;</span>, <span style=color:#a6e22e>Age</span>: <span style=color:#ae81ff>24</span>},
-		<span style=color:#a6e22e>Person</span>{<span style=color:#a6e22e>Name</span>: <span style=color:#e6db74>&#34;zhao&#34;</span>, <span style=color:#a6e22e>Age</span>: <span style=color:#ae81ff>24</span>},
-		<span style=color:#a6e22e>Person</span>{<span style=color:#a6e22e>Name</span>: <span style=color:#e6db74>&#34;qian&#34;</span>, <span style=color:#a6e22e>Age</span>: <span style=color:#ae81ff>26</span>},
+</code></pre><p>哈哈哈😁，Less 反过来了</p><p>使用：</p><pre><code class=language-go>func main() {
+	h := Human{
+		Person{Name: &quot;chen&quot;, Age: 24},
+		Person{Name: &quot;zhao&quot;, Age: 24},
+		Person{Name: &quot;qian&quot;, Age: 26},
 	}
-	<span style=color:#75715e>//sort.Sort(h)
-</span><span style=color:#75715e></span>	<span style=color:#a6e22e>sort</span>.<span style=color:#a6e22e>Sort</span>(<span style=color:#a6e22e>sort</span>.<span style=color:#a6e22e>Reverse</span>(<span style=color:#a6e22e>h</span>))
-	<span style=color:#a6e22e>fmt</span>.<span style=color:#a6e22e>Println</span>(<span style=color:#a6e22e>h</span>)
+	//sort.Sort(h)
+	sort.Sort(sort.Reverse(h))
+	fmt.Println(h)
 }
-</code></pre></div></div><script async src="//cdn.bootcss.com/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML"></script><script src=../../js/jquery-3.3.1.min.js></script><script src=../../js/code.js></script><script src=../../css/highlight.css></script><script src=../../js/instantclick.min.js data-no-instant></script><script data-no-instant>InstantClick.init();</script><script>hljs.configure({languages:[]});hljs.initHighlightingOnLoad();</script><hr>© <a href=https://chyroc.cn>chyroc</a> <a href=https://github.com/spf13/hyde>Theme By hyde</a> 2020
-<span id=reading-statistics><span><div id=git-comments></div><link rel=stylesheet href=https://imsun.github.io/gitment/style/default.css><script src=https://imsun.github.io/gitment/dist/gitment.browser.js></script><script>var gitment=new Gitment({id:'golang-interface-ii',title:'golang 的 interface(第二篇) - 接口的作用',owner:'chyroc',repo:'blog',oauth:{client_id:'36628d87f0ace3c0f34c',client_secret:'814e29f878a31ddf2a0f8f010c2bc3615750a998',}})
-gitment.render('git-comments')</script></main></body></html>
+</code></pre></main><footer><script async src="//cdn.bootcss.com/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML"></script><script src=../../js/jquery-3.3.1.min.js></script><script src=../../js/code.js></script><script src=../../css/highlight.css></script><script src=../../js/instantclick.min.js data-no-instant></script><script data-no-instant>InstantClick.init();</script><script>hljs.configure({languages:[]});hljs.initHighlightingOnLoad();</script><hr>&copy; <a href=https://chyroc.cn>chyroc</a> <a href=https://themes.gohugo.io/hugo-xmin/>Theme By hyde</a> 2021
+<span id=reading-statistics><span></footer><div id=git-comments></div><link rel=stylesheet href=https://imsun.github.io/gitment/style/default.css><script src=https://imsun.github.io/gitment/dist/gitment.browser.js></script><script>var gitment=new Gitment({id:'golang-interface-ii',title:'golang 的 interface(第二篇) - 接口的作用',owner:'Chyroc',repo:'chyroc.github.io',oauth:{client_id:'36628d87f0ace3c0f34c',client_secret:'814e29f878a31ddf2a0f8f010c2bc3615750a998',}})
+gitment.render('git-comments')</script></body></html>

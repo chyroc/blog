@@ -1,57 +1,57 @@
-<!doctype html><html xmlns=http://www.w3.org/1999/xhtml xml:lang=zh-cn lang=zh-cn><head><link href=https://gmpg.org/xfn/11 rel=profile><meta charset=utf-8><meta name=generator content="Hugo 0.68.3"><meta name=viewport content="width=device-width,initial-scale=1"><title>interface 与 nil 的比较 &#183; Chyroc的博客</title><meta name=description content><link type=text/css rel=stylesheet href=https://chyroc.cn/css/print.css media=print><link type=text/css rel=stylesheet href=https://chyroc.cn/css/poole.css><link type=text/css rel=stylesheet href=https://chyroc.cn/css/syntax.css><link type=text/css rel=stylesheet href=https://chyroc.cn/css/hyde.css><link rel=stylesheet href="https://fonts.googleapis.com/css?family=Abril+Fatface|PT+Sans:400,400i,700"><link rel=apple-touch-icon-precomposed sizes=144x144 href=/apple-touch-icon-144-precomposed.png><link rel="shortcut icon" href=/favicon.png></head><body class=theme-base-08><aside class=sidebar><div class="container sidebar-sticky"><div class=sidebar-about><a href=https://chyroc.cn><h1>Chyroc的博客</h1></a><p class=lead></p></div><nav><ul class=sidebar-nav><li><a href=https://chyroc.cn>Home</a></li><li><a href=/>主页</a></li><li><a href=/blogroll/>友链</a></li><li><a href=/about/>关于</a></li></ul></nav></div></aside><main class="content container"><div class=post><h1>interface 与 nil 的比较</h1><time datetime=2018-01-25T08:00:00+0800 class=post-date>2018-01-25 08:00:00</time><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=color:#f92672>package</span> <span style=color:#a6e22e>main</span>
+<!doctype html><html lang=zh-cn><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>interface 与 nil 的比较 | Chyroc的博客</title><link rel=stylesheet href=/css/style.css><link href=//cdn.bootcss.com/highlight.js/9.12.0/styles/github.min.css rel=stylesheet></head><body><nav><ul class=menu><li><a href=/>主页</a></li><li><a href=/blogroll/>友链</a></li><li><a href=/about/>关于</a></li></ul><hr></nav><div class=article-meta><h1><span class=title>interface 与 nil 的比较</span></h1><h2 class=date>2018/01/25</h2></div><main><pre><code class=language-go>package main
 
-<span style=color:#66d9ef>type</span> <span style=color:#a6e22e>S</span> <span style=color:#66d9ef>struct</span>{}
+type S struct{}
 
-<span style=color:#66d9ef>func</span> (<span style=color:#a6e22e>s</span> <span style=color:#a6e22e>S</span>) <span style=color:#a6e22e>F</span>() {}
+func (s S) F() {}
 
-<span style=color:#66d9ef>type</span> <span style=color:#a6e22e>IF</span> <span style=color:#66d9ef>interface</span> {
-	<span style=color:#a6e22e>F</span>()
+type IF interface {
+	F()
 }
 
-<span style=color:#66d9ef>func</span> <span style=color:#a6e22e>InitType</span>() <span style=color:#a6e22e>S</span> {
-	<span style=color:#66d9ef>var</span> <span style=color:#a6e22e>s</span> <span style=color:#a6e22e>S</span>
-	<span style=color:#66d9ef>return</span> <span style=color:#a6e22e>s</span>
+func InitType() S {
+	var s S
+	return s
 }
 
-<span style=color:#66d9ef>func</span> <span style=color:#a6e22e>InitPointer</span>() <span style=color:#f92672>*</span><span style=color:#a6e22e>S</span> {
-	<span style=color:#66d9ef>var</span> <span style=color:#a6e22e>s</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>S</span>
-	<span style=color:#66d9ef>return</span> <span style=color:#a6e22e>s</span>
+func InitPointer() *S {
+	var s *S
+	return s
 }
-<span style=color:#66d9ef>func</span> <span style=color:#a6e22e>InitEfaceType</span>() <span style=color:#66d9ef>interface</span>{} {
-	<span style=color:#66d9ef>var</span> <span style=color:#a6e22e>s</span> <span style=color:#a6e22e>S</span>
-	<span style=color:#66d9ef>return</span> <span style=color:#a6e22e>s</span>
-}
-
-<span style=color:#66d9ef>func</span> <span style=color:#a6e22e>InitEfacePointer</span>() <span style=color:#66d9ef>interface</span>{} {
-	<span style=color:#66d9ef>var</span> <span style=color:#a6e22e>s</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>S</span>
-	<span style=color:#66d9ef>return</span> <span style=color:#a6e22e>s</span>
+func InitEfaceType() interface{} {
+	var s S
+	return s
 }
 
-<span style=color:#66d9ef>func</span> <span style=color:#a6e22e>InitIfaceType</span>() <span style=color:#a6e22e>IF</span> {
-	<span style=color:#66d9ef>var</span> <span style=color:#a6e22e>s</span> <span style=color:#a6e22e>S</span>
-	<span style=color:#66d9ef>return</span> <span style=color:#a6e22e>s</span>
+func InitEfacePointer() interface{} {
+	var s *S
+	return s
 }
 
-<span style=color:#66d9ef>func</span> <span style=color:#a6e22e>InitIfacePointer</span>() <span style=color:#a6e22e>IF</span> {
-	<span style=color:#66d9ef>var</span> <span style=color:#a6e22e>s</span> <span style=color:#f92672>*</span><span style=color:#a6e22e>S</span>
-	<span style=color:#66d9ef>return</span> <span style=color:#a6e22e>s</span>
+func InitIfaceType() IF {
+	var s S
+	return s
 }
 
-<span style=color:#66d9ef>func</span> <span style=color:#a6e22e>main</span>() {
-	<span style=color:#75715e>//println(InitType() == nil)
-</span><span style=color:#75715e></span>	println(<span style=color:#a6e22e>InitPointer</span>() <span style=color:#f92672>==</span> <span style=color:#66d9ef>nil</span>)
-	println(<span style=color:#a6e22e>InitEfaceType</span>() <span style=color:#f92672>==</span> <span style=color:#66d9ef>nil</span>)
-	println(<span style=color:#a6e22e>InitEfacePointer</span>() <span style=color:#f92672>==</span> <span style=color:#66d9ef>nil</span>)
-	println(<span style=color:#a6e22e>InitIfaceType</span>() <span style=color:#f92672>==</span> <span style=color:#66d9ef>nil</span>)
-	println(<span style=color:#a6e22e>InitIfacePointer</span>() <span style=color:#f92672>==</span> <span style=color:#66d9ef>nil</span>)
+func InitIfacePointer() IF {
+	var s *S
+	return s
 }
 
-</code></pre></div><p>结果是</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-plain data-lang=plain>// cannot convert nil to type S
+func main() {
+	//println(InitType() == nil)
+	println(InitPointer() == nil)
+	println(InitEfaceType() == nil)
+	println(InitEfacePointer() == nil)
+	println(InitIfaceType() == nil)
+	println(InitIfacePointer() == nil)
+}
+
+</code></pre><p>结果是</p><pre><code class=language-plain>// cannot convert nil to type S
 true
 false
 false
 false
 false
-</code></pre></div><p>第一个<code>cannot convert nil to type S</code>是？</p><p>true 是因为函数返回的是指针类型，指针类型的零值是 nil</p><p>后面的结果都是 false 的原因是：后面的函数返回的结果都是 interface，而一个 interface 如果想要等于 nil 的话，那么它的<code>类型</code>和<code>值</code>都必须等于 nil，也就是说必须明确的返回 nil 才可以。但是这些函数都是返回来了含有类型的 interface，所以不等于 nil。</p><h2 id=参考>参考</h2><ul><li><a href=https://github.com/goquiz/goquiz.github.io>https://github.com/goquiz/goquiz.github.io</a></li><li><a href=https://stackoverflow.com/questions/26845572/expecting-nil-but-getting-an-interface-with-a-nil-value-in-return-which-should>go - Expecting nil but getting an interface with a nil value in return, which should be nil - Stack Overflow</a></li></ul></div><script async src="//cdn.bootcss.com/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML"></script><script src=../../js/jquery-3.3.1.min.js></script><script src=../../js/code.js></script><script src=../../css/highlight.css></script><script src=../../js/instantclick.min.js data-no-instant></script><script data-no-instant>InstantClick.init();</script><script>hljs.configure({languages:[]});hljs.initHighlightingOnLoad();</script><hr>© <a href=https://chyroc.cn>chyroc</a> <a href=https://github.com/spf13/hyde>Theme By hyde</a> 2020
-<span id=reading-statistics><span><div id=git-comments></div><link rel=stylesheet href=https://imsun.github.io/gitment/style/default.css><script src=https://imsun.github.io/gitment/dist/gitment.browser.js></script><script>var gitment=new Gitment({id:'interface-and-nil-comparison',title:'interface 与 nil 的比较',owner:'chyroc',repo:'blog',oauth:{client_id:'36628d87f0ace3c0f34c',client_secret:'814e29f878a31ddf2a0f8f010c2bc3615750a998',}})
-gitment.render('git-comments')</script></main></body></html>
+</code></pre><p>第一个<code>cannot convert nil to type S</code>是？</p><p>true 是因为函数返回的是指针类型，指针类型的零值是 nil</p><p>后面的结果都是 false 的原因是：后面的函数返回的结果都是 interface，而一个 interface 如果想要等于 nil 的话，那么它的<code>类型</code>和<code>值</code>都必须等于 nil，也就是说必须明确的返回 nil 才可以。但是这些函数都是返回来了含有类型的 interface，所以不等于 nil。</p><h2 id=参考>参考</h2><ul><li><a href=https://github.com/goquiz/goquiz.github.io>https://github.com/goquiz/goquiz.github.io</a></li><li><a href=https://stackoverflow.com/questions/26845572/expecting-nil-but-getting-an-interface-with-a-nil-value-in-return-which-should>go - Expecting nil but getting an interface with a nil value in return, which should be nil - Stack Overflow</a></li></ul></main><footer><script async src="//cdn.bootcss.com/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML"></script><script src=../../js/jquery-3.3.1.min.js></script><script src=../../js/code.js></script><script src=../../css/highlight.css></script><script src=../../js/instantclick.min.js data-no-instant></script><script data-no-instant>InstantClick.init();</script><script>hljs.configure({languages:[]});hljs.initHighlightingOnLoad();</script><hr>&copy; <a href=https://chyroc.cn>chyroc</a> <a href=https://themes.gohugo.io/hugo-xmin/>Theme By hyde</a> 2021
+<span id=reading-statistics><span></footer><div id=git-comments></div><link rel=stylesheet href=https://imsun.github.io/gitment/style/default.css><script src=https://imsun.github.io/gitment/dist/gitment.browser.js></script><script>var gitment=new Gitment({id:'interface-and-nil-comparison',title:'interface 与 nil 的比较',owner:'Chyroc',repo:'chyroc.github.io',oauth:{client_id:'36628d87f0ace3c0f34c',client_secret:'814e29f878a31ddf2a0f8f010c2bc3615750a998',}})
+gitment.render('git-comments')</script></body></html>
