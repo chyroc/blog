@@ -64,6 +64,19 @@ title: "博客 | chyroc"
 --
 # 博客 | chyroc
 
+> Homepage: [https://chyroc.cn/](https://chyroc.cn/)
+
+### 博客
+
 {{range .}}- [{{.Name}}](./posts/{{.Path}})
 {{end}}
+
+## 关于本博客
+
+* 博客的生成：[mdcat](https://github.com/chyroc/mdcat)
+* TODO: 基于 Issue 的博客评论系统：[gitment](https://github.com/imsun/gitment)
+
+### 友链
+
+- [laike9m's blog](https://laike9m.com/)
 `

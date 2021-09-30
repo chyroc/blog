@@ -3,6 +3,10 @@ title: "博客 | chyroc"
 --
 # 博客 | chyroc
 
+> Homepage: [https://chyroc.cn/](https://chyroc.cn/)
+
+### 博客
+
 - [golang 的 time.Now 精度](./posts/2019.03.03-golang-time-now-precision.md)
 - [在 github 开启 gpg 的几个 Q&A](./posts/2018.07.25-github-commit-with-gpg.md)
 - [poll、select 和 epoll](./posts/2018.07.23-poll-select-epoll.md)
@@ -26,3 +30,12 @@ title: "博客 | chyroc"
 - [golang 的 interface(第一篇) - 接口的定义与实现](./posts/2017.08.03-golang-interface-i.md)
 - [使用 修饰器+类 定义 python 的常量](./posts/2017.07.31-decorator-and-class-to-define-python-constants.md)
 
+
+## 关于本博客
+
+* 博客的生成：[mdcat](https://github.com/chyroc/mdcat)
+* TODO: 基于 Issue 的博客评论系统：[gitment](https://github.com/imsun/gitment)
+
+### 友链
+
+- [laike9m's blog](https://laike9m.com/)
