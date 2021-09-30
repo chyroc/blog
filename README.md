@@ -1,27 +1,30 @@
-chyroc blog
+# 博客 | chyroc
 
-see [https://chyroc.cn](https://chyroc.cn)
+see [https://blog.chyroc.cn](https://blog.chyroc.cn)
 
 ![](https://media.chyroc.cn/img/fuckyou.gif)
 
-## 预览、编译
+## 开发
 
-- 安装 hugo
-
-使用 `hugo@v0.54.0` 版本
-
-- hugo 版本
+- 安装工具
 
 ```shell
-hugo version
+brew install chyroc/tap/serve
+brew install chyroc/tap/mdcat
+```
+
+- 编译
+
+```shell
+make
 ```
 
 - 本地预览
 
 ```shell
-hugo server
+serve docs
 ```
 
-- 编译部署
+- 部署
 
-通过 github 自动部署到 `gh-pages` 分支
+将 `make` 命令生成的文件提交到远程仓库即可

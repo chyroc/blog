@@ -1,0 +1,345 @@
+<html><head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0"/>
+    <link href="https://unpkg.com/@primer/css@^16.0.0/dist/primer.css" rel="stylesheet"/>
+    <link rel="stylesheet alternate" href="https://cdn.jsdelivr.net/gh/primer/github-syntax-light@master/lib/github-light.css" id="light-hl"/>
+    <link rel="stylesheet alternate" href="https://cdn.jsdelivr.net/gh/primer/github-syntax-dark@master/lib/github-dark.css" id="dark-hl"/>
+
+    <title>Golang 中的 context 之控制（二）</title>
+</head>
+
+<body id="markdown-body" data-color-mode="light" data-dark-theme="light">
+<div class="
+        Box
+        md
+        js-code-block-container
+        Box--responsive
+        container-xl
+        px-3 px-md-4 px-lg-5
+        mt-5
+      " style="border:none" id="content">
+    <div class="Box-body px-5 pb-5" style="border-bottom:none">
+        <div class="d-flex flex-column flex-sm-row-reverse" style="text-align:right">
+            <div>
+                <button id="theme-button" class="btn" type="button" style="vertical-align: bottom">
+                    <span id="theme-icon" class="iconify" data-icon="octicon:sun-16"></span>
+                </button>
+            </div>
+        </div>
+        <article class="markdown-body entry-content container-lg" itemprop="text">
+            <h2>
+<a id="user-content-怎么使用-context-控制-goroutine-的-cancel-的" class="anchor" href="#%E6%80%8E%E4%B9%88%E4%BD%BF%E7%94%A8-context-%E6%8E%A7%E5%88%B6-goroutine-%E7%9A%84-cancel-%E7%9A%84" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>怎么使用 context 控制 goroutine 的 cancel 的</h2>
+<p>是如何实现流程控制的</p>
+<p>context 包除了上面介绍的 k-v 数据对外，还有三个函数，分别是：</p>
+<div class="highlight highlight-source-go"><pre><span class="pl-s1">context</span>.<span class="pl-c1">WithCancel</span>
+<span class="pl-s1">context</span>.<span class="pl-c1">WithDeadline</span>
+<span class="pl-s1">context</span>.<span class="pl-c1">WithTimeout</span></pre></div>
+<p>这三个函数都会返回一个类型为<code>CancelFunc</code>的函数，通过源码可以知道，这几个函数里面返回的 cancel 分别是</p>
+<div class="highlight highlight-source-go"><pre><span class="pl-c">// context.WithCancel</span>
+<span class="pl-c">// c是cancelCtx</span>
+<span class="pl-k">func</span>() { <span class="pl-s1">c</span>.<span class="pl-en">cancel</span>(<span class="pl-c1">true</span>, <span class="pl-s1">Canceled</span>) }
+
+<span class="pl-c">// context.WithDeadline</span>
+<span class="pl-c">// c是timerCtx</span>
+<span class="pl-en">WithCancel</span>(<span class="pl-s1">parent</span>)
+<span class="pl-c">// or</span>
+<span class="pl-k">func</span>() { <span class="pl-s1">c</span>.<span class="pl-en">cancel</span>(<span class="pl-c1">true</span>, <span class="pl-s1">Canceled</span>) }
+
+<span class="pl-c">// context.WithTimeout</span>
+<span class="pl-en">WithDeadline</span>(<span class="pl-s1">parent</span>, <span class="pl-s1">time</span>.<span class="pl-en">Now</span>().<span class="pl-en">Add</span>(<span class="pl-s1">timeout</span>))</pre></div>
+<p>从这里可以看出来，这三个函数的 cancel 是通过两个结构<code>cancelCtx</code>和<code>timerCtx</code>实现的</p>
+<p>cancelCtx:</p>
+<div class="highlight highlight-source-go"><pre><span class="pl-k">type</span> <span class="pl-smi">cancelCtx</span> <span class="pl-k">struct</span> {
+    <span class="pl-smi">Context</span>
+
+    <span class="pl-c1">mu</span>       sync.<span class="pl-smi">Mutex</span>            <span class="pl-c">// protects following fields</span>
+    <span class="pl-c1">done</span>     <span class="pl-k">chan</span> <span class="pl-k">struct</span>{}         <span class="pl-c">// created lazily, closed by first cancel call</span>
+    <span class="pl-c1">children</span> <span class="pl-k">map</span>[<span class="pl-smi">canceler</span>]<span class="pl-k">struct</span>{} <span class="pl-c">// set to nil by the first cancel call</span>
+    <span class="pl-c1">err</span>      <span class="pl-smi">error</span>                 <span class="pl-c">// set to non-nil by the first cancel call</span>
+}</pre></div>
+<p>timerCtx:(依赖了 cancelCtx)</p>
+<div class="highlight highlight-source-go"><pre><span class="pl-k">type</span> <span class="pl-smi">timerCtx</span> <span class="pl-k">struct</span> {
+    <span class="pl-smi">cancelCtx</span>
+    <span class="pl-c1">timer</span> <span class="pl-c1">*</span>time.<span class="pl-smi">Timer</span> <span class="pl-c">// Under cancelCtx.mu.</span>
+
+    <span class="pl-c1">deadline</span> time.<span class="pl-smi">Time</span>
+}</pre></div>
+<h3>
+<a id="user-content-那先看看-cancelctx-是如何实现-cancel-的" class="anchor" href="#%E9%82%A3%E5%85%88%E7%9C%8B%E7%9C%8B-cancelctx-%E6%98%AF%E5%A6%82%E4%BD%95%E5%AE%9E%E7%8E%B0-cancel-%E7%9A%84" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>那先看看 cancelCtx 是如何实现 cancel 的</h3>
+<h4>
+<a id="user-content-cancelctx-源码分析" class="anchor" href="#cancelctx-%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>cancelCtx 源码分析</h4>
+<div class="highlight highlight-source-go"><pre><span class="pl-c">// 实现了canceler接口</span>
+<span class="pl-c">// 可以被cancel，如果他被cancel，那么所有的children都会被cancel</span>
+<span class="pl-k">type</span> <span class="pl-smi">cancelCtx</span> <span class="pl-k">struct</span> {
+    <span class="pl-smi">Context</span>
+
+    <span class="pl-c1">mu</span>       sync.<span class="pl-smi">Mutex</span>            <span class="pl-c">// protects following fields</span>
+    <span class="pl-c1">done</span>     <span class="pl-k">chan</span> <span class="pl-k">struct</span>{}         <span class="pl-c">// created lazily, closed by first cancel call</span>
+    <span class="pl-c1">children</span> <span class="pl-k">map</span>[<span class="pl-smi">canceler</span>]<span class="pl-k">struct</span>{} <span class="pl-c">// set to nil by the first cancel call</span>
+    <span class="pl-c1">err</span>      <span class="pl-smi">error</span>                 <span class="pl-c">// set to non-nil by the first cancel call</span>
+}
+
+<span class="pl-k">func</span> <span class="pl-en">newCancelCtx</span>(<span class="pl-s1">parent</span> <span class="pl-smi">Context</span>) <span class="pl-smi">cancelCtx</span> {
+    <span class="pl-k">return</span> <span class="pl-smi">cancelCtx</span>{<span class="pl-c1">Context</span>: <span class="pl-s1">parent</span>}
+}
+
+<span class="pl-c">// 返回一个阻塞的chan，并且赋给c.done</span>
+<span class="pl-k">func</span> (<span class="pl-s1">c</span> <span class="pl-c1">*</span><span class="pl-smi">cancelCtx</span>) <span class="pl-en">Done</span>() <span class="pl-c1">&lt;-</span><span class="pl-k">chan</span> <span class="pl-k">struct</span>{} {
+    <span class="pl-s1">c</span>.<span class="pl-c1">mu</span>.<span class="pl-en">Lock</span>()
+    <span class="pl-k">if</span> <span class="pl-s1">c</span>.<span class="pl-c1">done</span> <span class="pl-c1">==</span> <span class="pl-c1">nil</span> {
+        <span class="pl-s1">c</span>.<span class="pl-c1">done</span> <span class="pl-c1">=</span> <span class="pl-en">make</span>(<span class="pl-k">chan</span> <span class="pl-k">struct</span>{})
+    }
+    <span class="pl-s1">d</span> <span class="pl-c1">:=</span> <span class="pl-s1">c</span>.<span class="pl-c1">done</span>
+    <span class="pl-s1">c</span>.<span class="pl-c1">mu</span>.<span class="pl-en">Unlock</span>()
+    <span class="pl-k">return</span> <span class="pl-s1">d</span>
+}
+
+<span class="pl-c">// 返回cancelCtx中的err</span>
+<span class="pl-k">func</span> (<span class="pl-s1">c</span> <span class="pl-c1">*</span><span class="pl-smi">cancelCtx</span>) <span class="pl-en">Err</span>() <span class="pl-smi">error</span> {
+    <span class="pl-s1">c</span>.<span class="pl-c1">mu</span>.<span class="pl-en">Lock</span>()
+    <span class="pl-k">defer</span> <span class="pl-s1">c</span>.<span class="pl-c1">mu</span>.<span class="pl-en">Unlock</span>()
+    <span class="pl-k">return</span> <span class="pl-s1">c</span>.<span class="pl-c1">err</span>
+}
+
+<span class="pl-k">func</span> (<span class="pl-s1">c</span> <span class="pl-c1">*</span><span class="pl-smi">cancelCtx</span>) <span class="pl-en">String</span>() <span class="pl-smi">string</span> {
+    <span class="pl-k">return</span> <span class="pl-s1">fmt</span>.<span class="pl-en">Sprintf</span>(<span class="pl-s">&#34;%v.WithCancel&#34;</span>, <span class="pl-s1">c</span>.<span class="pl-c1">Context</span>)
+}
+
+<span class="pl-c">// cancel函数</span>
+<span class="pl-c">// 关闭c.done这个阻塞chan，以及任何children的c.done</span>
+<span class="pl-c">// 如果removeFromParent==true，将当前ctx和parent之间的链移除，即当前ctx不再是parent的child</span>
+<span class="pl-c">// err 可以是context.Canceled，也可以是context.DeadlineExceeded</span>
+<span class="pl-k">func</span> (<span class="pl-s1">c</span> <span class="pl-c1">*</span><span class="pl-smi">cancelCtx</span>) <span class="pl-en">cancel</span>(<span class="pl-s1">removeFromParent</span> <span class="pl-smi">bool</span>, <span class="pl-s1">err</span> <span class="pl-smi">error</span>) {
+    <span class="pl-k">if</span> <span class="pl-s1">err</span> <span class="pl-c1">==</span> <span class="pl-c1">nil</span> {
+        <span class="pl-en">panic</span>(<span class="pl-s">&#34;context: internal error: missing cancel error&#34;</span>)
+    }
+    <span class="pl-s1">c</span>.<span class="pl-c1">mu</span>.<span class="pl-en">Lock</span>()
+    <span class="pl-k">if</span> <span class="pl-s1">c</span>.<span class="pl-c1">err</span> <span class="pl-c1">!=</span> <span class="pl-c1">nil</span> {
+        <span class="pl-s1">c</span>.<span class="pl-c1">mu</span>.<span class="pl-en">Unlock</span>()
+        <span class="pl-c">// err只有这个函数可以设置，所以如果err已经!=nil了，那么就已经cancel了</span>
+        <span class="pl-k">return</span> <span class="pl-c">// already canceled</span>
+    }
+    <span class="pl-s1">c</span>.<span class="pl-c1">err</span> <span class="pl-c1">=</span> <span class="pl-s1">err</span>
+
+    <span class="pl-c">// 接下来5行将c.done设置为一个已经close的chan</span>
+    <span class="pl-c">// 所以c.Done不再阻塞了</span>
+    <span class="pl-k">if</span> <span class="pl-s1">c</span>.<span class="pl-c1">done</span> <span class="pl-c1">==</span> <span class="pl-c1">nil</span> {
+        <span class="pl-s1">c</span>.<span class="pl-c1">done</span> <span class="pl-c1">=</span> <span class="pl-s1">closedchan</span>
+    } <span class="pl-k">else</span> {
+        <span class="pl-en">close</span>(<span class="pl-s1">c</span>.<span class="pl-c1">done</span>)
+    }
+
+    <span class="pl-c">// 循环cancel所有的children</span>
+    <span class="pl-k">for</span> <span class="pl-s1">child</span> <span class="pl-c1">:=</span> <span class="pl-k">range</span> <span class="pl-s1">c</span>.<span class="pl-c1">children</span> {
+        <span class="pl-c">// NOTE: acquiring the child&#39;s lock while holding parent&#39;s lock.</span>
+        <span class="pl-s1">child</span>.<span class="pl-en">cancel</span>(<span class="pl-c1">false</span>, <span class="pl-s1">err</span>)
+    }
+    <span class="pl-s1">c</span>.<span class="pl-c1">children</span> <span class="pl-c1">=</span> <span class="pl-c1">nil</span>
+    <span class="pl-s1">c</span>.<span class="pl-c1">mu</span>.<span class="pl-en">Unlock</span>()
+
+    <span class="pl-c">// 如果有需要，移除与parent的链</span>
+    <span class="pl-k">if</span> <span class="pl-s1">removeFromParent</span> {
+        <span class="pl-en">removeChild</span>(<span class="pl-s1">c</span>.<span class="pl-c1">Context</span>, <span class="pl-s1">c</span>)
+    }
+}</pre></div>
+<p>这个实现的点就在于创建了一个阻塞的 chan: <code>ctx.done()</code>，然后使用<code>ctx.cancel()</code>将<code>ctx.done</code>设置为非阻塞(close)</p>
+<h4>
+<a id="user-content-如何使用-withcancel" class="anchor" href="#%E5%A6%82%E4%BD%95%E4%BD%BF%E7%94%A8-withcancel" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>如何使用 WithCancel</h4>
+<p>下面这段代码中，gen 函数死循环做 n++然后赋给 dst，dst 是一个 channel，可以通过 range 循环获取。即下面这段代码在<code>for n := range gen(ctx)</code>和<code>case dst &lt;- n: n++</code>之间循环了 5 次。</p>
+<p>然后 main 函数退出，触发了 defer，执行 cancel。根据上面说的，cancel 会 close 掉 Done，所以<code>case &lt;-ctx.Done(): return</code>达到执行条件，gen 函数中创建的 goroutine<code>go func() { for { ... } }</code>执行结束</p>
+<p>因为这个函数本身就只有这么一点点就退出了，所以看不出<code>WithCancel</code>的优点，不过，如果是大型引用，使用<code>WithCancel</code>可以及早释放一些不必要的 goroutine</p>
+<div class="highlight highlight-source-go"><pre><span class="pl-k">package</span> main
+
+<span class="pl-k">import</span> (
+    <span class="pl-s">&#34;context&#34;</span>
+    <span class="pl-s">&#34;fmt&#34;</span>
+)
+
+<span class="pl-k">func</span> <span class="pl-en">main</span>() {
+    <span class="pl-c">// dst是一个channel，不停的遍历会递增</span>
+    <span class="pl-s1">gen</span> <span class="pl-c1">:=</span> <span class="pl-k">func</span>(<span class="pl-s1">ctx</span> context.<span class="pl-smi">Context</span>) <span class="pl-c1">&lt;-</span><span class="pl-k">chan</span> <span class="pl-smi">int</span> {
+        <span class="pl-s1">dst</span> <span class="pl-c1">:=</span> <span class="pl-en">make</span>(<span class="pl-k">chan</span> <span class="pl-smi">int</span>)
+        <span class="pl-s1">n</span> <span class="pl-c1">:=</span> <span class="pl-c1">1</span>
+        <span class="pl-k">go</span> <span class="pl-k">func</span>() {
+            <span class="pl-k">for</span> {
+                <span class="pl-k">select</span> {
+                <span class="pl-k">case</span> <span class="pl-c1">&lt;-</span><span class="pl-s1">ctx</span>.<span class="pl-en">Done</span>():
+                    <span class="pl-k">return</span> <span class="pl-c">// returning not to leak the goroutine</span>
+                <span class="pl-k">case</span> <span class="pl-s1">dst</span> <span class="pl-c1">&lt;-</span> <span class="pl-s1">n</span>:
+                    <span class="pl-s1">n</span><span class="pl-c1">++</span>
+                }
+            }
+        }()
+        <span class="pl-k">return</span> <span class="pl-s1">dst</span>
+    }
+
+    <span class="pl-c">// 创建ctx与cancel函数</span>
+    <span class="pl-s1">ctx</span>, <span class="pl-s1">cancel</span> <span class="pl-c1">:=</span> <span class="pl-s1">context</span>.<span class="pl-en">WithCancel</span>(<span class="pl-s1">context</span>.<span class="pl-en">Background</span>())
+    <span class="pl-k">defer</span> <span class="pl-en">cancel</span>() <span class="pl-c">// cancel when we are finished consuming integers</span>
+
+    <span class="pl-c">// 遍历5次退出，执行defer</span>
+    <span class="pl-k">for</span> <span class="pl-s1">n</span> <span class="pl-c1">:=</span> <span class="pl-k">range</span> <span class="pl-en">gen</span>(<span class="pl-s1">ctx</span>) {
+        <span class="pl-s1">fmt</span>.<span class="pl-en">Println</span>(<span class="pl-s1">n</span>)
+        <span class="pl-k">if</span> <span class="pl-s1">n</span> <span class="pl-c1">==</span> <span class="pl-c1">5</span> {
+            <span class="pl-k">break</span>
+        }
+    }
+}</pre></div>
+<h4>
+<a id="user-content-withcancel-源码分析" class="anchor" href="#withcancel-%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>WithCancel 源码分析</h4>
+<p>生成一个 <code>cancelCtx{ }</code>，在 cancel 的时候会执行<code>func() { c.cancel(true, Canceled) }</code></p>
+<p>看一下 propagateCancel 函数</p>
+<ul>
+<li>假如 parent 是 context.Background()，那么会执行到<code>else { go func() { .. } }</code>
+<ul>
+<li>这个时候，要么 parent 被 cancel 了，执行<code>case &lt;-parent.Done(): child.cancel(false, parent.Err())</code>，把本 ctxcancel 然后退出</li>
+<li>要么等到了本 ctx 的 cancel：<code>case &lt;-child.Done()</code>
+</li>
+</ul>
+</li>
+<li>假如 parent 已经携带了控制信号
+<ul>
+<li>parent 也是一个 cancelCtx，然后调用<code>func (c *cancelCtx) cancel(removeFromParent bool, err error)</code>
+</li>
+<li>parent 是一个 timerCtx，然后调用<code>func (c *timerCtx) cancel(removeFromParent bool, err error)s</code>
+</li>
+<li>（当然这里也可能是一个 valueCtx，这里会递归找下去）</li>
+<li>children 是怎么使用的？</li>
+</ul>
+</li>
+</ul>
+<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">WithCancel</span>(<span class="pl-s1">parent</span> <span class="pl-smi">Context</span>) (<span class="pl-s1">ctx</span> <span class="pl-smi">Context</span>, <span class="pl-s1">cancel</span> <span class="pl-smi">CancelFunc</span>) {
+    <span class="pl-s1">c</span> <span class="pl-c1">:=</span> <span class="pl-en">newCancelCtx</span>(<span class="pl-s1">parent</span>)
+    <span class="pl-en">propagateCancel</span>(<span class="pl-s1">parent</span>, <span class="pl-c1">&amp;</span><span class="pl-s1">c</span>)
+    <span class="pl-k">return</span> <span class="pl-c1">&amp;</span><span class="pl-s1">c</span>, <span class="pl-k">func</span>() { <span class="pl-s1">c</span>.<span class="pl-en">cancel</span>(<span class="pl-c1">true</span>, <span class="pl-s1">Canceled</span>) }
+}
+
+<span class="pl-k">func</span> <span class="pl-en">propagateCancel</span>(<span class="pl-s1">parent</span> <span class="pl-smi">Context</span>, <span class="pl-s1">child</span> <span class="pl-smi">canceler</span>) {
+    <span class="pl-k">if</span> <span class="pl-s1">parent</span>.<span class="pl-en">Done</span>() <span class="pl-c1">==</span> <span class="pl-c1">nil</span> {
+        <span class="pl-k">return</span> <span class="pl-c">// parent is never canceled</span>
+    }
+    <span class="pl-k">if</span> <span class="pl-s1">p</span>, <span class="pl-s1">ok</span> <span class="pl-c1">:=</span> <span class="pl-en">parentCancelCtx</span>(<span class="pl-s1">parent</span>); <span class="pl-s1">ok</span> {
+        <span class="pl-s1">p</span>.<span class="pl-c1">mu</span>.<span class="pl-en">Lock</span>()
+        <span class="pl-k">if</span> <span class="pl-s1">p</span>.<span class="pl-c1">err</span> <span class="pl-c1">!=</span> <span class="pl-c1">nil</span> {
+            <span class="pl-c">// parent has already been canceled</span>
+            <span class="pl-s1">child</span>.<span class="pl-en">cancel</span>(<span class="pl-c1">false</span>, <span class="pl-s1">p</span>.<span class="pl-c1">err</span>)
+        } <span class="pl-k">else</span> {
+            <span class="pl-k">if</span> <span class="pl-s1">p</span>.<span class="pl-c1">children</span> <span class="pl-c1">==</span> <span class="pl-c1">nil</span> {
+                <span class="pl-s1">p</span>.<span class="pl-c1">children</span> <span class="pl-c1">=</span> <span class="pl-en">make</span>(<span class="pl-k">map</span>[<span class="pl-smi">canceler</span>]<span class="pl-k">struct</span>{})
+            }
+            <span class="pl-s1">p</span>.<span class="pl-c1">children</span>[<span class="pl-s1">child</span>] <span class="pl-c1">=</span> <span class="pl-k">struct</span>{}{}
+        }
+        <span class="pl-s1">p</span>.<span class="pl-c1">mu</span>.<span class="pl-en">Unlock</span>()
+    } <span class="pl-k">else</span> {
+        <span class="pl-k">go</span> <span class="pl-k">func</span>() {
+            <span class="pl-k">select</span> {
+            <span class="pl-k">case</span> <span class="pl-c1">&lt;-</span><span class="pl-s1">parent</span>.<span class="pl-en">Done</span>():
+                <span class="pl-s1">child</span>.<span class="pl-en">cancel</span>(<span class="pl-c1">false</span>, <span class="pl-s1">parent</span>.<span class="pl-en">Err</span>())
+            <span class="pl-k">case</span> <span class="pl-c1">&lt;-</span><span class="pl-s1">child</span>.<span class="pl-en">Done</span>():
+            }
+        }()
+    }
+}
+
+<span class="pl-k">func</span> <span class="pl-en">parentCancelCtx</span>(<span class="pl-s1">parent</span> <span class="pl-smi">Context</span>) (<span class="pl-c1">*</span><span class="pl-smi">cancelCtx</span>, <span class="pl-smi">bool</span>) {
+    <span class="pl-k">for</span> {
+        <span class="pl-k">switch</span> <span class="pl-s1">c</span> <span class="pl-c1">:=</span> <span class="pl-s1">parent</span>.(<span class="pl-k">type</span>) {
+        <span class="pl-k">case</span> <span class="pl-c1">*</span><span class="pl-smi">cancelCtx</span>:
+            <span class="pl-k">return</span> <span class="pl-s1">c</span>, <span class="pl-c1">true</span>
+        <span class="pl-k">case</span> <span class="pl-c1">*</span><span class="pl-smi">timerCtx</span>:
+            <span class="pl-k">return</span> <span class="pl-c1">&amp;</span><span class="pl-s1">c</span>.<span class="pl-c1">cancelCtx</span>, <span class="pl-c1">true</span>
+        <span class="pl-k">case</span> <span class="pl-c1">*</span><span class="pl-smi">valueCtx</span>:
+            <span class="pl-s1">parent</span> <span class="pl-c1">=</span> <span class="pl-s1">c</span>.<span class="pl-c1">Context</span>
+        <span class="pl-k">default</span>:
+            <span class="pl-k">return</span> <span class="pl-c1">nil</span>, <span class="pl-c1">false</span>
+        }
+    }
+}</pre></div>
+<h3>
+<a id="user-content-然后看看-timerctx-是如何实现-cancel-的" class="anchor" href="#%E7%84%B6%E5%90%8E%E7%9C%8B%E7%9C%8B-timerctx-%E6%98%AF%E5%A6%82%E4%BD%95%E5%AE%9E%E7%8E%B0-cancel-%E7%9A%84" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>然后看看 timerCtx 是如何实现 cancel 的</h3>
+<h4>
+<a id="user-content-timerctx-源码解析" class="anchor" href="#timerctx-%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>timerCtx 源码解析</h4>
+<p>cancel 有两个实现，一个是 cancelCtx 的，一个是 TimerCtx 的</p>
+<p>这里的 timerCtx 的 cancel 的逻辑是</p>
+<div class="highlight highlight-source-go"><pre><span class="pl-k">type</span> <span class="pl-smi">timerCtx</span> <span class="pl-k">struct</span> {
+    <span class="pl-smi">cancelCtx</span>
+    <span class="pl-c1">timer</span> <span class="pl-c1">*</span>time.<span class="pl-smi">Timer</span> <span class="pl-c">// Under cancelCtx.mu.</span>
+
+    <span class="pl-c1">deadline</span> time.<span class="pl-smi">Time</span>
+}
+
+<span class="pl-c">// 返回当前ctx的deadline</span>
+<span class="pl-k">func</span> (<span class="pl-s1">c</span> <span class="pl-c1">*</span><span class="pl-smi">timerCtx</span>) <span class="pl-en">Deadline</span>() (<span class="pl-s1">deadline</span> time.<span class="pl-smi">Time</span>, <span class="pl-s1">ok</span> <span class="pl-smi">bool</span>) {
+    <span class="pl-k">return</span> <span class="pl-s1">c</span>.<span class="pl-c1">deadline</span>, <span class="pl-c1">true</span>
+}
+
+<span class="pl-k">func</span> (<span class="pl-s1">c</span> <span class="pl-c1">*</span><span class="pl-smi">timerCtx</span>) <span class="pl-en">String</span>() <span class="pl-smi">string</span> {
+    <span class="pl-k">return</span> <span class="pl-s1">fmt</span>.<span class="pl-en">Sprintf</span>(<span class="pl-s">&#34;%v.WithDeadline(%s [%s])&#34;</span>, <span class="pl-s1">c</span>.<span class="pl-c1">cancelCtx</span>.<span class="pl-c1">Context</span>, <span class="pl-s1">c</span>.<span class="pl-c1">deadline</span>, <span class="pl-s1">time</span>.<span class="pl-en">Until</span>(<span class="pl-s1">c</span>.<span class="pl-c1">deadline</span>))
+}
+
+<span class="pl-k">func</span> (<span class="pl-s1">c</span> <span class="pl-c1">*</span><span class="pl-smi">timerCtx</span>) <span class="pl-en">cancel</span>(<span class="pl-s1">removeFromParent</span> <span class="pl-smi">bool</span>, <span class="pl-s1">err</span> <span class="pl-smi">error</span>) {
+    <span class="pl-s1">c</span>.<span class="pl-c1">cancelCtx</span>.<span class="pl-en">cancel</span>(<span class="pl-c1">false</span>, <span class="pl-s1">err</span>)
+    <span class="pl-k">if</span> <span class="pl-s1">removeFromParent</span> {
+        <span class="pl-c">// Remove this timerCtx from its parent cancelCtx&#39;s children.</span>
+        <span class="pl-en">removeChild</span>(<span class="pl-s1">c</span>.<span class="pl-c1">cancelCtx</span>.<span class="pl-c1">Context</span>, <span class="pl-s1">c</span>)
+    }
+    <span class="pl-s1">c</span>.<span class="pl-c1">mu</span>.<span class="pl-en">Lock</span>()
+    <span class="pl-k">if</span> <span class="pl-s1">c</span>.<span class="pl-c1">timer</span> <span class="pl-c1">!=</span> <span class="pl-c1">nil</span> {
+        <span class="pl-s1">c</span>.<span class="pl-c1">timer</span>.<span class="pl-en">Stop</span>()
+        <span class="pl-s1">c</span>.<span class="pl-c1">timer</span> <span class="pl-c1">=</span> <span class="pl-c1">nil</span>
+    }
+    <span class="pl-s1">c</span>.<span class="pl-c1">mu</span>.<span class="pl-en">Unlock</span>()
+}</pre></div>
+<h2>
+<a id="user-content-简析" class="anchor" href="#%E7%AE%80%E6%9E%90" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>简析</h2>
+<h3>
+<a id="user-content-代码实现详解" class="anchor" href="#%E4%BB%A3%E7%A0%81%E5%AE%9E%E7%8E%B0%E8%AF%A6%E8%A7%A3" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>代码实现详解</h3>
+<h2>
+<a id="user-content-实现代码解析" class="anchor" href="#%E5%AE%9E%E7%8E%B0%E4%BB%A3%E7%A0%81%E8%A7%A3%E6%9E%90" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>实现代码解析</h2>
+<div class="highlight highlight-source-go"><pre><span class="pl-c">// WithDeadline returns a copy of the parent context with the deadline adjusted</span>
+<span class="pl-c">// to be no later than d. If the parent&#39;s deadline is already earlier than d,</span>
+<span class="pl-c">// WithDeadline(parent, d) is semantically equivalent to parent. The returned</span>
+<span class="pl-c">// context&#39;s Done channel is closed when the deadline expires, when the returned</span>
+<span class="pl-c">// cancel function is called, or when the parent context&#39;s Done channel is</span>
+<span class="pl-c">// closed, whichever happens first.</span>
+<span class="pl-c">//</span>
+<span class="pl-c">// Canceling this context releases resources associated with it, so code should</span>
+<span class="pl-c">// call cancel as soon as the operations running in this Context complete.</span>
+输入参数<span class="pl-s1">d</span>是超时时间，
+如果
+<span class="pl-k">func</span> <span class="pl-en">WithDeadline</span>(<span class="pl-s1">parent</span> <span class="pl-smi">Context</span>, <span class="pl-s1">d</span> time.<span class="pl-smi">Time</span>) (<span class="pl-smi">Context</span>, <span class="pl-smi">CancelFunc</span>) {
+    <span class="pl-k">if</span> <span class="pl-s1">cur</span>, <span class="pl-s1">ok</span> <span class="pl-c1">:=</span> <span class="pl-s1">parent</span>.<span class="pl-en">Deadline</span>(); <span class="pl-s1">ok</span> <span class="pl-c1">&amp;&amp;</span> <span class="pl-s1">cur</span>.<span class="pl-en">Before</span>(<span class="pl-s1">d</span>) {
+        <span class="pl-c">// The current deadline is already sooner than the new one.</span>
+        <span class="pl-k">return</span> <span class="pl-en">WithCancel</span>(<span class="pl-s1">parent</span>)
+    }
+    <span class="pl-s1">c</span> <span class="pl-c1">:=</span> <span class="pl-c1">&amp;</span><span class="pl-smi">timerCtx</span>{
+        <span class="pl-c1">cancelCtx</span>: <span class="pl-en">newCancelCtx</span>(<span class="pl-s1">parent</span>),
+        <span class="pl-c1">deadline</span>:  <span class="pl-s1">d</span>,
+    }
+    <span class="pl-en">propagateCancel</span>(<span class="pl-s1">parent</span>, <span class="pl-s1">c</span>)
+    <span class="pl-s1">dur</span> <span class="pl-c1">:=</span> <span class="pl-s1">time</span>.<span class="pl-en">Until</span>(<span class="pl-s1">d</span>)
+    <span class="pl-k">if</span> <span class="pl-s1">dur</span> <span class="pl-c1">&lt;=</span> <span class="pl-c1">0</span> {
+        <span class="pl-s1">c</span>.<span class="pl-en">cancel</span>(<span class="pl-c1">true</span>, <span class="pl-s1">DeadlineExceeded</span>) <span class="pl-c">// deadline has already passed</span>
+        <span class="pl-k">return</span> <span class="pl-s1">c</span>, <span class="pl-k">func</span>() { <span class="pl-s1">c</span>.<span class="pl-en">cancel</span>(<span class="pl-c1">true</span>, <span class="pl-s1">Canceled</span>) }
+    }
+    <span class="pl-s1">c</span>.<span class="pl-c1">mu</span>.<span class="pl-en">Lock</span>()
+    <span class="pl-k">defer</span> <span class="pl-s1">c</span>.<span class="pl-c1">mu</span>.<span class="pl-en">Unlock</span>()
+    <span class="pl-k">if</span> <span class="pl-s1">c</span>.<span class="pl-c1">err</span> <span class="pl-c1">==</span> <span class="pl-c1">nil</span> {
+        <span class="pl-s1">c</span>.<span class="pl-c1">timer</span> <span class="pl-c1">=</span> <span class="pl-s1">time</span>.<span class="pl-en">AfterFunc</span>(<span class="pl-s1">dur</span>, <span class="pl-k">func</span>() {
+            <span class="pl-s1">c</span>.<span class="pl-en">cancel</span>(<span class="pl-c1">true</span>, <span class="pl-s1">DeadlineExceeded</span>)
+        })
+    }
+    <span class="pl-k">return</span> <span class="pl-s1">c</span>, <span class="pl-k">func</span>() { <span class="pl-s1">c</span>.<span class="pl-en">cancel</span>(<span class="pl-c1">true</span>, <span class="pl-s1">Canceled</span>) }
+}</pre></div>
+<h2>
+<a id="user-content-参考文章" class="anchor" href="#%E5%8F%82%E8%80%83%E6%96%87%E7%AB%A0" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>参考文章</h2>
+<ul>
+<li><a href="https://github.com/grpc/grpc-go/issues/156">https://github.com/grpc/grpc-go/issues/156</a></li>
+<li><a href="https://talks.golang.org/2014/gotham-context.slide#1" rel="nofollow">https://talks.golang.org/2014/gotham-context.slide#1</a></li>
+</ul>
+
+        </article>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/gh/calganaygun/MDcat@main/theme.js"></script>
+<script src="https://code.iconify.design/2/2.0.3/iconify.min.js"></script>
+</body></html>

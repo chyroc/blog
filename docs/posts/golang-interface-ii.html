@@ -1,0 +1,157 @@
+<html><head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0"/>
+    <link href="https://unpkg.com/@primer/css@^16.0.0/dist/primer.css" rel="stylesheet"/>
+    <link rel="stylesheet alternate" href="https://cdn.jsdelivr.net/gh/primer/github-syntax-light@master/lib/github-light.css" id="light-hl"/>
+    <link rel="stylesheet alternate" href="https://cdn.jsdelivr.net/gh/primer/github-syntax-dark@master/lib/github-dark.css" id="dark-hl"/>
+
+    <title>golang 的 interface(第二篇) - 接口的作用</title>
+</head>
+
+<body id="markdown-body" data-color-mode="light" data-dark-theme="light">
+<div class="
+        Box
+        md
+        js-code-block-container
+        Box--responsive
+        container-xl
+        px-3 px-md-4 px-lg-5
+        mt-5
+      " style="border:none" id="content">
+    <div class="Box-body px-5 pb-5" style="border-bottom:none">
+        <div class="d-flex flex-column flex-sm-row-reverse" style="text-align:right">
+            <div>
+                <button id="theme-button" class="btn" type="button" style="vertical-align: bottom">
+                    <span id="theme-icon" class="iconify" data-icon="octicon:sun-16"></span>
+                </button>
+            </div>
+        </div>
+        <article class="markdown-body entry-content container-lg" itemprop="text">
+            <p>在<a href="../golang-interface-i/">golang 的 interface(第一篇) - 接口的定义与实现</a>里面，我稍微讲了一下我理解的什么是接口，怎么定义接口，怎么实现接口，本文将会讲一讲接口的作用。</p>
+<h2>
+<a id="user-content-接口作为参数代表什么" class="anchor" href="#%E6%8E%A5%E5%8F%A3%E4%BD%9C%E4%B8%BA%E5%8F%82%E6%95%B0%E4%BB%A3%E8%A1%A8%E4%BB%80%E4%B9%88" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>接口作为参数代表什么</h2>
+<p>如果一个函数的参数类型是一个接口，代表：在使用这个函数的时候，可以传进来一个实现了这个接口的类型。</p>
+<p>比如一个接口的参数类型是「跑」(runType)，不管他是跑到哪里，跑多久，是要一个对象可以跑，那这个对象就可以使用这个函数。</p>
+<h2>
+<a id="user-content-接口作为参数可以做什么" class="anchor" href="#%E6%8E%A5%E5%8F%A3%E4%BD%9C%E4%B8%BA%E5%8F%82%E6%95%B0%E5%8F%AF%E4%BB%A5%E5%81%9A%E4%BB%80%E4%B9%88" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>接口作为参数可以做什么</h2>
+<p>将对象一般行为抽象出来，作为接口，例如：</p>
+<p><code>io.Writer</code></p>
+<div class="highlight highlight-source-go"><pre><span class="pl-k">type</span> <span class="pl-smi">Writer</span> <span class="pl-k">interface</span> {
+	<span class="pl-c1">Write</span>(<span class="pl-s1">p</span> []<span class="pl-smi">byte</span>) (<span class="pl-s1">n</span> <span class="pl-smi">int</span>, <span class="pl-s1">err</span> <span class="pl-smi">error</span>)
+}</pre></div>
+<p>代表了所有可以写入字节的抽象，比如：文件，缓冲，http，hasher。</p>
+<p>只要一个类型实现了<code>io.Writer</code>接口，那他就可以去写。（具体怎么写在这个接口实现的方法里详细定义了。）</p>
+<p>我觉得自己对这个还不理解，感觉自己说了很多废话。</p>
+<p>现在有一个方法，输入一些字节和一个对象，就会调用这个对象的写方法，叫做<code>Print</code>。</p>
+<p>所以，屏幕可以定义自己的展现字符的方式，日志可以定义自己存储日志的格式，http server 可以定义网络返回的数据的格式，等等等等，只要这个独特的对象定义了自己的写方法，那么他就可以药药药切克闹。。</p>
+<h2>
+<a id="user-content-sort-包示例说明" class="anchor" href="#sort-%E5%8C%85%E7%A4%BA%E4%BE%8B%E8%AF%B4%E6%98%8E" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>sort 包示例说明</h2>
+<p>在 golang 内置的 sort 包里面，定义了一个<code>Interface</code>：</p>
+<div class="highlight highlight-source-go"><pre><span class="pl-k">type</span> <span class="pl-smi">Interface</span> <span class="pl-k">interface</span> {
+	<span class="pl-c1">Len</span>() <span class="pl-smi">int</span>
+	<span class="pl-c1">Less</span>(<span class="pl-s1">i</span>, <span class="pl-s1">j</span> <span class="pl-smi">int</span>) <span class="pl-smi">bool</span>
+	<span class="pl-c1">Swap</span>(<span class="pl-s1">i</span>, <span class="pl-s1">j</span> <span class="pl-smi">int</span>)
+}</pre></div>
+<p>好奇怪，竟然名字就是叫做<code>Interface</code>。</p>
+<p>然后还定义了一个函数，接受作为参数，并将其排序</p>
+<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">Sort</span>(<span class="pl-s1">data</span> <span class="pl-smi">Interface</span>)</pre></div>
+<p>所以，对于任何数据类型，你定义的乱七八糟的东西。你想要对他排序？</p>
+<p>没问题，只要你去为这个数据类型实现<code>Interface</code>的接口</p>
+<h3>
+<a id="user-content-字符串数组-sort-示例" class="anchor" href="#%E5%AD%97%E7%AC%A6%E4%B8%B2%E6%95%B0%E7%BB%84-sort-%E7%A4%BA%E4%BE%8B" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>字符串数组 sort 示例</h3>
+<div class="highlight highlight-source-go"><pre><span class="pl-k">type</span> <span class="pl-smi">personName</span> []<span class="pl-smi">string</span>
+
+<span class="pl-k">func</span> (<span class="pl-s1">pn</span> <span class="pl-smi">personName</span>) <span class="pl-en">Len</span>() <span class="pl-smi">int</span> {
+	<span class="pl-k">return</span> <span class="pl-en">len</span>(<span class="pl-s1">pn</span>)
+}
+
+<span class="pl-k">func</span> (<span class="pl-s1">pn</span> <span class="pl-smi">personName</span>) <span class="pl-en">Less</span>(<span class="pl-s1">i</span>, <span class="pl-s1">j</span> <span class="pl-smi">int</span>) <span class="pl-smi">bool</span> {
+	<span class="pl-k">return</span> <span class="pl-s1">pn</span>[<span class="pl-s1">i</span>] <span class="pl-c1">&lt;</span> <span class="pl-s1">pn</span>[<span class="pl-s1">j</span>]
+}
+
+<span class="pl-k">func</span> (<span class="pl-s1">pn</span> <span class="pl-smi">personName</span>) <span class="pl-en">Swap</span>(<span class="pl-s1">i</span>, <span class="pl-s1">j</span> <span class="pl-smi">int</span>) {
+	<span class="pl-s1">pn</span>[<span class="pl-s1">i</span>], <span class="pl-s1">pn</span>[<span class="pl-s1">j</span>] <span class="pl-c1">=</span> <span class="pl-s1">pn</span>[<span class="pl-s1">j</span>], <span class="pl-s1">pn</span>[<span class="pl-s1">i</span>]
+}</pre></div>
+<p>上面先定义了一个字符串数组<code>personName</code>，然后实现了<code>sort</code>包里面的<code>Interface</code>接口，所以可以用<code>sort.Sort</code>对他进行排序了</p>
+<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">main</span>() {
+	<span class="pl-s1">pn</span> <span class="pl-c1">:=</span><span class="pl-smi">personName</span>{<span class="pl-s">&#34;chen&#34;</span>,<span class="pl-s">&#34;zhao&#34;</span>,<span class="pl-s">&#34;qian&#34;</span>,<span class="pl-s">&#34;sun&#34;</span>,<span class="pl-s">&#34;li&#34;</span>}
+	<span class="pl-s1">sort</span>.<span class="pl-en">Sort</span>(<span class="pl-s1">pn</span>)
+
+	<span class="pl-s1">fmt</span>.<span class="pl-en">Println</span>(<span class="pl-s1">pn</span>)
+}</pre></div>
+<h3>
+<a id="user-content-自定义-struct-sort-示例" class="anchor" href="#%E8%87%AA%E5%AE%9A%E4%B9%89-struct-sort-%E7%A4%BA%E4%BE%8B" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>自定义 struct sort 示例</h3>
+<div class="highlight highlight-source-go"><pre><span class="pl-k">type</span> <span class="pl-smi">Person</span> <span class="pl-k">struct</span> {
+	<span class="pl-c1">Name</span> <span class="pl-smi">string</span>
+	<span class="pl-c1">Age</span>  <span class="pl-smi">int</span>
+}
+
+<span class="pl-k">type</span> <span class="pl-smi">Human</span> []<span class="pl-smi">Person</span>
+
+<span class="pl-k">func</span> (<span class="pl-s1">h</span> <span class="pl-smi">Human</span>) <span class="pl-en">Len</span>() <span class="pl-smi">int</span> {
+	<span class="pl-k">return</span> <span class="pl-en">len</span>(<span class="pl-s1">h</span>)
+}
+
+<span class="pl-k">func</span> (<span class="pl-s1">h</span> <span class="pl-smi">Human</span>) <span class="pl-en">Less</span>(<span class="pl-s1">i</span>, <span class="pl-s1">j</span> <span class="pl-smi">int</span>) <span class="pl-smi">bool</span> {
+	<span class="pl-s1">p1</span> <span class="pl-c1">:=</span> <span class="pl-s1">h</span>[<span class="pl-s1">i</span>]
+	<span class="pl-s1">p2</span> <span class="pl-c1">:=</span> <span class="pl-s1">h</span>[<span class="pl-s1">j</span>]
+	<span class="pl-k">if</span> <span class="pl-s1">p1</span>.<span class="pl-c1">Age</span> <span class="pl-c1">&lt;</span> <span class="pl-s1">p2</span>.<span class="pl-c1">Age</span> {
+		<span class="pl-k">return</span> <span class="pl-c1">true</span>
+	} <span class="pl-k">else</span> <span class="pl-k">if</span> <span class="pl-s1">p1</span>.<span class="pl-c1">Age</span> <span class="pl-c1">==</span> <span class="pl-s1">p2</span>.<span class="pl-c1">Age</span> {
+		<span class="pl-k">return</span> <span class="pl-s1">p1</span>.<span class="pl-c1">Name</span> <span class="pl-c1">&lt;=</span> <span class="pl-s1">p2</span>.<span class="pl-c1">Name</span>
+	}
+	<span class="pl-k">return</span> <span class="pl-c1">false</span>
+}
+
+<span class="pl-k">func</span> (<span class="pl-s1">h</span> <span class="pl-smi">Human</span>) <span class="pl-en">Swap</span>(<span class="pl-s1">i</span>, <span class="pl-s1">j</span> <span class="pl-smi">int</span>) {
+	<span class="pl-s1">h</span>[<span class="pl-s1">i</span>], <span class="pl-s1">h</span>[<span class="pl-s1">j</span>] <span class="pl-c1">=</span> <span class="pl-s1">h</span>[<span class="pl-s1">j</span>], <span class="pl-s1">h</span>[<span class="pl-s1">i</span>]
+}</pre></div>
+<p>嗯，上面定义了一个人类的对象，然后他们排序的时候先比较年龄，再比较名字。</p>
+<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">main</span>() {
+	<span class="pl-s1">h</span> <span class="pl-c1">:=</span> <span class="pl-smi">Human</span>{
+		<span class="pl-smi">Person</span>{<span class="pl-c1">Name</span>: <span class="pl-s">&#34;chen&#34;</span>, <span class="pl-c1">Age</span>: <span class="pl-c1">24</span>},
+		<span class="pl-smi">Person</span>{<span class="pl-c1">Name</span>: <span class="pl-s">&#34;zhao&#34;</span>, <span class="pl-c1">Age</span>: <span class="pl-c1">24</span>},
+		<span class="pl-smi">Person</span>{<span class="pl-c1">Name</span>: <span class="pl-s">&#34;qian&#34;</span>, <span class="pl-c1">Age</span>: <span class="pl-c1">26</span>},
+	}
+	<span class="pl-s1">sort</span>.<span class="pl-en">Sort</span>(<span class="pl-s1">h</span>)
+
+	<span class="pl-s1">fmt</span>.<span class="pl-en">Println</span>(<span class="pl-s1">h</span>)
+}</pre></div>
+<pre lang="plain"><code>[{chen 24} {zhao 24} {qian 26}]
+</code></pre>
+<h3>
+<a id="user-content-怎么实现逆向排序" class="anchor" href="#%E6%80%8E%E4%B9%88%E5%AE%9E%E7%8E%B0%E9%80%86%E5%90%91%E6%8E%92%E5%BA%8F" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>怎么实现逆向排序</h3>
+<h4>
+<a id="user-content-sort-逆向排序" class="anchor" href="#sort-%E9%80%86%E5%90%91%E6%8E%92%E5%BA%8F" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>sort 逆向排序</h4>
+<p>这个函数支持输入一并返回一个``接口，但是返回的那个的接口的方法被修改了</p>
+<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">Reverse</span>(<span class="pl-s1">data</span> <span class="pl-smi">Interface</span>) <span class="pl-smi">Interface</span> {
+	<span class="pl-k">return</span> <span class="pl-c1">&amp;</span><span class="pl-smi">reverse</span>{<span class="pl-s1">data</span>}
+}</pre></div>
+<div class="highlight highlight-source-go"><pre><span class="pl-k">type</span> <span class="pl-smi">reverse</span> <span class="pl-k">struct</span> {
+	<span class="pl-smi">Interface</span>
+}</pre></div>
+<p>在 sort 里面，定义了这样一个未导出的接口<code>reverse</code>，他使用了一个 <strong>重要的概念：组合</strong> ，他本身并没有声明任何方法，但是呢，他内嵌了一个<code>Interface</code>接口，所以他就自动声明了<code>Interface</code>接口的所有方法！！</p>
+<p>所以，如果你在你的代码里面对一个数据类型实现了<code>Interface</code>接口，那么实际上，你也隐式地实现了未导出的接口<code>reverse</code>接口。</p>
+<p>更为神奇的是：他在你实现了这些接口之后，改变了你所定义的意义。</p>
+<p>看一看 sort 里的实现：</p>
+<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> (<span class="pl-s1">r</span> <span class="pl-smi">reverse</span>) <span class="pl-en">Less</span>(<span class="pl-s1">i</span>, <span class="pl-s1">j</span> <span class="pl-smi">int</span>) <span class="pl-smi">bool</span> {
+	<span class="pl-k">return</span> <span class="pl-s1">r</span>.<span class="pl-c1">Interface</span>.<span class="pl-en">Less</span>(<span class="pl-s1">j</span>, <span class="pl-s1">i</span>)
+}</pre></div>
+<p>哈哈哈<g-emoji class="g-emoji" alias="grin" fallback-src="https://github.githubassets.com/images/icons/emoji/unicode/1f601.png">😁</g-emoji>，Less 反过来了</p>
+<p>使用：</p>
+<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">main</span>() {
+	<span class="pl-s1">h</span> <span class="pl-c1">:=</span> <span class="pl-smi">Human</span>{
+		<span class="pl-smi">Person</span>{<span class="pl-c1">Name</span>: <span class="pl-s">&#34;chen&#34;</span>, <span class="pl-c1">Age</span>: <span class="pl-c1">24</span>},
+		<span class="pl-smi">Person</span>{<span class="pl-c1">Name</span>: <span class="pl-s">&#34;zhao&#34;</span>, <span class="pl-c1">Age</span>: <span class="pl-c1">24</span>},
+		<span class="pl-smi">Person</span>{<span class="pl-c1">Name</span>: <span class="pl-s">&#34;qian&#34;</span>, <span class="pl-c1">Age</span>: <span class="pl-c1">26</span>},
+	}
+	<span class="pl-c">//sort.Sort(h)</span>
+	<span class="pl-s1">sort</span>.<span class="pl-en">Sort</span>(<span class="pl-s1">sort</span>.<span class="pl-en">Reverse</span>(<span class="pl-s1">h</span>))
+	<span class="pl-s1">fmt</span>.<span class="pl-en">Println</span>(<span class="pl-s1">h</span>)
+}</pre></div>
+
+        </article>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/gh/calganaygun/MDcat@main/theme.js"></script>
+<script src="https://code.iconify.design/2/2.0.3/iconify.min.js"></script>
+</body></html>

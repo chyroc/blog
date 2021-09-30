@@ -1,0 +1,75 @@
+<html><head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0"/>
+    <link href="https://unpkg.com/@primer/css@^16.0.0/dist/primer.css" rel="stylesheet"/>
+    <link rel="stylesheet alternate" href="https://cdn.jsdelivr.net/gh/primer/github-syntax-light@master/lib/github-light.css" id="light-hl"/>
+    <link rel="stylesheet alternate" href="https://cdn.jsdelivr.net/gh/primer/github-syntax-dark@master/lib/github-dark.css" id="dark-hl"/>
+
+    <title>修改 github page 绑定的 cname 记录</title>
+</head>
+
+<body id="markdown-body" data-color-mode="light" data-dark-theme="light">
+<div class="
+        Box
+        md
+        js-code-block-container
+        Box--responsive
+        container-xl
+        px-3 px-md-4 px-lg-5
+        mt-5
+      " style="border:none" id="content">
+    <div class="Box-body px-5 pb-5" style="border-bottom:none">
+        <div class="d-flex flex-column flex-sm-row-reverse" style="text-align:right">
+            <div>
+                <button id="theme-button" class="btn" type="button" style="vertical-align: bottom">
+                    <span id="theme-icon" class="iconify" data-icon="octicon:sun-16"></span>
+                </button>
+            </div>
+        </div>
+        <article class="markdown-body entry-content container-lg" itemprop="text">
+            <p>原来我的 github page 绑定的域名是 blog.chyroc.cn，然后我的 chyroc/chyroc.github.io 项目是我的博客项目，这个本来是没有什么问题的。</p>
+<p>但是如果你其他的项目也开启了 github page 服务，比如项目 <a href="https://github.com/Chyroc/golang-wasm-example">https://github.com/Chyroc/golang-wasm-example</a> ，这个项目开启 github page 后，访问的地址是 <a href="https://blog.chyroc.cn/golang-wasm-example" rel="nofollow">https://blog.chyroc.cn/golang-wasm-example</a> ，一个和 blog 没啥关系的项目的访问链接里面带了 blog，这样就比较奇怪。</p>
+<p>所以我准备将我的 github page 绑定的域名从 blog.chyroc.cn 改为 chyroc.cn。</p>
+<h2>
+<a id="user-content-第一步修改-github-repo-的-cname-记录" class="anchor" href="#%E7%AC%AC%E4%B8%80%E6%AD%A5%E4%BF%AE%E6%94%B9-github-repo-%E7%9A%84-cname-%E8%AE%B0%E5%BD%95" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>第一步，修改 github repo 的 CNAME 记录</h2>
+<p>commit：<a href="https://github.com/chyroc/chyroc.github.io/commit/b253413fa3d64b4f9408ebe1100fcf79faa9d883">https://github.com/chyroc/chyroc.github.io/commit/b253413fa3d64b4f9408ebe1100fcf79faa9d883</a></p>
+<div class="highlight highlight-source-diff"><pre><span class="pl-md"><span class="pl-md">-</span>blog.chyroc.cn</span>
+<span class="pl-mi1"><span class="pl-mi1">+</span>chyroc.cn</span></pre></div>
+<h2>
+<a id="user-content-第二步修改域名解析记录" class="anchor" href="#%E7%AC%AC%E4%BA%8C%E6%AD%A5%E4%BF%AE%E6%94%B9%E5%9F%9F%E5%90%8D%E8%A7%A3%E6%9E%90%E8%AE%B0%E5%BD%95" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>第二步，修改域名解析记录</h2>
+<ul>
+<li>移除原来的主机类型为<code>@</code>的 A 记录</li>
+<li>移除原来指向 chyroc.github.io 的主机类型为<code>blog</code>的 CNAME 记录</li>
+<li>添加主机类型为<code>@</code>的指向 github page ip 的 A 记录（可选 ip 在<a href="https://help.github.com/articles/setting-up-an-apex-domain/">这里</a>有记录：我用的是 185.199.108.153）</li>
+</ul>
+<p><a href="https://camo.githubusercontent.com/79ee5e2cfd6edaba1bf1208d0b207c0cb163c04697128df0fc9fec2f8235aedb/68747470733a2f2f6d656469612e636879726f632e636e2f696d672f626c6f672f6d6f646966792d6769746875622d706167652d62696e64696e672d636e616d652d7265636f72642d646e732d73657474696e672d322e6a7067" target="_blank" rel="nofollow"><img src="https://camo.githubusercontent.com/79ee5e2cfd6edaba1bf1208d0b207c0cb163c04697128df0fc9fec2f8235aedb/68747470733a2f2f6d656469612e636879726f632e636e2f696d672f626c6f672f6d6f646966792d6769746875622d706167652d62696e64696e672d636e616d652d7265636f72642d646e732d73657474696e672d322e6a7067" alt="" data-canonical-src="https://media.chyroc.cn/img/blog/modify-github-page-binding-cname-record-dns-setting-2.jpg" style="max-width:100%;"/></a>
+<a href="https://camo.githubusercontent.com/e06dbc1e645222918abac0c6bdfcf1877ffa022d636cafcf32d143dac1bbb98b/68747470733a2f2f6d656469612e636879726f632e636e2f696d672f626c6f672f6d6f646966792d6769746875622d706167652d62696e64696e672d636e616d652d7265636f72642d646e732d73657474696e672e6a706567" target="_blank" rel="nofollow"><img src="https://camo.githubusercontent.com/e06dbc1e645222918abac0c6bdfcf1877ffa022d636cafcf32d143dac1bbb98b/68747470733a2f2f6d656469612e636879726f632e636e2f696d672f626c6f672f6d6f646966792d6769746875622d706167652d62696e64696e672d636e616d652d7265636f72642d646e732d73657474696e672e6a706567" alt="" data-canonical-src="https://media.chyroc.cn/img/blog/modify-github-page-binding-cname-record-dns-setting.jpeg" style="max-width:100%;"/></a></p>
+<h2>
+<a id="user-content-第三步修改服务器-nginx-配置" class="anchor" href="#%E7%AC%AC%E4%B8%89%E6%AD%A5%E4%BF%AE%E6%94%B9%E6%9C%8D%E5%8A%A1%E5%99%A8-nginx-%E9%85%8D%E7%BD%AE" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>第三步，修改服务器 nginx 配置</h2>
+<ul>
+<li>移除 chyroc.cn 的 nginx 配置</li>
+</ul>
+<p>原来的 chyroc.cn 是指向我的云主机的，由服务器上面的 nginx 做反向代理，现在需要删除该配置，即移除 <code>server_name chyroc.cn</code>这一项</p>
+<ul>
+<li>添加 blog.chyroc.cn 的重定向</li>
+</ul>
+<p>为了保证原来的 blog 链接还能正常工作，也就是 <a href="https://blog.chyroc.cn/posts/some-experience-with-writing-dockerfile/" rel="nofollow">https://blog.chyroc.cn/posts/some-experience-with-writing-dockerfile/</a> 还能正常访问，需要设置 blog.chyroc.cn/xxx 重定向到 chyroc.cn/xxx</p>
+<p>我们使用 nginx 做这件事情，添加 nginx 配置：</p>
+<div class="highlight highlight-source-nginx"><pre><span class="pl-k">server</span> {
+    <span class="pl-k">server_name</span>  blog.chyroc.cn;
+    <span class="pl-c1">return</span> <span class="pl-s">301</span> https://chyroc.cn/<span class="pl-smi">$request_uri</span>;
+}</pre></div>
+<h1>
+<a id="user-content-第四步修改各个地方硬编码的-blogchyroccn" class="anchor" href="#%E7%AC%AC%E5%9B%9B%E6%AD%A5%E4%BF%AE%E6%94%B9%E5%90%84%E4%B8%AA%E5%9C%B0%E6%96%B9%E7%A1%AC%E7%BC%96%E7%A0%81%E7%9A%84-blogchyroccn" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>第四步，修改各个地方硬编码的 blog.chyroc.cn</h1>
+<p>例如：</p>
+<ul>
+<li>本博客中链接</li>
+<li>各个介绍</li>
+<li>等等</li>
+</ul>
+
+        </article>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/gh/calganaygun/MDcat@main/theme.js"></script>
+<script src="https://code.iconify.design/2/2.0.3/iconify.min.js"></script>
+</body></html>

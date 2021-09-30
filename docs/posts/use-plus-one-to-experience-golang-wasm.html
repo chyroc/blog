@@ -1,0 +1,136 @@
+<html><head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0"/>
+    <link href="https://unpkg.com/@primer/css@^16.0.0/dist/primer.css" rel="stylesheet"/>
+    <link rel="stylesheet alternate" href="https://cdn.jsdelivr.net/gh/primer/github-syntax-light@master/lib/github-light.css" id="light-hl"/>
+    <link rel="stylesheet alternate" href="https://cdn.jsdelivr.net/gh/primer/github-syntax-dark@master/lib/github-dark.css" id="dark-hl"/>
+
+    <title>使用加 1 项目体验 golang 的 wasm</title>
+</head>
+
+<body id="markdown-body" data-color-mode="light" data-dark-theme="light">
+<div class="
+        Box
+        md
+        js-code-block-container
+        Box--responsive
+        container-xl
+        px-3 px-md-4 px-lg-5
+        mt-5
+      " style="border:none" id="content">
+    <div class="Box-body px-5 pb-5" style="border-bottom:none">
+        <div class="d-flex flex-column flex-sm-row-reverse" style="text-align:right">
+            <div>
+                <button id="theme-button" class="btn" type="button" style="vertical-align: bottom">
+                    <span id="theme-icon" class="iconify" data-icon="octicon:sun-16"></span>
+                </button>
+            </div>
+        </div>
+        <article class="markdown-body entry-content container-lg" itemprop="text">
+            <h2>
+<a id="user-content-什么是-webassembly" class="anchor" href="#%E4%BB%80%E4%B9%88%E6%98%AF-webassembly" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>什么是 WebAssembly</h2>
+<p>WebAssembly（以下简称 wasm）是一种新的编码方式，可以在现代的网络浏览器中运行。啥意思，就是除了 JavaScript（以下简称 js），还有一种语言可以在浏览器里面运行了！</p>
+<p>对于网络平台而言，WebAssembly 具有巨大的意义——它提供了一条途径，以使得以各种语言编写的代码都可以以接近原生的速度在 Web 中运行。在这种情况下，以前无法以此方式运行的客户端软件都将可以运行在 Web 中。</p>
+<h2>
+<a id="user-content-编译支持-wasm-的-go" class="anchor" href="#%E7%BC%96%E8%AF%91%E6%94%AF%E6%8C%81-wasm-%E7%9A%84-go" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>编译支持 wasm 的 go</h2>
+<p>golang 的 release 版本（1.10）还不支持 wasm，但是在 github.com/golang/go 的 master 分支中已经包含 wasm 了，所以我们需要自己编译一个 go。</p>
+<div class="highlight highlight-source-shell"><pre>git clone http://github.com/golang/go /path/go
+<span class="pl-c1">cd</span> /path/go/src
+./make.bash</pre></div>
+<p><code>/path/go/bin/</code>目录下会生成编译后的 go：<code>/path/go/bin/go</code></p>
+<p>设置<code>GOROOT</code>为<code>/path/go/</code></p>
+<h2>
+<a id="user-content-创建自己的-wasm-程序" class="anchor" href="#%E5%88%9B%E5%BB%BA%E8%87%AA%E5%B7%B1%E7%9A%84-wasm-%E7%A8%8B%E5%BA%8F" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>创建自己的 wasm 程序</h2>
+<p>参见项目：<a href="https://github.com/Chyroc/golang-wasm-example">https://github.com/Chyroc/golang-wasm-example</a></p>
+<h3>
+<a id="user-content-indexhtml" class="anchor" href="#indexhtml" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>index.html</h3>
+<p><code>index.html</code>引入了<code>wasm_exec.js</code>（这个是从<code>/path/go/misc/wasm/wasm_exec.js</code>复制来过的）和加载 wasm 的 js（这个参见参见<a href="https://developer.mozilla.org/zh-CN/docs/WebAssembly/Loading_and_running#%E4%BD%BF%E7%94%A8Fetch" rel="nofollow">文档</a>），总之这样我们的 wasm 就已经加载到我们的网页了</p>
+<p>最后有一个显示数字的 span 块，和两个<kbd>+</kbd>和<kbd>-</kbd>的 button，我们待会写的 wasm 代码就是操作这个 span 块的</p>
+<div class="highlight highlight-text-html-basic"><pre><span class="pl-kos">&lt;</span><span class="pl-ent">html</span><span class="pl-kos">&gt;</span>
+<span class="pl-kos">&lt;</span><span class="pl-ent">head</span><span class="pl-kos">&gt;</span>
+    <span class="pl-kos">&lt;</span><span class="pl-ent">title</span><span class="pl-kos">&gt;</span>加1减1<span class="pl-kos">&lt;/</span><span class="pl-ent">title</span><span class="pl-kos">&gt;</span>
+    <span class="pl-kos">&lt;</span><span class="pl-ent">script</span> <span class="pl-c1">src</span>=&#34;<span class="pl-s">wasm_exec.js</span>&#34;<span class="pl-kos">&gt;</span><span class="pl-kos">&lt;/</span><span class="pl-ent">script</span><span class="pl-kos">&gt;</span>
+    <span class="pl-kos">&lt;</span><span class="pl-ent">script</span> <span class="pl-c1">type</span>=&#34;<span class="pl-s">text/javascript</span>&#34;<span class="pl-kos">&gt;</span>
+        <span class="pl-k">function</span> <span class="pl-en">fetchAndInstantiate</span><span class="pl-kos">(</span><span class="pl-s1">url</span><span class="pl-kos">,</span> <span class="pl-s1">importObject</span><span class="pl-kos">)</span> <span class="pl-kos">{</span>
+            <span class="pl-k">return</span> <span class="pl-en">fetch</span><span class="pl-kos">(</span><span class="pl-s1">url</span><span class="pl-kos">)</span><span class="pl-kos">.</span><span class="pl-en">then</span><span class="pl-kos">(</span><span class="pl-s1">response</span> <span class="pl-c1">=&gt;</span>
+                    <span class="pl-s1">response</span><span class="pl-kos">.</span><span class="pl-en">arrayBuffer</span><span class="pl-kos">(</span><span class="pl-kos">)</span>
+            <span class="pl-kos">)</span><span class="pl-kos">.</span><span class="pl-en">then</span><span class="pl-kos">(</span><span class="pl-s1">bytes</span> <span class="pl-c1">=&gt;</span>
+                    <span class="pl-v">WebAssembly</span><span class="pl-kos">.</span><span class="pl-en">instantiate</span><span class="pl-kos">(</span><span class="pl-s1">bytes</span><span class="pl-kos">,</span> <span class="pl-s1">importObject</span><span class="pl-kos">)</span>
+            <span class="pl-kos">)</span><span class="pl-kos">.</span><span class="pl-en">then</span><span class="pl-kos">(</span><span class="pl-s1">results</span> <span class="pl-c1">=&gt;</span>
+                    <span class="pl-s1">results</span><span class="pl-kos">.</span><span class="pl-c1">instance</span>
+            <span class="pl-kos">)</span><span class="pl-kos">;</span>
+        <span class="pl-kos">}</span>
+
+        <span class="pl-k">var</span> <span class="pl-s1">go</span> <span class="pl-c1">=</span> <span class="pl-k">new</span> <span class="pl-v">Go</span><span class="pl-kos">(</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+        <span class="pl-k">var</span> <span class="pl-s1">mod</span> <span class="pl-c1">=</span> <span class="pl-en">fetchAndInstantiate</span><span class="pl-kos">(</span><span class="pl-s">&#34;./example.wasm&#34;</span><span class="pl-kos">,</span> <span class="pl-s1">go</span><span class="pl-kos">.</span><span class="pl-c1">importObject</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+        <span class="pl-smi">window</span><span class="pl-kos">.</span><span class="pl-en">onload</span> <span class="pl-c1">=</span> <span class="pl-k">function</span> <span class="pl-kos">(</span><span class="pl-kos">)</span> <span class="pl-kos">{</span>
+            <span class="pl-s1">mod</span><span class="pl-kos">.</span><span class="pl-en">then</span><span class="pl-kos">(</span><span class="pl-k">function</span> <span class="pl-kos">(</span><span class="pl-s1">instance</span><span class="pl-kos">)</span> <span class="pl-kos">{</span>
+                <span class="pl-s1">go</span><span class="pl-kos">.</span><span class="pl-en">run</span><span class="pl-kos">(</span><span class="pl-s1">instance</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+            <span class="pl-kos">}</span><span class="pl-kos">)</span><span class="pl-kos">;</span>
+        <span class="pl-kos">}</span><span class="pl-kos">;</span>
+    <span class="pl-kos">&lt;/</span><span class="pl-ent">script</span><span class="pl-kos">&gt;</span>
+<span class="pl-kos">&lt;/</span><span class="pl-ent">head</span><span class="pl-kos">&gt;</span>
+<span class="pl-kos">&lt;</span><span class="pl-ent">body</span><span class="pl-kos">&gt;</span>
+<span class="pl-kos">&lt;</span><span class="pl-ent">br</span><span class="pl-kos">&gt;</span>
+<span class="pl-kos">&lt;</span><span class="pl-ent">div</span><span class="pl-kos">&gt;</span>加1减1<span class="pl-kos">&lt;/</span><span class="pl-ent">div</span><span class="pl-kos">&gt;</span>
+<span class="pl-kos">&lt;</span><span class="pl-ent">br</span><span class="pl-kos">&gt;</span>
+<span class="pl-kos">&lt;</span><span class="pl-ent">button</span> <span class="pl-c1">id</span>=&#34;<span class="pl-s">minus</span>&#34; <span class="pl-c1">type</span>=&#34;<span class="pl-s">button</span>&#34; <span class="pl-c1">disabled</span>=<span class="pl-s">true</span><span class="pl-kos">&gt;</span>-<span class="pl-kos">&lt;/</span><span class="pl-ent">button</span><span class="pl-kos">&gt;</span>
+<span class="pl-kos">&lt;</span><span class="pl-ent">span</span> <span class="pl-c1">id</span>=&#34;<span class="pl-s">number</span>&#34;<span class="pl-kos">&gt;</span>0<span class="pl-kos">&lt;/</span><span class="pl-ent">span</span><span class="pl-kos">&gt;</span>
+<span class="pl-kos">&lt;</span><span class="pl-ent">button</span> <span class="pl-c1">id</span>=&#34;<span class="pl-s">plus</span>&#34; <span class="pl-c1">type</span>=&#34;<span class="pl-s">button</span>&#34; <span class="pl-c1">disabled</span>=<span class="pl-s">true</span><span class="pl-kos">&gt;</span>+<span class="pl-kos">&lt;/</span><span class="pl-ent">button</span><span class="pl-kos">&gt;</span>
+<span class="pl-kos">&lt;/</span><span class="pl-ent">body</span><span class="pl-kos">&gt;</span>
+<span class="pl-kos">&lt;/</span><span class="pl-ent">html</span><span class="pl-kos">&gt;</span></pre></div>
+<h3>
+<a id="user-content-wasmgo" class="anchor" href="#wasmgo" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>wasm.go</h3>
+<p>第一行有 build tag：<code>// +build js,wasm</code>表示<code>GOARCH</code>是<code>wasm</code>，<code>GOOS</code>是<code>js</code></p>
+<p>然后<code>syscall/js</code>包提供了操作网页的接口：</p>
+<p><code>js.Global.Get(&#34;document&#34;).Call(&#34;getElementById&#34;, &#34;number&#34;)</code>这几行获取到刚刚<code>index.html</code>中最后一个按钮和 span 块</p>
+<p>全局变量<code>number</code>是我们最后操作的数字</p>
+<p>然后对<kbd>+</kbd>和<kbd>-</kbd>按钮添加事件监听，监听到按了<kbd>+</kbd>，就将<code>number</code>加 1；监听到按了<kbd>-</kbd>，就将<code>number</code>减 1；并渲染 span 块。</p>
+<p><code>plus.Set(&#34;disabled&#34;, false)</code>这两句会在页面 wasm 加载后将<kbd>+</kbd>和<kbd>-</kbd>按钮 disable 状态去掉，变成可点击状态</p>
+<p>最后使用<code>select{}</code>阻塞 go 程序不退出</p>
+<div class="highlight highlight-source-go"><pre><span class="pl-c">// +build js,wasm</span>
+
+<span class="pl-k">package</span> main
+
+<span class="pl-k">import</span> (
+	<span class="pl-s">&#34;syscall/js&#34;</span>
+	<span class="pl-s">&#34;strconv&#34;</span>
+)
+
+<span class="pl-k">func</span> <span class="pl-en">main</span>() {
+	<span class="pl-k">var</span> <span class="pl-s1">numberDoc</span> <span class="pl-c1">=</span> <span class="pl-s1">js</span>.<span class="pl-c1">Global</span>.<span class="pl-en">Get</span>(<span class="pl-s">&#34;document&#34;</span>).<span class="pl-en">Call</span>(<span class="pl-s">&#34;getElementById&#34;</span>, <span class="pl-s">&#34;number&#34;</span>)
+	<span class="pl-k">var</span> <span class="pl-s1">plus</span> <span class="pl-c1">=</span> <span class="pl-s1">js</span>.<span class="pl-c1">Global</span>.<span class="pl-en">Get</span>(<span class="pl-s">&#34;document&#34;</span>).<span class="pl-en">Call</span>(<span class="pl-s">&#34;getElementById&#34;</span>, <span class="pl-s">&#34;plus&#34;</span>)
+	<span class="pl-k">var</span> <span class="pl-s1">minus</span> <span class="pl-c1">=</span> <span class="pl-s1">js</span>.<span class="pl-c1">Global</span>.<span class="pl-en">Get</span>(<span class="pl-s">&#34;document&#34;</span>).<span class="pl-en">Call</span>(<span class="pl-s">&#34;getElementById&#34;</span>, <span class="pl-s">&#34;minus&#34;</span>)
+	<span class="pl-k">var</span> <span class="pl-s1">number</span> <span class="pl-smi">int</span>
+
+	<span class="pl-s1">plus</span>.<span class="pl-en">Call</span>(<span class="pl-s">&#34;addEventListener&#34;</span>, <span class="pl-s">&#34;click&#34;</span>, <span class="pl-s1">js</span>.<span class="pl-en">NewCallback</span>(<span class="pl-k">func</span>(<span class="pl-s1">args</span> []js.<span class="pl-smi">Value</span>) {
+		<span class="pl-en">println</span>(<span class="pl-s">&#34;press +&#34;</span>)
+		<span class="pl-s1">number</span><span class="pl-c1">++</span>
+		<span class="pl-s1">numberDoc</span>.<span class="pl-en">Set</span>(<span class="pl-s">&#34;innerHTML&#34;</span>, <span class="pl-s1">strconv</span>.<span class="pl-en">Itoa</span>(<span class="pl-s1">number</span>))
+	}))
+
+	<span class="pl-s1">minus</span>.<span class="pl-en">Call</span>(<span class="pl-s">&#34;addEventListener&#34;</span>, <span class="pl-s">&#34;click&#34;</span>, <span class="pl-s1">js</span>.<span class="pl-en">NewCallback</span>(<span class="pl-k">func</span>(<span class="pl-s1">args</span> []js.<span class="pl-smi">Value</span>) {
+		<span class="pl-s1">number</span><span class="pl-c1">--</span>
+		<span class="pl-s1">numberDoc</span>.<span class="pl-en">Set</span>(<span class="pl-s">&#34;innerHTML&#34;</span>, <span class="pl-s1">strconv</span>.<span class="pl-en">Itoa</span>(<span class="pl-s1">number</span>))
+		<span class="pl-en">println</span>(<span class="pl-s">&#34;press -&#34;</span>)
+	}))
+
+	<span class="pl-s1">plus</span>.<span class="pl-en">Set</span>(<span class="pl-s">&#34;disabled&#34;</span>, <span class="pl-c1">false</span>)
+	<span class="pl-s1">minus</span>.<span class="pl-en">Set</span>(<span class="pl-s">&#34;disabled&#34;</span>, <span class="pl-c1">false</span>)
+
+	<span class="pl-k">select</span> {}
+}</pre></div>
+<p>程序效果请访问：<a href="https://blog.chyroc.cn/golang-wasm-example/" rel="nofollow">https://blog.chyroc.cn/golang-wasm-example/</a> 体验</p>
+<h2>
+<a id="user-content-参考" class="anchor" href="#%E5%8F%82%E8%80%83" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>参考</h2>
+<ul>
+<li><a href="https://blog.gopheracademy.com/advent-2017/go-wasm/" rel="nofollow">https://blog.gopheracademy.com/advent-2017/go-wasm/</a></li>
+<li><a href="https://github.com/neelance/go/issues/29">https://github.com/neelance/go/issues/29</a></li>
+<li><a href="https://blog.csdn.net/garfielder007/article/details/68215694" rel="nofollow">https://blog.csdn.net/garfielder007/article/details/68215694</a></li>
+</ul>
+
+        </article>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/gh/calganaygun/MDcat@main/theme.js"></script>
+<script src="https://code.iconify.design/2/2.0.3/iconify.min.js"></script>
+</body></html>

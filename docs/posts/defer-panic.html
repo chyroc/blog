@@ -1,0 +1,85 @@
+<html><head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0"/>
+    <link href="https://unpkg.com/@primer/css@^16.0.0/dist/primer.css" rel="stylesheet"/>
+    <link rel="stylesheet alternate" href="https://cdn.jsdelivr.net/gh/primer/github-syntax-light@master/lib/github-light.css" id="light-hl"/>
+    <link rel="stylesheet alternate" href="https://cdn.jsdelivr.net/gh/primer/github-syntax-dark@master/lib/github-dark.css" id="dark-hl"/>
+
+    <title>defer 与 panic 的问题（defer 之二）</title>
+</head>
+
+<body id="markdown-body" data-color-mode="light" data-dark-theme="light">
+<div class="
+        Box
+        md
+        js-code-block-container
+        Box--responsive
+        container-xl
+        px-3 px-md-4 px-lg-5
+        mt-5
+      " style="border:none" id="content">
+    <div class="Box-body px-5 pb-5" style="border-bottom:none">
+        <div class="d-flex flex-column flex-sm-row-reverse" style="text-align:right">
+            <div>
+                <button id="theme-button" class="btn" type="button" style="vertical-align: bottom">
+                    <span id="theme-icon" class="iconify" data-icon="octicon:sun-16"></span>
+                </button>
+            </div>
+        </div>
+        <article class="markdown-body entry-content container-lg" itemprop="text">
+            <p>defer 与 panic 问题</p>
+<div class="highlight highlight-source-go"><pre><span class="pl-k">package</span> main
+
+<span class="pl-k">func</span> <span class="pl-en">f1</span>() {
+	<span class="pl-k">defer</span> <span class="pl-en">println</span>(<span class="pl-s">&#34;f1-begin&#34;</span>)
+	<span class="pl-en">f2</span>()
+	<span class="pl-k">defer</span> <span class="pl-en">println</span>(<span class="pl-s">&#34;f1-end&#34;</span>)
+}
+
+<span class="pl-k">func</span> <span class="pl-en">f2</span>() {
+	<span class="pl-k">defer</span> <span class="pl-en">println</span>(<span class="pl-s">&#34;f2-begin&#34;</span>)
+	<span class="pl-en">f3</span>()
+	<span class="pl-k">defer</span> <span class="pl-en">println</span>(<span class="pl-s">&#34;f2-end&#34;</span>)
+}
+
+<span class="pl-k">func</span> <span class="pl-en">f3</span>() {
+	<span class="pl-k">defer</span> <span class="pl-en">println</span>(<span class="pl-s">&#34;f3-begin&#34;</span>)
+	<span class="pl-en">panic</span>(<span class="pl-c1">0</span>)
+	<span class="pl-k">defer</span> <span class="pl-en">println</span>(<span class="pl-s">&#34;f3-end&#34;</span>)
+}
+
+<span class="pl-k">func</span> <span class="pl-en">main</span>() {
+	<span class="pl-en">f1</span>()
+}</pre></div>
+<p>最后 f3 中 panic，所以 defer 不再增加，defer 栈是：<code>f11 f21 f31 panic</code></p>
+<p>第二个问题</p>
+<div class="highlight highlight-source-go"><pre><span class="pl-k">package</span> main
+
+<span class="pl-k">import</span> <span class="pl-s">&#34;log&#34;</span>
+
+<span class="pl-k">func</span> <span class="pl-en">f</span>() {
+	<span class="pl-k">defer</span> <span class="pl-k">func</span>() {
+		<span class="pl-k">if</span> <span class="pl-s1">r</span> <span class="pl-c1">:=</span> <span class="pl-en">recover</span>(); <span class="pl-s1">r</span> <span class="pl-c1">!=</span> <span class="pl-c1">nil</span> {
+			<span class="pl-s1">log</span>.<span class="pl-en">Printf</span>(<span class="pl-s">&#34;recover:%#v&#34;</span>, <span class="pl-s1">r</span>)
+		}
+	}()
+	<span class="pl-en">panic</span>(<span class="pl-c1">1</span>)
+	<span class="pl-en">panic</span>(<span class="pl-c1">2</span>)
+}
+
+<span class="pl-k">func</span> <span class="pl-en">main</span>() {
+	<span class="pl-en">f</span>()
+}</pre></div>
+<p>两个 panic 的时候 recover，结果是什么：</p>
+<p>panic 之后，要么直接退出函数，要么 recover 一下退出函数，不会再执行别的代码</p>
+<h2>
+<a id="user-content-参考" class="anchor" href="#%E5%8F%82%E8%80%83" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>参考</h2>
+<ul>
+<li><a href="https://github.com/goquiz/goquiz.github.io">https://github.com/goquiz/goquiz.github.io</a></li>
+</ul>
+
+        </article>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/gh/calganaygun/MDcat@main/theme.js"></script>
+<script src="https://code.iconify.design/2/2.0.3/iconify.min.js"></script>
+</body></html>

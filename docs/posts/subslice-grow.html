@@ -1,0 +1,104 @@
+<html><head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0"/>
+    <link href="https://unpkg.com/@primer/css@^16.0.0/dist/primer.css" rel="stylesheet"/>
+    <link rel="stylesheet alternate" href="https://cdn.jsdelivr.net/gh/primer/github-syntax-light@master/lib/github-light.css" id="light-hl"/>
+    <link rel="stylesheet alternate" href="https://cdn.jsdelivr.net/gh/primer/github-syntax-dark@master/lib/github-dark.css" id="dark-hl"/>
+
+    <title>slice 与底层数组引用</title>
+</head>
+
+<body id="markdown-body" data-color-mode="light" data-dark-theme="light">
+<div class="
+        Box
+        md
+        js-code-block-container
+        Box--responsive
+        container-xl
+        px-3 px-md-4 px-lg-5
+        mt-5
+      " style="border:none" id="content">
+    <div class="Box-body px-5 pb-5" style="border-bottom:none">
+        <div class="d-flex flex-column flex-sm-row-reverse" style="text-align:right">
+            <div>
+                <button id="theme-button" class="btn" type="button" style="vertical-align: bottom">
+                    <span id="theme-icon" class="iconify" data-icon="octicon:sun-16"></span>
+                </button>
+            </div>
+        </div>
+        <article class="markdown-body entry-content container-lg" itemprop="text">
+            <div class="highlight highlight-source-go"><pre><span class="pl-k">package</span> main
+
+<span class="pl-k">import</span> (
+	<span class="pl-s">&#34;fmt&#34;</span>
+)
+
+<span class="pl-k">func</span> <span class="pl-en">main</span>() {
+	<span class="pl-s1">s</span> <span class="pl-c1">:=</span> []<span class="pl-smi">int</span>{<span class="pl-c1">1</span>, <span class="pl-c1">2</span>, <span class="pl-c1">3</span>}
+	<span class="pl-s1">ss</span> <span class="pl-c1">:=</span> <span class="pl-s1">s</span>[<span class="pl-c1">1</span>:]
+	<span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">:=</span> <span class="pl-k">range</span> <span class="pl-s1">ss</span> {
+		<span class="pl-s1">ss</span>[<span class="pl-s1">i</span>] <span class="pl-c1">+=</span> <span class="pl-c1">10</span>
+	}
+	<span class="pl-s1">fmt</span>.<span class="pl-en">Println</span>(<span class="pl-s1">s</span>)
+	<span class="pl-s1">ss</span> <span class="pl-c1">=</span> <span class="pl-en">append</span>(<span class="pl-s1">ss</span>, <span class="pl-c1">4</span>)
+	<span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">:=</span> <span class="pl-k">range</span> <span class="pl-s1">ss</span> {
+		<span class="pl-s1">ss</span>[<span class="pl-s1">i</span>] <span class="pl-c1">+=</span> <span class="pl-c1">10</span>
+	}
+	<span class="pl-s1">fmt</span>.<span class="pl-en">Println</span>(<span class="pl-s1">s</span>)
+}</pre></div>
+<p>结果是</p>
+<pre lang="plain"><code>[1 12 13]
+[1 12 13]
+</code></pre>
+<p>也就是说第一个循环改变了 s，第二个循环没有改变。</p>
+<p>为什么会这样呢，因为在第一个循环中，s 和 ss 都是 slice，底层共用的是一个数组，所以改变 ss 的时候，实际上改变的是底层的数组，所以 s 也会跟着改变。</p>
+<p>在第二个循环中，<code>ss = append(ss, 4)</code>这句话会将 ss 底层引用的数组改变，所以从这里开始 s 和 ss 就没有关联了。所以改变 ss 的时候，并不会改变 s。</p>
+<p>可以打印出 slice 的底层数组印证一下：</p>
+<div class="highlight highlight-source-go"><pre><span class="pl-k">package</span> main
+
+<span class="pl-k">import</span> (
+	<span class="pl-s">&#34;fmt&#34;</span>
+	<span class="pl-s">&#34;reflect&#34;</span>
+	<span class="pl-s">&#34;unsafe&#34;</span>
+)
+
+<span class="pl-k">func</span> <span class="pl-en">printArrayOfSlice</span>(<span class="pl-s1">msg</span> <span class="pl-smi">string</span>, <span class="pl-s1">s</span> []<span class="pl-smi">int</span>) {
+	<span class="pl-s1">hdr</span> <span class="pl-c1">:=</span> (<span class="pl-c1">*</span><span class="pl-s1">reflect</span>.<span class="pl-c1">SliceHeader</span>)(<span class="pl-s1">unsafe</span>.<span class="pl-en">Pointer</span>(<span class="pl-c1">&amp;</span><span class="pl-s1">s</span>))
+	<span class="pl-s1">data</span> <span class="pl-c1">:=</span> <span class="pl-c1">*</span>(<span class="pl-c1">*</span>[<span class="pl-c1">3</span>]<span class="pl-smi">int</span>)(<span class="pl-s1">unsafe</span>.<span class="pl-en">Pointer</span>(<span class="pl-s1">hdr</span>.<span class="pl-c1">Data</span>))
+	<span class="pl-s1">fmt</span>.<span class="pl-en">Printf</span>(<span class="pl-s">&#34;%s <span class="pl-cce">\t</span>array<span class="pl-cce">\t</span>%+v<span class="pl-cce">\n</span>&#34;</span>, <span class="pl-s1">msg</span>, <span class="pl-s1">data</span>)
+}
+
+<span class="pl-k">func</span> <span class="pl-en">main</span>() {
+	<span class="pl-s1">s</span> <span class="pl-c1">:=</span> []<span class="pl-smi">int</span>{<span class="pl-c1">1</span>, <span class="pl-c1">2</span>, <span class="pl-c1">3</span>}
+	<span class="pl-s1">ss</span> <span class="pl-c1">:=</span> <span class="pl-s1">s</span>[<span class="pl-c1">1</span>:]
+	<span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">:=</span> <span class="pl-k">range</span> <span class="pl-s1">ss</span> {
+		<span class="pl-s1">ss</span>[<span class="pl-s1">i</span>] <span class="pl-c1">+=</span> <span class="pl-c1">10</span>
+	}
+	<span class="pl-en">printArrayOfSlice</span>(<span class="pl-s">&#34;s&#34;</span>, <span class="pl-s1">s</span>)
+	<span class="pl-en">printArrayOfSlice</span>(<span class="pl-s">&#34;ss&#34;</span>, <span class="pl-s1">ss</span>)
+
+	<span class="pl-s1">ss</span> <span class="pl-c1">=</span> <span class="pl-en">append</span>(<span class="pl-s1">ss</span>, <span class="pl-c1">4</span>)
+	<span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">:=</span> <span class="pl-k">range</span> <span class="pl-s1">ss</span> {
+		<span class="pl-s1">ss</span>[<span class="pl-s1">i</span>] <span class="pl-c1">+=</span> <span class="pl-c1">10</span>
+	}
+	<span class="pl-en">printArrayOfSlice</span>(<span class="pl-s">&#34;s&#34;</span>, <span class="pl-s1">s</span>)
+	<span class="pl-en">printArrayOfSlice</span>(<span class="pl-s">&#34;ss&#34;</span>, <span class="pl-s1">ss</span>)
+}</pre></div>
+<p>结果是</p>
+<pre lang="plain"><code>s 	array	[1 12 13]
+ss 	array	[12 13 842350739296]
+s 	array	[1 12 13]
+ss 	array	[22 23 14]
+</code></pre>
+<p>说明的我的想法：ss 在前后所引用底层数组改变了。</p>
+<h2>
+<a id="user-content-参考" class="anchor" href="#%E5%8F%82%E8%80%83" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>参考</h2>
+<ul>
+<li><a href="https://github.com/goquiz/goquiz.github.io">https://github.com/goquiz/goquiz.github.io</a></li>
+</ul>
+
+        </article>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/gh/calganaygun/MDcat@main/theme.js"></script>
+<script src="https://code.iconify.design/2/2.0.3/iconify.min.js"></script>
+</body></html>

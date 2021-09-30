@@ -1,0 +1,202 @@
+<html><head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0"/>
+    <link href="https://unpkg.com/@primer/css@^16.0.0/dist/primer.css" rel="stylesheet"/>
+    <link rel="stylesheet alternate" href="https://cdn.jsdelivr.net/gh/primer/github-syntax-light@master/lib/github-light.css" id="light-hl"/>
+    <link rel="stylesheet alternate" href="https://cdn.jsdelivr.net/gh/primer/github-syntax-dark@master/lib/github-dark.css" id="dark-hl"/>
+
+    <title>Token、认证与授权</title>
+</head>
+
+<body id="markdown-body" data-color-mode="light" data-dark-theme="light">
+<div class="
+        Box
+        md
+        js-code-block-container
+        Box--responsive
+        container-xl
+        px-3 px-md-4 px-lg-5
+        mt-5
+      " style="border:none" id="content">
+    <div class="Box-body px-5 pb-5" style="border-bottom:none">
+        <div class="d-flex flex-column flex-sm-row-reverse" style="text-align:right">
+            <div>
+                <button id="theme-button" class="btn" type="button" style="vertical-align: bottom">
+                    <span id="theme-icon" class="iconify" data-icon="octicon:sun-16"></span>
+                </button>
+            </div>
+        </div>
+        <article class="markdown-body entry-content container-lg" itemprop="text">
+            <blockquote>
+<p>这篇文章是我在公司内部分享的 paper（去掉了敏感信息之后），在这里贴一下~</p>
+</blockquote>
+<ul>
+<li>什么是认证和授权</li>
+<li>有哪些方式</li>
+<li>我们是怎么设计的</li>
+</ul>
+<hr/>
+<h1>
+<a id="user-content-认证和授权" class="anchor" href="#%E8%AE%A4%E8%AF%81%E5%92%8C%E6%8E%88%E6%9D%83" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>认证和授权</h1>
+<table>
+<thead>
+<tr>
+<th>认证 <em>authentication</em>
+</th>
+<th>授权 <em>authorization</em>
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>~~X~~</td>
+<td>~~√~~</td>
+</tr>
+<tr>
+<td>X</td>
+<td>X</td>
+</tr>
+<tr>
+<td>√</td>
+<td>X</td>
+</tr>
+<tr>
+<td>√</td>
+<td>√</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>公开的数据/可以匿名访问的</li>
+<li>验证有效的 user</li>
+<li>需要 ACL 系统验证</li>
+</ul>
+<hr/>
+<h1>
+<a id="user-content-有哪些方式" class="anchor" href="#%E6%9C%89%E5%93%AA%E4%BA%9B%E6%96%B9%E5%BC%8F" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>有哪些方式</h1>
+<ul>
+<li>Cookie 与 Session</li>
+<li>Basic Auth</li>
+<li>JWT</li>
+<li>OAuth2</li>
+</ul>
+<hr/>
+<h2>
+<a id="user-content-cookie-与-session" class="anchor" href="#cookie-%E4%B8%8E-session" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Cookie 与 Session</h2>
+<ul>
+<li>Cookie：键值对；Set-Cookie</li>
+<li>Session：浏览器存储 cookie，包含 session-id；服务端验证 session-id 有效性，并获取 user 信息</li>
+<li>优点：简单</li>
+<li>缺点
+<ul>
+<li>对非浏览器端不友好</li>
+<li>CSRF：Cross Site Request Forgery，跨站请求伪造
+<a href="https://camo.githubusercontent.com/03107655dc144d0502a499aa85e5d925cd1083effe50786fe4700b21abca21eb/68747470733a2f2f6d656469612e636879726f632e636e2f696d672f637372662e6a7067" target="_blank" rel="nofollow"><img src="https://camo.githubusercontent.com/03107655dc144d0502a499aa85e5d925cd1083effe50786fe4700b21abca21eb/68747470733a2f2f6d656469612e636879726f632e636e2f696d672f637372662e6a7067" alt="" data-canonical-src="https://media.chyroc.cn/img/csrf.jpg" style="max-width:100%;"/></a>
+</li>
+</ul>
+</li>
+</ul>
+<hr/>
+<h2>
+<a id="user-content-basic-auth" class="anchor" href="#basic-auth" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Basic Auth</h2>
+<ul>
+<li>Header: <code>Authorization: &#34;Basic &#34; + base64(username:password)</code>
+</li>
+<li>优点：简单</li>
+<li>缺点
+<ul>
+<li>明文传输用户名和密码</li>
+<li>无法提供更多有效信息，只有用户名</li>
+</ul>
+</li>
+</ul>
+<hr/>
+<h2>
+<a id="user-content-jwt" class="anchor" href="#jwt" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>JWT</h2>
+<ul>
+<li>JWT：JSON Web Token</li>
+<li>由三段构成：header、payload、signature，三段都进行 base64 编码，由”.”连接起来
+<ul>
+<li>header：类型与摘要算法（{&#39;typ&#39;: &#39;JWT&#39;,&#39;alg&#39;: &#39;HS256&#39;}），指示其余部分如何解析与生成</li>
+<li>payload：Issuer/Audience/Expiration Time/Issued At，任何需要的业务信息</li>
+<li>signature：使用第一段的签名算法对前两段的数据进行签名</li>
+</ul>
+</li>
+<li>保证有效性：第三段信息对前两段信息进行摘要，保证前两段信息没有被篡改</li>
+<li>摘要算法可以是对称的，也可以是非对称的</li>
+</ul>
+<hr/>
+<ul>
+<li>优点
+<ul>
+<li>不需要中心服务器，可以独立的验证有效性（非对称）</li>
+<li>不需要服务器存储</li>
+</ul>
+</li>
+<li>缺点
+<ul>
+<li>无法主动失效已经签发的 jwt token</li>
+<li>过期需要重新登录</li>
+</ul>
+</li>
+</ul>
+<hr/>
+<h2>
+<a id="user-content-oauth2" class="anchor" href="#oauth2" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>OAuth2</h2>
+<ul>
+<li>两种：access_token 和 refresh_token（optional）</li>
+<li>签发与验证、刷新</li>
+<li>与 OAuth1 对比
+<ul>
+<li>新增了 refresh_token（optional）</li>
+<li>access_token 变短</li>
+<li>使用更简单</li>
+</ul>
+</li>
+</ul>
+<hr/>
+<ul>
+<li>优点
+<ul>
+<li>使 access_token 有效期变短，access_token 的泄露造成的危害性有时间限制</li>
+<li>可刷新，token 过期的时候，不需要重新登录</li>
+</ul>
+</li>
+<li>缺点
+<ul>
+<li>refresh_token 提高了客户端操作的复杂性</li>
+<li>客户端刷新操作复杂</li>
+</ul>
+</li>
+<li>access_token 是否在服务端存储 memory/redis/mysql？</li>
+</ul>
+<hr/>
+<p><strong>时序图</strong></p>
+<p><a href="https://camo.githubusercontent.com/ca030e626c0adab4a81dfe3b7aa3daae81c73396f8881a9facfd60e61f46ee0a/68747470733a2f2f6d656469612e636879726f632e636e2f696d672f61757468322d726566726573682d746f6b656e2e706e67" target="_blank" rel="nofollow"><img src="https://camo.githubusercontent.com/ca030e626c0adab4a81dfe3b7aa3daae81c73396f8881a9facfd60e61f46ee0a/68747470733a2f2f6d656469612e636879726f632e636e2f696d672f61757468322d726566726573682d746f6b656e2e706e67" alt="" data-canonical-src="https://media.chyroc.cn/img/auth2-refresh-token.png" style="max-width:100%;"/></a></p>
+<hr/>
+<p><strong>第三方授权时序图</strong></p>
+<p><a href="https://camo.githubusercontent.com/0ee2d67595b35e84f5f6364cafa961bb1ec319015b1bd31c80d80dd25035b8fe/68747470733a2f2f6d656469612e636879726f632e636e2f696d672f61757468322d74686972642d70617274792e706e67" target="_blank" rel="nofollow"><img src="https://camo.githubusercontent.com/0ee2d67595b35e84f5f6364cafa961bb1ec319015b1bd31c80d80dd25035b8fe/68747470733a2f2f6d656469612e636879726f632e636e2f696d672f61757468322d74686972642d70617274792e706e67" alt="" data-canonical-src="https://media.chyroc.cn/img/auth2-third-party.png" style="max-width:100%;"/></a></p>
+<hr/>
+<h2>
+<a id="user-content--我们是怎么设计的" class="anchor" href="#-%E6%88%91%E4%BB%AC%E6%98%AF%E6%80%8E%E4%B9%88%E8%AE%BE%E8%AE%A1%E7%9A%84" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><del># 我们是怎么设计的</del>
+</h2>
+<h1>
+<a id="user-content-安全性" class="anchor" href="#%E5%AE%89%E5%85%A8%E6%80%A7" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>安全性</h1>
+<ul>
+<li>HTTPS</li>
+<li>弱口令/暴力破解</li>
+<li>二次验证  Two-factor Authentication</li>
+</ul>
+<hr/>
+<h1>
+<a id="user-content-q--a" class="anchor" href="#q--a" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Q &amp; A</h1>
+<hr/>
+<h1>
+<a id="user-content-谢谢大家" class="anchor" href="#%E8%B0%A2%E8%B0%A2%E5%A4%A7%E5%AE%B6" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>谢谢大家</h1>
+<hr/>
+
+        </article>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/gh/calganaygun/MDcat@main/theme.js"></script>
+<script src="https://code.iconify.design/2/2.0.3/iconify.min.js"></script>
+</body></html>

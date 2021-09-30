@@ -1,0 +1,127 @@
+<html><head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0"/>
+    <link href="https://unpkg.com/@primer/css@^16.0.0/dist/primer.css" rel="stylesheet"/>
+    <link rel="stylesheet alternate" href="https://cdn.jsdelivr.net/gh/primer/github-syntax-light@master/lib/github-light.css" id="light-hl"/>
+    <link rel="stylesheet alternate" href="https://cdn.jsdelivr.net/gh/primer/github-syntax-dark@master/lib/github-dark.css" id="dark-hl"/>
+
+    <title>defer 与 return 的问题（defer 之一）</title>
+</head>
+
+<body id="markdown-body" data-color-mode="light" data-dark-theme="light">
+<div class="
+        Box
+        md
+        js-code-block-container
+        Box--responsive
+        container-xl
+        px-3 px-md-4 px-lg-5
+        mt-5
+      " style="border:none" id="content">
+    <div class="Box-body px-5 pb-5" style="border-bottom:none">
+        <div class="d-flex flex-column flex-sm-row-reverse" style="text-align:right">
+            <div>
+                <button id="theme-button" class="btn" type="button" style="vertical-align: bottom">
+                    <span id="theme-icon" class="iconify" data-icon="octicon:sun-16"></span>
+                </button>
+            </div>
+        </div>
+        <article class="markdown-body entry-content container-lg" itemprop="text">
+            <p>我们知道 defer 的时候会将后面的函数入栈，然后 return 的时候执行。</p>
+<p>那么具体是什么样子的呢。</p>
+<p>分 4 步：</p>
+<pre lang="plain"><code>- 遇到defer函数，计算defer函数的参数值，入栈
+- 将return后面的值计算出来，赋给t（这个t是函数声明中要返回的的变量）
+- 执行defer函数
+- 空的return（结果就是那个t）
+</code></pre>
+<h2>
+<a id="user-content-关于-defer-函数的参数什么时候计算" class="anchor" href="#%E5%85%B3%E4%BA%8E-defer-%E5%87%BD%E6%95%B0%E7%9A%84%E5%8F%82%E6%95%B0%E4%BB%80%E4%B9%88%E6%97%B6%E5%80%99%E8%AE%A1%E7%AE%97" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>关于 defer 函数的参数什么时候计算</h2>
+<div class="highlight highlight-source-go"><pre><span class="pl-k">package</span> main
+
+<span class="pl-k">import</span> (
+	<span class="pl-s">&#34;fmt&#34;</span>
+	<span class="pl-s">&#34;time&#34;</span>
+)
+
+<span class="pl-k">func</span> <span class="pl-en">main</span>() {
+	<span class="pl-k">defer</span> <span class="pl-s1">fmt</span>.<span class="pl-en">Println</span>(<span class="pl-s1">time</span>.<span class="pl-en">Now</span>()) <span class="pl-c">// 1</span>
+	<span class="pl-s1">time</span>.<span class="pl-en">Sleep</span>(<span class="pl-s1">time</span>.<span class="pl-c1">Second</span>)
+	<span class="pl-s1">fmt</span>.<span class="pl-en">Println</span>(<span class="pl-s1">time</span>.<span class="pl-en">Now</span>()) <span class="pl-c">// 3</span>
+}</pre></div>
+<p>先 print 的时间(line 3)是要比后 print 的时间(line 1)多 1s 的，所以是先计算 defer 的参数，入栈，然后再继续往下执行</p>
+<h2>
+<a id="user-content-关于-return-后面的参数与-defer-函数之间的关系" class="anchor" href="#%E5%85%B3%E4%BA%8E-return-%E5%90%8E%E9%9D%A2%E7%9A%84%E5%8F%82%E6%95%B0%E4%B8%8E-defer-%E5%87%BD%E6%95%B0%E4%B9%8B%E9%97%B4%E7%9A%84%E5%85%B3%E7%B3%BB" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>关于 return 后面的参数与 defer 函数之间的关系</h2>
+<p><strong>最重要的一点就是要明白，return xxx 这一条语句并不是一条原子指令!</strong></p>
+<p>下面这段代码给了三个使用了 defer 的函数<code>f_x()</code>，然后将其分解开了，写成了<code>g_x()</code>，希望通过这个分解让你对 defer 更加了解。</p>
+<div class="highlight highlight-source-go"><pre><span class="pl-k">package</span> main
+
+<span class="pl-k">import</span> <span class="pl-s">&#34;sync&#34;</span>
+
+<span class="pl-k">func</span> <span class="pl-en">f1</span>() (<span class="pl-s1">result</span> <span class="pl-smi">int</span>) {
+	<span class="pl-k">defer</span> <span class="pl-k">func</span>() {
+		<span class="pl-s1">result</span><span class="pl-c1">++</span>
+	}()
+	<span class="pl-k">return</span> <span class="pl-c1">0</span>
+}
+
+<span class="pl-k">func</span> <span class="pl-en">g1</span>() (<span class="pl-s1">result</span> <span class="pl-smi">int</span>) {
+	<span class="pl-s1">result</span> <span class="pl-c1">=</span> <span class="pl-c1">0</span> <span class="pl-c">// 1</span>
+	<span class="pl-s1">result</span><span class="pl-c1">++</span>   <span class="pl-c">// 2</span>
+	<span class="pl-k">return</span>     <span class="pl-c">// 3</span>
+}
+
+<span class="pl-k">func</span> <span class="pl-en">f2</span>() (<span class="pl-s1">r</span> <span class="pl-smi">int</span>) {
+	<span class="pl-s1">t</span> <span class="pl-c1">:=</span> <span class="pl-c1">5</span>
+	<span class="pl-k">defer</span> <span class="pl-k">func</span>() {
+		<span class="pl-s1">t</span> <span class="pl-c1">=</span> <span class="pl-s1">t</span> <span class="pl-c1">+</span> <span class="pl-c1">5</span>
+	}()
+	<span class="pl-k">return</span> <span class="pl-s1">t</span>
+}
+
+<span class="pl-k">func</span> <span class="pl-en">g2</span>() (<span class="pl-s1">r</span> <span class="pl-smi">int</span>) {
+	<span class="pl-s1">t</span> <span class="pl-c1">:=</span> <span class="pl-c1">5</span>
+
+	<span class="pl-s1">r</span> <span class="pl-c1">=</span> <span class="pl-s1">t</span>     <span class="pl-c">// 1</span>
+	<span class="pl-s1">t</span> <span class="pl-c1">=</span> <span class="pl-s1">t</span> <span class="pl-c1">+</span> <span class="pl-c1">5</span> <span class="pl-c">// 2</span>
+	<span class="pl-k">return</span>    <span class="pl-c">// 3</span>
+}
+
+<span class="pl-k">func</span> <span class="pl-en">f3</span>() (<span class="pl-s1">r</span> <span class="pl-smi">int</span>) {
+	<span class="pl-k">defer</span> <span class="pl-k">func</span>(<span class="pl-s1">r</span> <span class="pl-smi">int</span>) {
+		<span class="pl-s1">r</span> <span class="pl-c1">=</span> <span class="pl-s1">r</span> <span class="pl-c1">+</span> <span class="pl-c1">5</span>
+	}(<span class="pl-s1">r</span>)
+	<span class="pl-k">return</span> <span class="pl-c1">1</span>
+}
+
+<span class="pl-k">func</span> <span class="pl-en">g3</span>() (<span class="pl-s1">r</span> <span class="pl-smi">int</span>) {
+	<span class="pl-s1">r</span> <span class="pl-c1">=</span> <span class="pl-c1">1</span>                                     <span class="pl-c">// 1</span>
+	<span class="pl-k">var</span> <span class="pl-s1">s</span> <span class="pl-c1">=</span> sync.<span class="pl-smi">WaitGroup</span>{}                  <span class="pl-c">// 2</span>
+	<span class="pl-s1">s</span>.<span class="pl-en">Add</span>(<span class="pl-c1">1</span>)                                  <span class="pl-c">// 2</span>
+	<span class="pl-k">go</span> <span class="pl-k">func</span>(<span class="pl-s1">r</span> <span class="pl-smi">int</span>) { <span class="pl-s1">r</span> <span class="pl-c1">=</span> <span class="pl-s1">r</span> <span class="pl-c1">+</span> <span class="pl-c1">5</span>; <span class="pl-s1">s</span>.<span class="pl-en">Done</span>() }(<span class="pl-s1">r</span>) <span class="pl-c">// 2</span>
+	<span class="pl-s1">s</span>.<span class="pl-en">Wait</span>()                                  <span class="pl-c">// 2</span>
+	<span class="pl-k">return</span>                                    <span class="pl-c">// 3</span>
+}
+
+<span class="pl-k">func</span> <span class="pl-en">main</span>() {
+	<span class="pl-en">println</span>(<span class="pl-en">f1</span>(), <span class="pl-en">f1</span>() <span class="pl-c1">==</span> <span class="pl-en">g1</span>())
+	<span class="pl-en">println</span>(<span class="pl-en">f2</span>(), <span class="pl-en">f2</span>() <span class="pl-c1">==</span> <span class="pl-en">g2</span>())
+	<span class="pl-en">println</span>(<span class="pl-en">f3</span>(), <span class="pl-en">f3</span>() <span class="pl-c1">==</span> <span class="pl-en">g3</span>())
+}</pre></div>
+<p>结果是</p>
+<pre lang="plain"><code>1 true
+5 true
+1 true
+</code></pre>
+<h2>
+<a id="user-content-参考" class="anchor" href="#%E5%8F%82%E8%80%83" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>参考</h2>
+<ul>
+<li><a href="https://github.com/goquiz/goquiz.github.io">https://github.com/goquiz/goquiz.github.io</a></li>
+<li><a href="https://github.com/tiancaiamao/go-internals/blob/master/zh/03.4.md">https://github.com/tiancaiamao/go-internals/blob/master/zh/03.4.md</a></li>
+</ul>
+
+        </article>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/gh/calganaygun/MDcat@main/theme.js"></script>
+<script src="https://code.iconify.design/2/2.0.3/iconify.min.js"></script>
+</body></html>

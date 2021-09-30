@@ -1,0 +1,100 @@
+<html><head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0"/>
+    <link href="https://unpkg.com/@primer/css@^16.0.0/dist/primer.css" rel="stylesheet"/>
+    <link rel="stylesheet alternate" href="https://cdn.jsdelivr.net/gh/primer/github-syntax-light@master/lib/github-light.css" id="light-hl"/>
+    <link rel="stylesheet alternate" href="https://cdn.jsdelivr.net/gh/primer/github-syntax-dark@master/lib/github-dark.css" id="dark-hl"/>
+
+    <title>golang 的 time.Now 精度</title>
+</head>
+
+<body id="markdown-body" data-color-mode="light" data-dark-theme="light">
+<div class="
+        Box
+        md
+        js-code-block-container
+        Box--responsive
+        container-xl
+        px-3 px-md-4 px-lg-5
+        mt-5
+      " style="border:none" id="content">
+    <div class="Box-body px-5 pb-5" style="border-bottom:none">
+        <div class="d-flex flex-column flex-sm-row-reverse" style="text-align:right">
+            <div>
+                <button id="theme-button" class="btn" type="button" style="vertical-align: bottom">
+                    <span id="theme-icon" class="iconify" data-icon="octicon:sun-16"></span>
+                </button>
+            </div>
+        </div>
+        <article class="markdown-body entry-content container-lg" itemprop="text">
+            <p>昨天群里有人问了一个问题</p>
+<blockquote>
+<p>golang defer 函数参数是什么时候求值的哈， 我这边试了下输出有时候两者是一样的，有时候两者相差 1000ms</p>
+</blockquote>
+<p><a href="https://camo.githubusercontent.com/3ef151328b1569c7d751d3625ce297fc72f9d065cec04ae02280169b2af75a0e/68747470733a2f2f6d656469612e636879726f632e636e2f696d672f31613930386537332d356231662d346265642d613637362d3039376134333730656639662e706e67" target="_blank" rel="nofollow"><img src="https://camo.githubusercontent.com/3ef151328b1569c7d751d3625ce297fc72f9d065cec04ae02280169b2af75a0e/68747470733a2f2f6d656469612e636879726f632e636e2f696d672f31613930386537332d356231662d346265642d613637362d3039376134333730656639662e706e67" alt="" data-canonical-src="https://media.chyroc.cn/img/1a908e73-5b1f-4bed-a676-097a4370ef9f.png" style="max-width:100%;"/></a></p>
+<p>这里面的 defer 的参数计算问题可以在<a href="https://chyroc.cn/posts/defer-return/" rel="nofollow">这篇文章</a>中找到</p>
+<p>本文主要讨论 <code>time.Now</code> 函数的精度问题。</p>
+<p>先看一下下面这段代码</p>
+<div class="highlight highlight-source-go"><pre><span class="pl-k">package</span> main
+
+<span class="pl-k">import</span> (
+	<span class="pl-s">&#34;fmt&#34;</span>
+	<span class="pl-s">&#34;time&#34;</span>
+)
+
+<span class="pl-k">func</span> <span class="pl-en">test</span>() {
+	<span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">:=</span> <span class="pl-c1">0</span>; <span class="pl-s1">i</span> <span class="pl-c1">&lt;=</span> <span class="pl-c1">1000</span>; <span class="pl-s1">i</span><span class="pl-c1">++</span> {
+		<span class="pl-s1">start</span> <span class="pl-c1">:=</span> <span class="pl-s1">time</span>.<span class="pl-en">Now</span>()                                              <span class="pl-c">// 1</span>
+		<span class="pl-k">defer</span> <span class="pl-s1">fmt</span>.<span class="pl-en">Print</span>(<span class="pl-s1">time</span>.<span class="pl-en">Now</span>().<span class="pl-en">Nanosecond</span>()<span class="pl-c1">-</span><span class="pl-s1">start</span>.<span class="pl-en">Nanosecond</span>(), <span class="pl-s">&#34;,&#34;</span>) <span class="pl-c">// 2</span>
+		<span class="pl-s1">time</span>.<span class="pl-en">Sleep</span>(<span class="pl-c1">1000</span>)                                                 <span class="pl-c">// 3</span>
+	}
+	<span class="pl-s1">fmt</span>.<span class="pl-en">Println</span>()
+}
+
+<span class="pl-k">func</span> <span class="pl-en">test2</span>() {
+	<span class="pl-s1">s</span> <span class="pl-c1">:=</span> <span class="pl-s1">time</span>.<span class="pl-en">Now</span>() <span class="pl-c">//4</span>
+	<span class="pl-s1">N</span> <span class="pl-c1">:=</span> <span class="pl-c1">1000</span>
+	<span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">:=</span> <span class="pl-c1">0</span>; <span class="pl-s1">i</span> <span class="pl-c1">&lt;=</span> <span class="pl-s1">N</span>; <span class="pl-s1">i</span><span class="pl-c1">++</span> {
+		<span class="pl-s1">time</span>.<span class="pl-en">Now</span>() <span class="pl-c">// 5</span>
+	}
+	<span class="pl-s1">fmt</span>.<span class="pl-en">Println</span>()
+	<span class="pl-s1">fmt</span>.<span class="pl-en">Println</span>((<span class="pl-s1">time</span>.<span class="pl-en">Now</span>().<span class="pl-en">Nanosecond</span>() <span class="pl-c1">-</span> <span class="pl-s1">s</span>.<span class="pl-en">Nanosecond</span>()) <span class="pl-c1">/</span> (<span class="pl-s1">N</span> <span class="pl-c1">+</span> <span class="pl-c1">1</span>)) <span class="pl-c">// 6</span>
+}
+
+<span class="pl-k">func</span> <span class="pl-en">main</span>() {
+	<span class="pl-en">test</span>()
+	<span class="pl-en">test2</span>()
+}</pre></div>
+<p><code>test</code> 函数就是截图里面那位朋友的代码。</p>
+<p>首先，<code>line 2</code> 肯定是先计算 <code>time.Now()</code>，然后再将参数入栈的，现在的问题是：这样的代码的结果应该是固定的，为什么有时候返回 <code>0ns</code>，有时候返回 <code>1000ns</code>？</p>
+<p>我看到这段代码后，想到的第一个原因就是 <code>time.Now</code> 这个函数的执行时间导致的上面的问题，但是仔细一想：如果是这样的话，name 应该每次相差的结果（<code>line 2</code> print 的）应该差不多呀，为什么大部分是 0，少部分是 1000 呢？而且为什么是 1000，不是 2000 呢？</p>
+<p>然后我就翻了一下 <code>go</code> 的 <code>time.Now</code> 的源码：</p>
+<ul>
+<li><a href="https://github.com/golang/go/blob/master/src/runtime/timestub.go#L15-L18">timestub.go</a></li>
+</ul>
+<div class="highlight highlight-source-go"><pre><span class="pl-c">//go:linkname time_now time.now</span>
+<span class="pl-k">func</span> <span class="pl-en">time_now</span>() (<span class="pl-s1">sec</span> <span class="pl-smi">int64</span>, <span class="pl-s1">nsec</span> <span class="pl-smi">int32</span>, <span class="pl-s1">mono</span> <span class="pl-smi">int64</span>) {
+	<span class="pl-s1">sec</span>, <span class="pl-s1">nsec</span> <span class="pl-c1">=</span> <span class="pl-en">walltime</span>()
+	<span class="pl-k">return</span> <span class="pl-s1">sec</span>, <span class="pl-s1">nsec</span>, <span class="pl-en">nanotime</span>()
+}</pre></div>
+<ul>
+<li><a href="https://github.com/golang/go/blob/master/src/runtime/sys_darwin.go#L248-L252">sys_darwin.go</a></li>
+</ul>
+<div class="highlight highlight-source-go"><pre><span class="pl-c">//go:nosplit</span>
+<span class="pl-c">//go:cgo_unsafe_args</span>
+<span class="pl-k">func</span> <span class="pl-en">walltime</span>() (<span class="pl-smi">int64</span>, <span class="pl-smi">int32</span>) {
+	<span class="pl-k">var</span> <span class="pl-s1">t</span> <span class="pl-smi">timeval</span>
+	<span class="pl-en">libcCall</span>(<span class="pl-s1">unsafe</span>.<span class="pl-en">Pointer</span>(<span class="pl-en">funcPC</span>(<span class="pl-s1">walltime_trampoline</span>)), <span class="pl-s1">unsafe</span>.<span class="pl-en">Pointer</span>(<span class="pl-c1">&amp;</span><span class="pl-s1">t</span>))
+	<span class="pl-k">return</span> <span class="pl-en">int64</span>(<span class="pl-s1">t</span>.<span class="pl-c1">tv_sec</span>), <span class="pl-c1">1000</span> <span class="pl-c1">*</span> <span class="pl-s1">t</span>.<span class="pl-c1">tv_usec</span>  <span class="pl-c">// line 7</span>
+}</pre></div>
+<p>[捂脸]根据 <code>line 7</code>，在 <code>darwin(mac)</code> 系统上，go 的 <code>time.Now</code> 精度就是 1000ns。</p>
+<p>所以在上面 <code>line 2</code> 的代码中，每个 <code>time.Now</code> 都是 80 - 150 ns 的时间，然后 print 0，到 1000 ns 过去后，就 print 一个 1000 ns</p>
+<p>将上面的代码交叉编译并在 linux 系统上执行，结果是：</p>
+<p><a href="https://camo.githubusercontent.com/39671121f7e44da6542d0e9261ff4a0b76f23fa6e9492d09fa412c6f195325fd/68747470733a2f2f6d656469612e636879726f632e636e2f696d672f64653130636231332d363433392d343232352d383733632d3263326661306463333233392e706e67" target="_blank" rel="nofollow"><img src="https://camo.githubusercontent.com/39671121f7e44da6542d0e9261ff4a0b76f23fa6e9492d09fa412c6f195325fd/68747470733a2f2f6d656469612e636879726f632e636e2f696d672f64653130636231332d363433392d343232352d383733632d3263326661306463333233392e706e67" alt="" data-canonical-src="https://media.chyroc.cn/img/de10cb13-6439-4225-873c-2c2fa0dc3239.png" style="max-width:100%;"/></a></p>
+<p>嗯...是正常的了。</p>
+
+        </article>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/gh/calganaygun/MDcat@main/theme.js"></script>
+<script src="https://code.iconify.design/2/2.0.3/iconify.min.js"></script>
+</body></html>
