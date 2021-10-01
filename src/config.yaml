@@ -1,0 +1,10 @@
+link: true
+title: "Blog | chyroc"
+output: "./docs/index.html"
+gitalk: # https://github.com/gitalk/gitalk/blob/master/readme-cn.md
+    client_id: "36628d87f0ace3c0f34c"
+    client_secret: "83f31946833f726ce2b2e1688e593d987c72d59e"
+    repo: "blog"
+    owner: "chyroc"
+    admin: ["chyroc"]
+    labels: ["gitment"]

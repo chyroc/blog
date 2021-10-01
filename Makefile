@@ -5,7 +5,7 @@ generate-index-md:
 	/tmp/blog-generate-index-md
 
 generate-html:
-	mdcat --title "Projects | chyroc" --output ./docs/index.html --link src/index.md
+	mdcat --config ./src/config.yaml src/index.md
 
 build:
 	make generate-index-md
