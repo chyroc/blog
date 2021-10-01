@@ -1,6 +1,7 @@
 link: true
 title: "Blog | chyroc"
 output: "./docs/index.html"
+omit_html_suffix: true
 gitalk: # https://github.com/gitalk/gitalk/blob/master/readme-cn.md
     client_id: "36628d87f0ace3c0f34c"
     client_secret: "83f31946833f726ce2b2e1688e593d987c72d59e"

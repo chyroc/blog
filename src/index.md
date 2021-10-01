@@ -1,5 +1,6 @@
 --
 title: "博客 | chyroc"
+slug: "index"
 --
 # 博客 | chyroc
 

@@ -61,6 +61,7 @@ func buildTemplate(templateContent string, data interface{}) string {
 
 var indexTemplate = `--
 title: "博客 | chyroc"
+slug: "index"
 --
 # 博客 | chyroc
 
