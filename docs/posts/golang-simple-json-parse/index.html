@@ -1,0 +1,372 @@
+<html><head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0"/>
+    <link href="https://unpkg.com/@primer/css@^16.0.0/dist/primer.css" rel="stylesheet"/>
+    <link rel="stylesheet alternate" href="https://cdn.jsdelivr.net/gh/primer/github-syntax-light@master/lib/github-light.css" id="light-hl"/>
+    <link rel="stylesheet alternate" href="https://cdn.jsdelivr.net/gh/primer/github-syntax-dark@master/lib/github-dark.css" id="dark-hl"/>
+
+    <title>使用 Go 写一个简单的 JSON 解析器</title>
+</head>
+
+<body id="markdown-body" data-color-mode="light" data-dark-theme="light">
+<div class="
+        Box
+        md
+        js-code-block-container
+        Box--responsive
+        container-xl
+        px-3 px-md-4 px-lg-5
+        mt-5
+      " style="border:none" id="content">
+    <div class="Box-body px-5 pb-5" style="border-bottom:none">
+        <div class="d-flex flex-column flex-sm-row-reverse" style="text-align:right">
+            <div>
+                <button id="theme-button" class="btn" type="button" style="vertical-align: bottom">
+                    <span id="theme-icon" class="iconify" data-icon="octicon:sun-16"></span>
+                </button>
+            </div>
+        </div>
+        <article class="markdown-body entry-content container-lg" itemprop="text">
+            <h1>
+<a id="user-content-使用-go-写一个简单的-json-解析器" class="anchor" href="#%E4%BD%BF%E7%94%A8-go-%E5%86%99%E4%B8%80%E4%B8%AA%E7%AE%80%E5%8D%95%E7%9A%84-json-%E8%A7%A3%E6%9E%90%E5%99%A8" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>使用 Go 写一个简单的 JSON 解析器</h1>
+<h2>
+<a id="user-content-什么是-json" class="anchor" href="#%E4%BB%80%E4%B9%88%E6%98%AF-json" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>什么是 JSON</h2>
+<p>JSON 是一个使用文本协议表示的数据，能够表达非常丰富的含义，在现在的 Web 世界应用的非常广泛，一个非常简单的 JSON 文本如下：</p>
+<div class="highlight highlight-source-json"><pre>{
+  <span class="pl-s"><span class="pl-pds">&#34;</span>id<span class="pl-pds">&#34;</span></span>: <span class="pl-c1">24245</span>,
+  <span class="pl-s"><span class="pl-pds">&#34;</span>expired<span class="pl-pds">&#34;</span></span>: <span class="pl-c1">false</span>,
+  <span class="pl-s"><span class="pl-pds">&#34;</span>book<span class="pl-pds">&#34;</span></span>: {
+    <span class="pl-s"><span class="pl-pds">&#34;</span>title<span class="pl-pds">&#34;</span></span>: <span class="pl-s"><span class="pl-pds">&#34;</span>example title<span class="pl-pds">&#34;</span></span>,
+    <span class="pl-s"><span class="pl-pds">&#34;</span>author<span class="pl-pds">&#34;</span></span>: {
+      <span class="pl-s"><span class="pl-pds">&#34;</span>name<span class="pl-pds">&#34;</span></span>: <span class="pl-s"><span class="pl-pds">&#34;</span>jack<span class="pl-pds">&#34;</span></span>,
+      <span class="pl-s"><span class="pl-pds">&#34;</span>age<span class="pl-pds">&#34;</span></span>: <span class="pl-c1">25</span>
+    }
+  },
+  <span class="pl-s"><span class="pl-pds">&#34;</span>discount<span class="pl-pds">&#34;</span></span>: <span class="pl-c1">null</span>,
+  <span class="pl-s"><span class="pl-pds">&#34;</span>tag<span class="pl-pds">&#34;</span></span>: [
+    <span class="pl-s"><span class="pl-pds">&#34;</span>tech<span class="pl-pds">&#34;</span></span>,
+    <span class="pl-s"><span class="pl-pds">&#34;</span>news<span class="pl-pds">&#34;</span></span>
+  ]
+}</pre></div>
+<p>JSON 支持 6 种基本的数据类型，分别是：</p>
+<ul>
+<li>number: 数字，支持整数和浮点数</li>
+<li>string: 双引号包括的字符</li>
+<li>boolean: true 和 false 之一</li>
+<li>array: 由 <code>[</code> 和 <code>]</code> 包围的一组对象，每个对象都是一个 JSON 对象，多个对象之间通过 <code>,</code> 分隔</li>
+<li>object: 由 <code>{</code> 和 <code>}</code> 包围的一组对象，每个对象由 key 和 val 组成，key 必须是字符串类型，val 可以是任意的 JSON 对象，多个 k-v 对之间通过 <code>,</code> 分隔</li>
+<li>null: 即 null 这个字符串</li>
+</ul>
+<h2>
+<a id="user-content-编写一个解析-json-协议的解析器的思路" class="anchor" href="#%E7%BC%96%E5%86%99%E4%B8%80%E4%B8%AA%E8%A7%A3%E6%9E%90-json-%E5%8D%8F%E8%AE%AE%E7%9A%84%E8%A7%A3%E6%9E%90%E5%99%A8%E7%9A%84%E6%80%9D%E8%B7%AF" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>编写一个解析 JSON 协议的解析器的思路</h2>
+<h3>
+<a id="user-content-json-不同对象类型的判断" class="anchor" href="#json-%E4%B8%8D%E5%90%8C%E5%AF%B9%E8%B1%A1%E7%B1%BB%E5%9E%8B%E7%9A%84%E5%88%A4%E6%96%AD" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>JSON 不同对象类型的判断</h3>
+<p>无论是 pb 还是 thrift，这种在网络中传输的数据的协议一般有这样的特征：</p>
+<p>第 1 个字节表示接下来的数据种类，然后 4 个字节表示数据的长度，最后读取特定长度的字节作为数据体。</p>
+<blockquote>
+<p>当然这里的第 1 个字节和 4 个字节都是举例，实际情况可能并非如此。</p>
+</blockquote>
+<p>按照这个思路观察 JSON 支持的 6 个对象类型：</p>
+<ul>
+<li>number: 以 <code>0-9</code> 开头，或以 <code>-</code> 开头表示负数</li>
+<li>string: 以 <code>&#34;</code> 开头</li>
+<li>boolean: 以 <code>t</code> 或者 <code>f</code> 开头</li>
+<li>array: 以 <code>[</code> 开头</li>
+<li>object: 以 <code>{</code> 开头</li>
+<li>null: 以 <code>n</code> 开头</li>
+</ul>
+<h3>
+<a id="user-content-如何处理空格等数据" class="anchor" href="#%E5%A6%82%E4%BD%95%E5%A4%84%E7%90%86%E7%A9%BA%E6%A0%BC%E7%AD%89%E6%95%B0%E6%8D%AE" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>如何处理空格等数据？</h3>
+<p>在 JSON 对象的特定位置，是可以忽略空格的，但是在某些位置下，不可以忽略空格。</p>
+<p>在关键帧：<code>{</code>, <code>[</code>, <code>,</code>, <code>:</code>, <code>]</code>, <code>}</code> 附近的空格是没有用的，需要丢弃掉。其他位置的空格需要保留。</p>
+<h3>
+<a id="user-content-解析器的思路" class="anchor" href="#%E8%A7%A3%E6%9E%90%E5%99%A8%E7%9A%84%E6%80%9D%E8%B7%AF" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>解析器的思路</h3>
+<ul>
+<li>取首字节，判断是哪种基本的 JSON 对象类型，调用具体的 JSON 对象解析函数处理数据</li>
+<li>对于类型：number, string, boolean, null，只需要简单的返回数据即可</li>
+<li>对于类型: array，在含有 <code>,</code> 的情况下循环调用本函数，得到的结果作为 array 的对象</li>
+<li>对于类型: map，读取以 <code>:</code> 分隔的 key 和 val 数据，并在含有 <code>,</code> 的情况下循环调用，得到的结果作为 map 的对象</li>
+</ul>
+<h2>
+<a id="user-content-代码的编写" class="anchor" href="#%E4%BB%A3%E7%A0%81%E7%9A%84%E7%BC%96%E5%86%99" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>代码的编写</h2>
+<blockquote>
+<p>思路理清楚了，可以着手写代码了。</p>
+</blockquote>
+<h3>
+<a id="user-content-parser-实体" class="anchor" href="#parser-%E5%AE%9E%E4%BD%93" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>parser 实体</h3>
+<p>我们需要一个实体来记录在 JSON 字符串中寻址的地址（index），让我们来定义一个非常简单的结构体：</p>
+<p>其中，<code>data</code> 是输入字符串的 <code>[]rune</code> 类型，<code>idx</code> 的范围是 <code>[0, len(s))</code>，表示当前寻址的位置</p>
+<div class="highlight highlight-source-go"><pre><span class="pl-k">type</span> <span class="pl-smi">jsonParser</span> <span class="pl-k">struct</span> {
+	<span class="pl-c1">data</span> []<span class="pl-smi">rune</span>
+	<span class="pl-c1">idx</span>  <span class="pl-smi">int</span>
+}</pre></div>
+<h3>
+<a id="user-content-解析入口" class="anchor" href="#%E8%A7%A3%E6%9E%90%E5%85%A5%E5%8F%A3" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>解析入口</h3>
+<p>现在我们什么都没有，我们需要判断这个字符串是哪一种 JSON 对象类型，然后调用子函数来处理它。</p>
+<p>注意：此时我们只有上面这个结构体，其他什么都没有，我们在臆想已经有了所有 JSON 对象类型的处理函数之后，可以写这样一个函数来处理 JSON 字符串。</p>
+<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> (<span class="pl-s1">r</span> <span class="pl-c1">*</span><span class="pl-smi">jsonParser</span>) <span class="pl-en">parse</span>() (<span class="pl-k">interface</span>{}, <span class="pl-smi">error</span>) {
+	<span class="pl-k">if</span> <span class="pl-en">len</span>(<span class="pl-s1">r</span>.<span class="pl-c1">data</span>) <span class="pl-c1">==</span> <span class="pl-c1">0</span> {
+		<span class="pl-k">return</span> <span class="pl-c1">nil</span>, <span class="pl-s1">fmt</span>.<span class="pl-en">Errorf</span>(<span class="pl-s">&#34;empty input&#34;</span>)
+	}
+	<span class="pl-s1">itemType</span> <span class="pl-c1">:=</span> <span class="pl-s1">r</span>.<span class="pl-c1">data</span>[<span class="pl-s1">r</span>.<span class="pl-c1">idx</span>]
+	<span class="pl-k">switch</span> {
+	<span class="pl-k">case</span> <span class="pl-s1">itemType</span> <span class="pl-c1">==</span> <span class="pl-s">&#39;&#34;&#39;</span>:
+		<span class="pl-s1">res</span>, <span class="pl-s1">err</span> <span class="pl-c1">:=</span> <span class="pl-s1">r</span>.<span class="pl-en">parseString</span>()
+		<span class="pl-k">return</span> <span class="pl-s1">res</span>, <span class="pl-s1">err</span>
+	<span class="pl-k">case</span> <span class="pl-s1">strings</span>.<span class="pl-en">Contains</span>(<span class="pl-s">&#34;0123456789-&#34;</span>, <span class="pl-en">string</span>([]<span class="pl-smi">rune</span>{<span class="pl-s1">itemType</span>})):
+		<span class="pl-s1">res</span>, <span class="pl-s1">err</span> <span class="pl-c1">:=</span> <span class="pl-s1">r</span>.<span class="pl-en">parseNumber</span>()
+		<span class="pl-k">return</span> <span class="pl-s1">res</span>, <span class="pl-s1">err</span>
+	<span class="pl-k">case</span> <span class="pl-s1">itemType</span> <span class="pl-c1">==</span> <span class="pl-s">&#39;{&#39;</span>:
+		<span class="pl-s1">res</span>, <span class="pl-s1">err</span> <span class="pl-c1">:=</span> <span class="pl-s1">r</span>.<span class="pl-en">parseObject</span>()
+		<span class="pl-k">return</span> <span class="pl-s1">res</span>, <span class="pl-s1">err</span>
+	<span class="pl-k">case</span> <span class="pl-s1">itemType</span> <span class="pl-c1">==</span> <span class="pl-s">&#39;[&#39;</span>:
+		<span class="pl-s1">res</span>, <span class="pl-s1">err</span> <span class="pl-c1">:=</span> <span class="pl-s1">r</span>.<span class="pl-en">parseArray</span>()
+		<span class="pl-k">return</span> <span class="pl-s1">res</span>, <span class="pl-s1">err</span>
+	<span class="pl-k">case</span> <span class="pl-s1">strings</span>.<span class="pl-en">Contains</span>(<span class="pl-s">&#34;tf&#34;</span>, <span class="pl-en">string</span>([]<span class="pl-smi">rune</span>{<span class="pl-s1">itemType</span>})):
+		<span class="pl-s1">res</span>, <span class="pl-s1">err</span> <span class="pl-c1">:=</span> <span class="pl-s1">r</span>.<span class="pl-en">parseBoolean</span>()
+		<span class="pl-k">return</span> <span class="pl-s1">res</span>, <span class="pl-s1">err</span>
+	<span class="pl-k">case</span> <span class="pl-s1">itemType</span> <span class="pl-c1">==</span> <span class="pl-s">&#39;n&#39;</span>:
+		<span class="pl-s1">err</span> <span class="pl-c1">:=</span> <span class="pl-s1">r</span>.<span class="pl-en">parseNull</span>()
+		<span class="pl-k">return</span> <span class="pl-c1">nil</span>, <span class="pl-s1">err</span>
+	<span class="pl-k">default</span>:
+		<span class="pl-k">return</span> <span class="pl-c1">nil</span>, <span class="pl-s1">fmt</span>.<span class="pl-en">Errorf</span>(<span class="pl-s">&#34;invalid item-type, pos: %d&#34;</span>, <span class="pl-s1">r</span>.<span class="pl-c1">idx</span>)
+	}
+}</pre></div>
+<h3>
+<a id="user-content-处理-null-和-boolean-类型" class="anchor" href="#%E5%A4%84%E7%90%86-null-%E5%92%8C-boolean-%E7%B1%BB%E5%9E%8B" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>处理 <code>null</code> 和 <code>boolean</code> 类型</h3>
+<p>让我们从简单的 JSON 对象开始：<code>null</code> 和 <code>boolean</code>，都是简单和固定的字符串。</p>
+<ul>
+<li>
+<code>null</code> 的处理是:</li>
+</ul>
+<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> (<span class="pl-s1">r</span> <span class="pl-c1">*</span><span class="pl-smi">jsonParser</span>) <span class="pl-en">parseNull</span>() <span class="pl-smi">error</span> {
+	<span class="pl-k">if</span> <span class="pl-s1">err</span> <span class="pl-c1">:=</span> <span class="pl-s1">r</span>.<span class="pl-en">findRune</span>(<span class="pl-c1">false</span>, <span class="pl-s">&#39;n&#39;</span>, <span class="pl-s">&#39;u&#39;</span>, <span class="pl-s">&#39;l&#39;</span>, <span class="pl-s">&#39;l&#39;</span>); <span class="pl-s1">err</span> <span class="pl-c1">==</span> <span class="pl-c1">nil</span> {
+		<span class="pl-k">return</span> <span class="pl-c1">nil</span>
+	}
+	<span class="pl-k">return</span> <span class="pl-s1">fmt</span>.<span class="pl-en">Errorf</span>(<span class="pl-s">&#34;invalid null-item, pos: %d&#34;</span>, <span class="pl-s1">r</span>.<span class="pl-c1">idx</span>)
+}</pre></div>
+<ul>
+<li>
+<code>boolean</code> 的处理是:</li>
+</ul>
+<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> (<span class="pl-s1">r</span> <span class="pl-c1">*</span><span class="pl-smi">jsonParser</span>) <span class="pl-en">parseBoolean</span>() (<span class="pl-smi">bool</span>, <span class="pl-smi">error</span>) {
+	<span class="pl-k">if</span> <span class="pl-s1">err</span> <span class="pl-c1">:=</span> <span class="pl-s1">r</span>.<span class="pl-en">findRune</span>(<span class="pl-c1">false</span>, <span class="pl-s">&#39;t&#39;</span>, <span class="pl-s">&#39;r&#39;</span>, <span class="pl-s">&#39;u&#39;</span>, <span class="pl-s">&#39;e&#39;</span>); <span class="pl-s1">err</span> <span class="pl-c1">==</span> <span class="pl-c1">nil</span> {
+		<span class="pl-k">return</span> <span class="pl-c1">true</span>, <span class="pl-c1">nil</span>
+	}
+	<span class="pl-k">if</span> <span class="pl-s1">err</span> <span class="pl-c1">:=</span> <span class="pl-s1">r</span>.<span class="pl-en">findRune</span>(<span class="pl-c1">false</span>, <span class="pl-s">&#39;f&#39;</span>, <span class="pl-s">&#39;a&#39;</span>, <span class="pl-s">&#39;l&#39;</span>, <span class="pl-s">&#39;s&#39;</span>, <span class="pl-s">&#39;e&#39;</span>); <span class="pl-s1">err</span> <span class="pl-c1">==</span> <span class="pl-c1">nil</span> {
+		<span class="pl-k">return</span> <span class="pl-c1">false</span>, <span class="pl-c1">nil</span>
+	}
+	<span class="pl-k">return</span> <span class="pl-c1">false</span>, <span class="pl-s1">fmt</span>.<span class="pl-en">Errorf</span>(<span class="pl-s">&#34;invalid boolean-item, pos: %d&#34;</span>, <span class="pl-s1">r</span>.<span class="pl-c1">idx</span>)
+}</pre></div>
+<p>这两个类型的处理是相似的，都是尝试从 <code>r.idx</code> 位置寻找接下来的字符串是不是完全匹配 <code>null</code> / <code>true</code> / <code>false</code></p>
+<p>如果是，就说明是对应的 JSON 对象，并返回值；</p>
+<p>如果不是，则需要报错，表示遇到了类似：<code>tfake</code> / <code>nil</code> 这样的非法 JSON 对象。</p>
+<h3>
+<a id="user-content-使用-findrune-函数处理字符串匹配" class="anchor" href="#%E4%BD%BF%E7%94%A8-findrune-%E5%87%BD%E6%95%B0%E5%A4%84%E7%90%86%E5%AD%97%E7%AC%A6%E4%B8%B2%E5%8C%B9%E9%85%8D" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>使用 findRune 函数处理字符串匹配</h3>
+<p>注意到这里使用了一个函数 <code>findRune</code> 来处理字符串匹配，这是个重要的函数，接下来会解释这个函数。</p>
+<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> (<span class="pl-s1">r</span> <span class="pl-c1">*</span><span class="pl-smi">jsonParser</span>) <span class="pl-en">findRune</span>(<span class="pl-s1">isKey</span> <span class="pl-smi">bool</span>, <span class="pl-s1">rs</span> <span class="pl-c1">...</span><span class="pl-smi">rune</span>) <span class="pl-smi">error</span> {
+	<span class="pl-k">if</span> <span class="pl-s1">isKey</span> {
+		<span class="pl-s1">r</span>.<span class="pl-en">removeSpace</span>()
+	}
+	<span class="pl-s1">c</span> <span class="pl-c1">:=</span> <span class="pl-c1">0</span>
+	<span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">:=</span> <span class="pl-s1">r</span>.<span class="pl-c1">idx</span>; <span class="pl-s1">i</span> <span class="pl-c1">&lt;</span> <span class="pl-en">len</span>(<span class="pl-s1">r</span>.<span class="pl-c1">data</span>) <span class="pl-c1">&amp;&amp;</span> <span class="pl-s1">i</span><span class="pl-c1">-</span><span class="pl-s1">r</span>.<span class="pl-c1">idx</span> <span class="pl-c1">&gt;=</span> <span class="pl-c1">0</span> <span class="pl-c1">&amp;&amp;</span> <span class="pl-s1">i</span><span class="pl-c1">-</span><span class="pl-s1">r</span>.<span class="pl-c1">idx</span> <span class="pl-c1">&lt;</span> <span class="pl-en">len</span>(<span class="pl-s1">rs</span>); <span class="pl-s1">i</span><span class="pl-c1">++</span> {
+		<span class="pl-k">if</span> <span class="pl-s1">r</span>.<span class="pl-c1">data</span>[<span class="pl-s1">i</span>] <span class="pl-c1">==</span> <span class="pl-s1">rs</span>[<span class="pl-s1">i</span><span class="pl-c1">-</span><span class="pl-s1">r</span>.<span class="pl-c1">idx</span>] {
+			<span class="pl-s1">c</span><span class="pl-c1">++</span>
+			<span class="pl-k">continue</span>
+		}
+		<span class="pl-k">return</span> <span class="pl-s1">fmt</span>.<span class="pl-en">Errorf</span>(<span class="pl-s">&#34;expect key rune: %s, pos: %d&#34;</span>, <span class="pl-en">string</span>(<span class="pl-s1">rs</span>), <span class="pl-s1">r</span>.<span class="pl-c1">idx</span>)
+	}
+	<span class="pl-s1">r</span>.<span class="pl-c1">idx</span> <span class="pl-c1">+=</span> <span class="pl-s1">c</span>
+	<span class="pl-k">if</span> <span class="pl-s1">isKey</span> {
+		<span class="pl-s1">r</span>.<span class="pl-en">removeSpace</span>()
+	}
+	<span class="pl-k">return</span> <span class="pl-c1">nil</span>
+}</pre></div>
+<ul>
+<li>
+<code>findRune</code> 函数接受两个参数：</li>
+</ul>
+<p>第一个参数 <code>isKey</code> 表示输入字节是否是一个关键帧，即：<code>{</code>, <code>[</code>, <code>,</code>, <code>:</code>, <code>]</code>, <code>}</code> 之一，如果是关键帧，则匹配到这个字节前后需要删除空格；</p>
+<p>第二个参数 <code>rs</code> 是一个变长 <code>rune</code> 切片，表示需要匹配的字节元素。</p>
+<ul>
+<li>
+<code>findRune</code> 函数的处理：</li>
+</ul>
+<p>函数的首、尾都使用了 <code>isKey</code> 判断了是否是关键帧，如果是，则执行 <code>remoteSpace</code>；</p>
+<p>在函数的中间部分，遍历了 <code>rs</code>，并判断是否和输入字符串从 <code>r.idx</code> 位置开始的字符串一致。</p>
+<ul>
+<li>函数的返回也非常有意思：</li>
+</ul>
+<p>首先返回的 <code>error</code> 如果为 <code>nil</code>，则表示找到了输入的 <code>rs</code> 字节，否则无；</p>
+<p>其次，当返回的 <code>error</code> 不为 <code>nil</code> 的时候，<code>r.idx</code> 不会向后移动，这个特性在处理 <code>boolean</code> 类型中，先尝试找 <code>true</code>，然后尝试找 <code>false</code> 的过程中起到了很好的作用。</p>
+<h3>
+<a id="user-content-移除可以移除的空格" class="anchor" href="#%E7%A7%BB%E9%99%A4%E5%8F%AF%E4%BB%A5%E7%A7%BB%E9%99%A4%E7%9A%84%E7%A9%BA%E6%A0%BC" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>移除可以移除的空格</h3>
+<p>这一部分比较简单，略过，只贴出代码：</p>
+<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> (<span class="pl-s1">r</span> <span class="pl-c1">*</span><span class="pl-smi">jsonParser</span>) <span class="pl-en">removeSpace</span>() (<span class="pl-s1">n</span> <span class="pl-smi">int</span>) {
+	<span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">:=</span> <span class="pl-s1">r</span>.<span class="pl-c1">idx</span>; <span class="pl-s1">i</span> <span class="pl-c1">&lt;</span> <span class="pl-en">len</span>(<span class="pl-s1">r</span>.<span class="pl-c1">data</span>); <span class="pl-s1">i</span><span class="pl-c1">++</span> {
+		<span class="pl-k">if</span> <span class="pl-s1">r</span>.<span class="pl-c1">data</span>[<span class="pl-s1">i</span>] <span class="pl-c1">!=</span> <span class="pl-s">&#39; &#39;</span> <span class="pl-c1">&amp;&amp;</span> <span class="pl-s1">r</span>.<span class="pl-c1">data</span>[<span class="pl-s1">i</span>] <span class="pl-c1">!=</span> <span class="pl-s">&#39;\n&#39;</span> {
+			<span class="pl-k">return</span>
+		}
+		<span class="pl-s1">r</span>.<span class="pl-c1">idx</span><span class="pl-c1">++</span>
+		<span class="pl-s1">n</span><span class="pl-c1">++</span>
+	}
+	<span class="pl-k">return</span>
+}</pre></div>
+<h3>
+<a id="user-content-处理-string-类型" class="anchor" href="#%E5%A4%84%E7%90%86-string-%E7%B1%BB%E5%9E%8B" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>处理 string 类型</h3>
+<p>下来来我们处理稍微麻烦一点的 string 类型</p>
+<p>string 类型的思路就是遍历字符串，当遇到 <code>&#34;</code> 的时候，终止遍历，返回此前遍历的数据，说到这里，是不是觉得又会使用到前面的函数 <code>findRune</code> 了。</p>
+<p>不过需要注意的一点是，字符串也可能以转义符 <code>\</code> 包含字符 <code>&#34;</code>，所以对转义符需要特殊处理下，即遇到转义符的时候，将它的下一个字符直接加入到要返回的数据中。</p>
+<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> (<span class="pl-s1">r</span> <span class="pl-c1">*</span><span class="pl-smi">jsonParser</span>) <span class="pl-en">parseString</span>() (<span class="pl-smi">string</span>, <span class="pl-smi">error</span>) {
+	<span class="pl-k">if</span> <span class="pl-s1">err</span> <span class="pl-c1">:=</span> <span class="pl-s1">r</span>.<span class="pl-en">findRune</span>(<span class="pl-c1">false</span>, <span class="pl-s">&#39;&#34;&#39;</span>); <span class="pl-s1">err</span> <span class="pl-c1">!=</span> <span class="pl-c1">nil</span> {
+		<span class="pl-k">return</span> <span class="pl-s">&#34;&#34;</span>, <span class="pl-s1">err</span>
+	}
+	<span class="pl-s1">res</span> <span class="pl-c1">:=</span> []<span class="pl-smi">rune</span>{}
+	<span class="pl-k">for</span> <span class="pl-s1">r</span>.<span class="pl-c1">idx</span> <span class="pl-c1">&lt;</span> <span class="pl-en">len</span>(<span class="pl-s1">r</span>.<span class="pl-c1">data</span>) {
+		<span class="pl-k">switch</span> <span class="pl-s1">r</span>.<span class="pl-c1">data</span>[<span class="pl-s1">r</span>.<span class="pl-c1">idx</span>] {
+		<span class="pl-k">case</span> <span class="pl-s">&#39;\\&#39;</span>:
+			<span class="pl-k">if</span> <span class="pl-s1">r</span>.<span class="pl-c1">idx</span> <span class="pl-c1">==</span> <span class="pl-en">len</span>(<span class="pl-s1">r</span>.<span class="pl-c1">data</span>)<span class="pl-c1">-</span><span class="pl-c1">1</span> {
+				<span class="pl-k">return</span> <span class="pl-s">&#34;&#34;</span>, <span class="pl-s1">fmt</span>.<span class="pl-en">Errorf</span>(<span class="pl-s">&#34;invalid string-item, At least one character is required after the escape character, pos: %d&#34;</span>, <span class="pl-s1">r</span>.<span class="pl-c1">idx</span>)
+			}
+			<span class="pl-s1">r</span>.<span class="pl-c1">idx</span><span class="pl-c1">++</span>
+			<span class="pl-s1">res</span> <span class="pl-c1">=</span> <span class="pl-en">append</span>(<span class="pl-s1">res</span>, <span class="pl-s1">r</span>.<span class="pl-c1">data</span>[<span class="pl-s1">r</span>.<span class="pl-c1">idx</span>])
+			<span class="pl-s1">r</span>.<span class="pl-c1">idx</span><span class="pl-c1">++</span>
+		<span class="pl-k">case</span> <span class="pl-s">&#39;&#34;&#39;</span>:
+			<span class="pl-s1">r</span>.<span class="pl-c1">idx</span><span class="pl-c1">++</span>
+			<span class="pl-k">return</span> <span class="pl-en">string</span>(<span class="pl-s1">res</span>), <span class="pl-c1">nil</span>
+		<span class="pl-k">default</span>:
+			<span class="pl-s1">res</span> <span class="pl-c1">=</span> <span class="pl-en">append</span>(<span class="pl-s1">res</span>, <span class="pl-s1">r</span>.<span class="pl-c1">data</span>[<span class="pl-s1">r</span>.<span class="pl-c1">idx</span>])
+			<span class="pl-s1">r</span>.<span class="pl-c1">idx</span><span class="pl-c1">++</span>
+		}
+	}
+	<span class="pl-k">return</span> <span class="pl-s">&#34;&#34;</span>, <span class="pl-s1">fmt</span>.<span class="pl-en">Errorf</span>(<span class="pl-s">&#34;invalid string-item, expect: <span class="pl-cce">\&#34;</span>, pos: %d&#34;</span>, <span class="pl-s1">r</span>.<span class="pl-c1">idx</span>)
+}</pre></div>
+<h3>
+<a id="user-content-处理-number-类型" class="anchor" href="#%E5%A4%84%E7%90%86-number-%E7%B1%BB%E5%9E%8B" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>处理 number 类型</h3>
+<p>number 比 string 类型要更麻烦一点，因为 number 既包括整数，也包括浮点数。</p>
+<blockquote>
+<p>浮点数还涉及到精度的问题，为了简化代码，我们略去了浮点数的处理。</p>
+</blockquote>
+<p>整数可能是正数也可能是负数，所以 number JSON 对象可能以 <code>-</code> 开头，也可能以 <code>0123456789</code> 开头，<code>-</code> 开头表示一个负数。</p>
+<p>接下来的处理和 string JSON 对象的处理类似，即遍历字符串，当它是一个 <code>0123456789</code> 之一的时候，将它加入要返回的数据中，否则中断处理。</p>
+<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> (<span class="pl-s1">r</span> <span class="pl-c1">*</span><span class="pl-smi">jsonParser</span>) <span class="pl-en">parseNumber</span>() (<span class="pl-smi">int64</span>, <span class="pl-smi">error</span>) {
+	<span class="pl-s1">prefix</span> <span class="pl-c1">:=</span> <span class="pl-s1">r</span>.<span class="pl-c1">data</span>[<span class="pl-s1">r</span>.<span class="pl-c1">idx</span>] <span class="pl-c1">==</span> <span class="pl-s">&#39;-&#39;</span>
+	<span class="pl-k">if</span> <span class="pl-s1">prefix</span> {
+		<span class="pl-s1">r</span>.<span class="pl-c1">idx</span><span class="pl-c1">++</span>
+	}
+	<span class="pl-k">if</span> <span class="pl-c1">!</span><span class="pl-s1">strings</span>.<span class="pl-en">Contains</span>(<span class="pl-s">&#34;0123456789&#34;</span>, <span class="pl-en">string</span>([]<span class="pl-smi">rune</span>{<span class="pl-s1">r</span>.<span class="pl-c1">data</span>[<span class="pl-s1">r</span>.<span class="pl-c1">idx</span>]})) {
+		<span class="pl-k">return</span> <span class="pl-c1">0</span>, <span class="pl-s1">fmt</span>.<span class="pl-en">Errorf</span>(<span class="pl-s">&#34;expect: 0-9, pos: %d&#34;</span>, <span class="pl-s1">r</span>.<span class="pl-c1">idx</span>)
+	}
+
+	<span class="pl-s1">i</span> <span class="pl-c1">:=</span> <span class="pl-en">int64</span>(<span class="pl-c1">0</span>)
+	<span class="pl-k">for</span> <span class="pl-s1">r</span>.<span class="pl-c1">idx</span> <span class="pl-c1">&lt;</span> <span class="pl-en">len</span>(<span class="pl-s1">r</span>.<span class="pl-c1">data</span>) {
+		<span class="pl-s1">dd</span> <span class="pl-c1">:=</span> <span class="pl-s1">r</span>.<span class="pl-c1">data</span>[<span class="pl-s1">r</span>.<span class="pl-c1">idx</span>]
+		<span class="pl-k">if</span> <span class="pl-s1">dd</span> <span class="pl-c1">&gt;=</span> <span class="pl-s">&#39;0&#39;</span> <span class="pl-c1">&amp;&amp;</span> <span class="pl-s1">dd</span> <span class="pl-c1">&lt;=</span> <span class="pl-s">&#39;9&#39;</span> {
+			<span class="pl-s1">i</span> <span class="pl-c1">=</span> <span class="pl-s1">i</span><span class="pl-c1">*</span><span class="pl-c1">10</span> <span class="pl-c1">+</span> <span class="pl-en">int64</span>(<span class="pl-s1">dd</span><span class="pl-c1">-</span><span class="pl-s">&#39;0&#39;</span>)
+			<span class="pl-s1">r</span>.<span class="pl-c1">idx</span><span class="pl-c1">++</span>
+		} <span class="pl-k">else</span> {
+			<span class="pl-k">break</span>
+		}
+	}
+
+	<span class="pl-k">if</span> <span class="pl-s1">prefix</span> {
+		<span class="pl-s1">i</span> <span class="pl-c1">*=</span> <span class="pl-c1">-</span><span class="pl-c1">1</span>
+	}
+	<span class="pl-k">return</span> <span class="pl-s1">i</span>, <span class="pl-c1">nil</span>
+}</pre></div>
+<h3>
+<a id="user-content-处理复合-json-对象-array" class="anchor" href="#%E5%A4%84%E7%90%86%E5%A4%8D%E5%90%88-json-%E5%AF%B9%E8%B1%A1-array" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>处理复合 JSON 对象 array</h3>
+<p>array 是以 <code>[</code> 和 <code>]</code> 包括的 JSON 对象的集合，在我们已经处理了 <code>null</code> / <code>boolean</code> / <code>string</code> / <code>number</code> 的情况下，处理 array 非常简单</p>
+<p>函数 <code>parseArray</code> 的首尾分别匹配了 <code>[</code> 和 <code>]</code>，在函数的中间，循环调用了 <code>parse</code> 来解析 JSON 对象，并加入返回的切片中。</p>
+<p>这里有一个比较特别的操作，即在每个循环的最后，会尝试寻找 <code>,</code> 字符，如果找到，说明还有下一个 JSON array 子元素对象，继续循环，否则结束循环。</p>
+<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> (<span class="pl-s1">r</span> <span class="pl-c1">*</span><span class="pl-smi">jsonParser</span>) <span class="pl-en">parseArray</span>() (<span class="pl-s1">resp</span> []<span class="pl-k">interface</span>{}, <span class="pl-s1">err</span> <span class="pl-smi">error</span>) {
+	<span class="pl-k">if</span> <span class="pl-s1">err</span> <span class="pl-c1">:=</span> <span class="pl-s1">r</span>.<span class="pl-en">findRune</span>(<span class="pl-c1">true</span>, <span class="pl-s">&#39;[&#39;</span>); <span class="pl-s1">err</span> <span class="pl-c1">!=</span> <span class="pl-c1">nil</span> {
+		<span class="pl-k">return</span> <span class="pl-c1">nil</span>, <span class="pl-s1">err</span>
+	}
+	<span class="pl-k">if</span> <span class="pl-s1">err</span> <span class="pl-c1">:=</span> <span class="pl-s1">r</span>.<span class="pl-en">findRune</span>(<span class="pl-c1">true</span>, <span class="pl-s">&#39;]&#39;</span>); <span class="pl-s1">err</span> <span class="pl-c1">==</span> <span class="pl-c1">nil</span> {
+		<span class="pl-k">return</span> []<span class="pl-k">interface</span>{}{}, <span class="pl-c1">nil</span>
+	}
+	<span class="pl-k">for</span> {
+		<span class="pl-s1">s</span>, <span class="pl-s1">err</span> <span class="pl-c1">:=</span> <span class="pl-s1">r</span>.<span class="pl-en">parse</span>()
+		<span class="pl-k">if</span> <span class="pl-s1">err</span> <span class="pl-c1">!=</span> <span class="pl-c1">nil</span> {
+			<span class="pl-k">return</span> <span class="pl-c1">nil</span>, <span class="pl-s1">err</span>
+		}
+		<span class="pl-s1">resp</span> <span class="pl-c1">=</span> <span class="pl-en">append</span>(<span class="pl-s1">resp</span>, <span class="pl-s1">s</span>)
+		<span class="pl-k">if</span> <span class="pl-s1">err</span> <span class="pl-c1">:=</span> <span class="pl-s1">r</span>.<span class="pl-en">findRune</span>(<span class="pl-c1">true</span>, <span class="pl-s">&#39;,&#39;</span>); <span class="pl-s1">err</span> <span class="pl-c1">!=</span> <span class="pl-c1">nil</span> {
+			<span class="pl-k">break</span>
+		}
+	}
+	<span class="pl-k">if</span> <span class="pl-s1">err</span> <span class="pl-c1">:=</span> <span class="pl-s1">r</span>.<span class="pl-en">findRune</span>(<span class="pl-c1">true</span>, <span class="pl-s">&#39;]&#39;</span>); <span class="pl-s1">err</span> <span class="pl-c1">!=</span> <span class="pl-c1">nil</span> {
+		<span class="pl-k">return</span> <span class="pl-c1">nil</span>, <span class="pl-s1">err</span>
+	}
+	<span class="pl-k">return</span> <span class="pl-s1">resp</span>, <span class="pl-c1">nil</span>
+}</pre></div>
+<h3>
+<a id="user-content-处理复合-json-对象-object" class="anchor" href="#%E5%A4%84%E7%90%86%E5%A4%8D%E5%90%88-json-%E5%AF%B9%E8%B1%A1-object" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>处理复合 JSON 对象 object</h3>
+<p>object 是以 <code>{</code> 和 <code>}</code> 包括的 JSON 对象的键值对集合，和处理 array 的情况比较类似。</p>
+<p>函数 <code>parsePbject</code> 的首尾分别匹配了 <code>{</code> 和 <code>}</code>，在函数的中间，循环调用了 <code>parse</code> 来解析 JSON key 和 val 对象，并加入返回的字典中，注意，key 肯定是一个 string JSON 对象。</p>
+<p>和处理 array 比较类似，在本函数的循环中，也会尝试寻找 <code>,</code> 字符，如果找到，说明还有下一个 JSON object 子元素对象，继续循环，否则结束循环。</p>
+<div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> (<span class="pl-s1">r</span> <span class="pl-c1">*</span><span class="pl-smi">jsonParser</span>) <span class="pl-en">parseObject</span>() (<span class="pl-s1">resp</span> <span class="pl-k">map</span>[<span class="pl-smi">string</span>]<span class="pl-k">interface</span>{}, <span class="pl-s1">err</span> <span class="pl-smi">error</span>) {
+	<span class="pl-s1">resp</span> <span class="pl-c1">=</span> <span class="pl-k">map</span>[<span class="pl-smi">string</span>]<span class="pl-k">interface</span>{}{}
+
+	<span class="pl-k">if</span> <span class="pl-s1">err</span> <span class="pl-c1">:=</span> <span class="pl-s1">r</span>.<span class="pl-en">findRune</span>(<span class="pl-c1">true</span>, <span class="pl-s">&#39;{&#39;</span>); <span class="pl-s1">err</span> <span class="pl-c1">!=</span> <span class="pl-c1">nil</span> {
+		<span class="pl-k">return</span> <span class="pl-c1">nil</span>, <span class="pl-s1">err</span>
+	}
+	<span class="pl-k">if</span> <span class="pl-s1">err</span> <span class="pl-c1">:=</span> <span class="pl-s1">r</span>.<span class="pl-en">findRune</span>(<span class="pl-c1">true</span>, <span class="pl-s">&#39;}&#39;</span>); <span class="pl-s1">err</span> <span class="pl-c1">==</span> <span class="pl-c1">nil</span> {
+		<span class="pl-k">return</span> <span class="pl-s1">resp</span>, <span class="pl-c1">nil</span>
+	}
+	<span class="pl-k">for</span> {
+		<span class="pl-s1">key</span>, <span class="pl-s1">err</span> <span class="pl-c1">:=</span> <span class="pl-s1">r</span>.<span class="pl-en">parseString</span>()
+		<span class="pl-k">if</span> <span class="pl-s1">err</span> <span class="pl-c1">!=</span> <span class="pl-c1">nil</span> {
+			<span class="pl-k">return</span> <span class="pl-c1">nil</span>, <span class="pl-s1">err</span>
+		}
+
+		<span class="pl-k">if</span> <span class="pl-s1">err</span> <span class="pl-c1">:=</span> <span class="pl-s1">r</span>.<span class="pl-en">findRune</span>(<span class="pl-c1">true</span>, <span class="pl-s">&#39;:&#39;</span>); <span class="pl-s1">err</span> <span class="pl-c1">!=</span> <span class="pl-c1">nil</span> {
+			<span class="pl-k">return</span> <span class="pl-c1">nil</span>, <span class="pl-s1">err</span>
+		}
+
+		<span class="pl-s1">val</span>, <span class="pl-s1">err</span> <span class="pl-c1">:=</span> <span class="pl-s1">r</span>.<span class="pl-en">parse</span>()
+		<span class="pl-k">if</span> <span class="pl-s1">err</span> <span class="pl-c1">!=</span> <span class="pl-c1">nil</span> {
+			<span class="pl-k">return</span> <span class="pl-c1">nil</span>, <span class="pl-s1">err</span>
+		}
+		<span class="pl-s1">resp</span>[<span class="pl-s1">key</span>] <span class="pl-c1">=</span> <span class="pl-s1">val</span>
+
+		<span class="pl-k">if</span> <span class="pl-s1">err</span> <span class="pl-c1">:=</span> <span class="pl-s1">r</span>.<span class="pl-en">findRune</span>(<span class="pl-c1">true</span>, <span class="pl-s">&#39;,&#39;</span>); <span class="pl-s1">err</span> <span class="pl-c1">!=</span> <span class="pl-c1">nil</span> {
+			<span class="pl-k">break</span>
+		}
+	}
+	<span class="pl-k">if</span> <span class="pl-s1">err</span> <span class="pl-c1">:=</span> <span class="pl-s1">r</span>.<span class="pl-en">findRune</span>(<span class="pl-c1">true</span>, <span class="pl-s">&#39;}&#39;</span>); <span class="pl-s1">err</span> <span class="pl-c1">!=</span> <span class="pl-c1">nil</span> {
+		<span class="pl-k">return</span> <span class="pl-c1">nil</span>, <span class="pl-s1">err</span>
+	}
+	<span class="pl-k">return</span> <span class="pl-s1">resp</span>, <span class="pl-c1">nil</span>
+}</pre></div>
+<h2>
+<a id="user-content-结语" class="anchor" href="#%E7%BB%93%E8%AF%AD" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>结语</h2>
+<p>至此，我们完成了一个简单的 JSON 解析器的编写，它很小，不到 200 行代码，当然也非常简陋。</p>
+<p>代码地址：<a href="https://github.com/chyroc/go-json-parse-example">https://github.com/chyroc/go-json-parse-example</a></p>
+
+        </article>
+        <div id="gitalk-container"></div>
+    </div>
+</div>
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css"/>
+<script src="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>
+<script>
+    const gitalk = new Gitalk({
+        clientID: '36628d87f0ace3c0f34c',
+        clientSecret: '83f31946833f726ce2b2e1688e593d987c72d59e',
+        repo: 'blog',      // The repository of store comments,
+        owner: 'chyroc',
+        admin: ['chyroc'],
+        id: 'golang-simple-json-parse',      // Ensure uniqueness and length less than 50
+        labels: ['gitment'],
+        distractionFreeMode: false  // Facebook-like distraction free mode
+    })
+    gitalk.render('gitalk-container')
+</script>
+
+
+<script src="https://cdn.jsdelivr.net/gh/calganaygun/MDcat@main/theme.js"></script>
+<script src="https://code.iconify.design/2/2.0.3/iconify.min.js"></script>
+</body></html>

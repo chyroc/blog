@@ -8,6 +8,7 @@ slug: "index"
 
 ### 博客
 
+- [使用 Go 写一个简单的 JSON 解析器](./posts/2032.10.09-golang-simple-json-parse.md)
 - [golang 的 time.Now 精度](./posts/2019.03.03-golang-time-now-precision.md)
 - [在 github 开启 gpg 的几个 Q&A](./posts/2018.07.25-github-commit-with-gpg.md)
 - [poll、select 和 epoll](./posts/2018.07.23-poll-select-epoll.md)
