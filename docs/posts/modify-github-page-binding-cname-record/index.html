@@ -31,7 +31,7 @@
 <p>所以我准备将我的 github page 绑定的域名从 blog.chyroc.cn 改为 chyroc.cn。</p>
 <h2>
 <a id="user-content-第一步修改-github-repo-的-cname-记录" class="anchor" href="#%E7%AC%AC%E4%B8%80%E6%AD%A5%E4%BF%AE%E6%94%B9-github-repo-%E7%9A%84-cname-%E8%AE%B0%E5%BD%95" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>第一步，修改 github repo 的 CNAME 记录</h2>
-<p>commit：<a href="https://github.com/chyroc/chyroc.github.io/commit/b253413fa3d64b4f9408ebe1100fcf79faa9d883">https://github.com/chyroc/chyroc.github.io/commit/b253413fa3d64b4f9408ebe1100fcf79faa9d883</a></p>
+<p>commit：<a href="https://github.com/chyroc/blog/commit/b253413fa3d64b4f9408ebe1100fcf79faa9d883">https://github.com/chyroc/blog/commit/b253413fa3d64b4f9408ebe1100fcf79faa9d883</a></p>
 <div class="highlight highlight-source-diff"><pre><span class="pl-md"><span class="pl-md">-</span>blog.chyroc.cn</span>
 <span class="pl-mi1"><span class="pl-mi1">+</span>chyroc.cn</span></pre></div>
 <h2>
@@ -88,6 +88,17 @@
     })
     gitalk.render('gitalk-container')
 </script>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css"/>
+<script src="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>
+<script>
+    if ('addEventListener' in document) {
+        document.addEventListener('DOMContentLoaded', function() {
+            FastClick.attach(document.body);
+        }, false);
+    }
+</script>
+
 
 
 <script src="https://cdn.jsdelivr.net/gh/calganaygun/MDcat@main/theme.js"></script>

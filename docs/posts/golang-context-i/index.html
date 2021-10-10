@@ -27,14 +27,14 @@
         </div>
         <article class="markdown-body entry-content container-lg" itemprop="text">
             <blockquote>
-<p>前几天在工作中使用 context 的时候，对于 metadata 和 context.Value 有一些疑惑，顺便探索了一下 go 的 context，在这里分享一下</p>
+<p>前几天在工作中使用 grpc 和 context 的时候，对于 grpc 的 metadata 和 context 的 context.Value 有一些疑惑，顺便探索了一下 go 的 context，在这里分享一下。</p>
 </blockquote>
 <blockquote>
 <p>现在是 2018-04-29 19:49，正在北京开往家的动车上，窗外已经是黑黑的一片了，11 点到家，写一会文章吧</p>
 </blockquote>
 <h2>
 <a id="user-content-context-包" class="anchor" href="#context-%E5%8C%85" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>context 包</h2>
-<p>这里说的 context 包指的是 golang(1.7+)中的标准库 context，文档在这里：<a href="https://godoc.org/context" rel="nofollow">https://godoc.org/context</a> 。</p>
+<p>这里说的 context 包指的是 golang(1.7+)中的标准库 context，文档在这里：<a href="https://pkg.go.dev/context%E3%80%82" rel="nofollow">https://pkg.go.dev/context。</a></p>
 <p>context 包定义了 Context 类型，他可以在携带 deadlines 和 cancelatin 信号，也可以携带其他的请求值。</p>
 <p>发送到 server 的请求应该创建一个 context，服务器处理请求的时候也应该接受一个 context。在程序的函数调用链中，必须传递 context，也可以基于一个 context，使用 WithCancel, WithDeadline, WithTimeout, or WithValue 等函数创建一个新的 context 传递下去。当一个 context 被 canceled 的时候，那么所有通过改 context 派生的 context 都应该被 cancel</p>
 <p>WithCancel, WithDeadline, and WithTimeout 这三个函数使用一个 context(the parent) 作为参数，然后创建一个新的 context（the child）和 CancelFunc 函数。调用 CancelFunc 函数将会取消该 child 和他的 children，移除 parent 到 child 的应用，然后停止任何相关的 timeers。吐过调用这个函数失败的话，会导致 child 和他的 children 知道 parent cancel 的时候或者 timer fired 的时候才会取消。go vet 工具会检查 CancelFuncs 对否在所有的控制分支上使用了。</p>
@@ -42,7 +42,7 @@
 <ul>
 <li>context 应该作为函数参数传递，而不是 struct 的一个 field</li>
 <li>context 应该是函数的第一个参数</li>
-<li>不要传递 nil context，即使是不使用，如果不知道用啥，用 context.TODO 吧</li>
+<li>不要传递 nil context，即使是不使用，如果不知道用啥，用 context.TODO()</li>
 <li>只使用 context 传递请求上下文，而不是为了传递可选参数</li>
 <li>context 可能会被同一个函数在不同的 goroutine 中使用，他是并发安全的</li>
 </ul>
@@ -108,7 +108,7 @@
 <span class="pl-s1">fmt</span>.<span class="pl-en">Printf</span>(<span class="pl-s">&#34;value: %v<span class="pl-cce">\n</span>&#34;</span>, <span class="pl-s1">ctx</span>.<span class="pl-en">Value</span>(<span class="pl-smi">key</span>{}))</pre></div>
 <h3>
 <a id="user-content-简析" class="anchor" href="#%E7%AE%80%E6%9E%90" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>简析</h3>
-<p>context 值的实现和 cancel 等的实现是基于不同的 struct 的，这些 struct 都和接口 Context 组合了，所以都<strong>实现</strong>了接口 Context（参见<a href="http://blog.chyroc.cn/articles/2017-8-3-247632972.html" rel="nofollow">这篇我的博文</a>）</p>
+<p>context 值的实现和 cancel 等的实现是基于不同的 struct 的，这些 struct 都和接口 Context 组合了，所以都<strong>实现</strong>了接口 Context（参见<a href="https://blog.chyroc.cn/posts/golang-interface-i/" rel="nofollow">这篇我的博文</a>）</p>
 <p>这种思想是可以借鉴的，即先定义一个 interface，然后不同的 struct 组合这个 interface，然后实现不同的方法</p>
 <p>context 的 k-v 对存储是一个树状的结构，每个节点都存储一对 k-v，并指向父 context</p>
 <h3>
@@ -154,15 +154,16 @@
     <span class="pl-k">return</span> <span class="pl-c1">&amp;</span><span class="pl-smi">valueCtx</span>{<span class="pl-s1">parent</span>, <span class="pl-s1">key</span>, <span class="pl-s1">val</span>}
 }</pre></div>
 <h2>
-<a id="user-content-context-中的-value-存储与-medatada" class="anchor" href="#context-%E4%B8%AD%E7%9A%84-value-%E5%AD%98%E5%82%A8%E4%B8%8E-medatada" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>context 中的 value 存储与 medatada</h2>
+<a id="user-content-context-中的-value-存储与-grpc-medatada" class="anchor" href="#context-%E4%B8%AD%E7%9A%84-value-%E5%AD%98%E5%82%A8%E4%B8%8E-grpc-medatada" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>context 中的 value 存储与 grpc medatada</h2>
 <p>在 grpc 中，client 与 server 之间通过 context 传递上下文数据的时候，不能使用 context.WithValue。</p>
-<p>因为 server 端无法获取到 client 自定义的 key（是这个 key 本身的原因还是 grpc 做了限制？）</p>
+<p>因为 context.Context 是没有办法跨网络传输的， grpc 需要定义自己的 Context 实现，并为这个 Context 实现基于网络的数据传输、序列化和反序列化方法。</p>
 <p>那么如何在 client 与 server 之间传递数据呢？可以使用 grpc 提供的 medadata 接口:</p>
 <div class="highlight highlight-source-go"><pre><span class="pl-k">package</span> main
 
 <span class="pl-k">import</span> (
     <span class="pl-s">&#34;context&#34;</span>
     <span class="pl-s">&#34;fmt&#34;</span>
+
     <span class="pl-s">&#34;google.golang.org/grpc/metadata&#34;</span>
 )
 
@@ -214,6 +215,17 @@
     })
     gitalk.render('gitalk-container')
 </script>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css"/>
+<script src="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>
+<script>
+    if ('addEventListener' in document) {
+        document.addEventListener('DOMContentLoaded', function() {
+            FastClick.attach(document.body);
+        }, false);
+    }
+</script>
+
 
 
 <script src="https://cdn.jsdelivr.net/gh/calganaygun/MDcat@main/theme.js"></script>
