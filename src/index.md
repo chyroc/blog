@@ -42,3 +42,7 @@ slug: "index"
 
 - [laike9m's blog](https://laike9m.com/)
 - [BoyChai Blog's](https://blog.boychai.xyz/)
+
+## 备案
+
+[皖ICP备16008680号-1](https://beian.miit.gov.cn/)
