@@ -26,8 +26,7 @@
             </div>
         </div>
         <article class="markdown-body entry-content container-lg" itemprop="text">
-            <h2>
-<a id="user-content-golang-有哪些数据类型" class="anchor" href="#golang-%E6%9C%89%E5%93%AA%E4%BA%9B%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>golang 有哪些数据类型</h2>
+            <h2><a id="user-content-golang-有哪些数据类型" class="anchor" aria-hidden="true" href="#golang-有哪些数据类型"><span aria-hidden="true" class="octicon octicon-link"></span></a>golang 有哪些数据类型</h2>
 <p>interface 是一种数据类型吗，答案是：是。</p>
 <p>golang 语言有四种数据类型，分别是</p>
 <ul>
@@ -55,8 +54,7 @@
 </li>
 <li>接口类型(interface)</li>
 </ul>
-<h2>
-<a id="user-content-什么是方法" class="anchor" href="#%E4%BB%80%E4%B9%88%E6%98%AF%E6%96%B9%E6%B3%95" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>什么是方法</h2>
+<h2><a id="user-content-什么是方法" class="anchor" aria-hidden="true" href="#什么是方法"><span aria-hidden="true" class="octicon octicon-link"></span></a>什么是方法</h2>
 <p>方法是定义在一个数据类型上面的函数，可以类比为 “面向对象中，类中的方法”。</p>
 <p>方法和这个数据类型需要处于同一个包里，所以对于内置类型，如 int，需要从他定义一个数据类型，</p>
 <div class="highlight highlight-source-go"><pre><span class="pl-k">type</span> <span class="pl-smi">CountNum</span> <span class="pl-smi">int</span></pre></div>
@@ -85,8 +83,7 @@
 }</pre></div>
 <p>这样就可以通过指针修改原来的数据。</p>
 <p>事实上，指针仍然是值传递，但是，哈哈，拷贝的指针指向的地方是不变的，是依然可以修改的。</p>
-<h2>
-<a id="user-content-怎么定义一个-interface" class="anchor" href="#%E6%80%8E%E4%B9%88%E5%AE%9A%E4%B9%89%E4%B8%80%E4%B8%AA-interface" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>怎么定义一个 interface</h2>
+<h2><a id="user-content-怎么定义一个-interface" class="anchor" aria-hidden="true" href="#怎么定义一个-interface"><span aria-hidden="true" class="octicon octicon-link"></span></a>怎么定义一个 interface</h2>
 <p>划重点：<strong>接口的定义是方法的声明的集合，接口的实现是方法的实现的集合</strong></p>
 <p>所以我刚刚先说了方法。</p>
 <p>和方法不一样的是，接口并不是定义在具体的类型上面的（方法是这样的）。</p>
@@ -97,18 +94,15 @@
     <span class="pl-c1">Set</span>(<span class="pl-smi">string</span>)
 }</pre></div>
 <p>这个接口声明了两个方法：<code>Get() string</code>,<code>Set(string)</code>，这两个方法合起来(<code>interface{   }</code>)就构成了一个接口，这个接口的名字叫做<code>GetSet</code>。</p>
-<h2>
-<a id="user-content-怎么实现一个-interface" class="anchor" href="#%E6%80%8E%E4%B9%88%E5%AE%9E%E7%8E%B0%E4%B8%80%E4%B8%AA-interface" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>怎么实现一个 interface</h2>
-<h4>
-<a id="user-content-说明" class="anchor" href="#%E8%AF%B4%E6%98%8E" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>说明</h4>
+<h2><a id="user-content-怎么实现一个-interface" class="anchor" aria-hidden="true" href="#怎么实现一个-interface"><span aria-hidden="true" class="octicon octicon-link"></span></a>怎么实现一个 interface</h2>
+<h4><a id="user-content-说明" class="anchor" aria-hidden="true" href="#说明"><span aria-hidden="true" class="octicon octicon-link"></span></a>说明</h4>
 <p>golang 这门语言的接口与其他语言的不同之处在于，golang 的接口是<code>隐式实现</code>的。</p>
 <p>这是什么意思呢？</p>
 <p>意思就是你不需要<code>显式</code>的这么做：</p>
 <div class="highlight highlight-source-java"><pre><span class="pl-k">class</span> <span class="pl-smi">SomeClass</span> <span class="pl-k">implements</span> <span class="pl-smi">SomeInterface</span> {
 
 }</pre></div>
-<h4>
-<a id="user-content-那怎么做" class="anchor" href="#%E9%82%A3%E6%80%8E%E4%B9%88%E5%81%9A" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>那怎么做</h4>
+<h4><a id="user-content-那怎么做" class="anchor" aria-hidden="true" href="#那怎么做"><span aria-hidden="true" class="octicon octicon-link"></span></a>那怎么做</h4>
 <p>刚刚说了：「接口的实现是方法的实现的集合」，方法是定义在数据类型上面的，所以先给出一个数据类型：</p>
 <div class="highlight highlight-source-go"><pre><span class="pl-k">type</span> <span class="pl-smi">Person</span> <span class="pl-k">struct</span> {
 	<span class="pl-c1">Name</span> <span class="pl-smi">string</span>
@@ -122,16 +116,14 @@
 <span class="pl-k">func</span> (<span class="pl-s1">p</span> <span class="pl-c1">*</span><span class="pl-smi">Person</span>) <span class="pl-en">Set</span>(<span class="pl-s1">name</span> <span class="pl-smi">string</span>) {
 	<span class="pl-s1">p</span>.<span class="pl-c1">Name</span> <span class="pl-c1">=</span> <span class="pl-s1">name</span>
 }</pre></div>
-<h4>
-<a id="user-content-断言是否实现了接口" class="anchor" href="#%E6%96%AD%E8%A8%80%E6%98%AF%E5%90%A6%E5%AE%9E%E7%8E%B0%E4%BA%86%E6%8E%A5%E5%8F%A3" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>断言是否实现了接口</h4>
+<h4><a id="user-content-断言是否实现了接口" class="anchor" aria-hidden="true" href="#断言是否实现了接口"><span aria-hidden="true" class="octicon octicon-link"></span></a>断言是否实现了接口</h4>
 <p>ok，到这里为止，我定义了一个接口<code>GetSet</code>，然后用<code>Person</code>实现了这个接口，一切都很美好，问题是，我真的实现了这个接口了吗？</p>
 <p>有一个简单的方法去判断：</p>
 <div class="highlight highlight-source-go"><pre><span class="pl-k">var</span> <span class="pl-s1">_</span> <span class="pl-smi">GetSet</span> <span class="pl-c1">=</span> <span class="pl-en">new</span>(<span class="pl-smi">Person</span>) <span class="pl-c">// var _ GetSet = Person{}</span></pre></div>
 <p>这是一个断言：<code>Person</code>的一个值实现了接口<code>GetSet</code>，如果<code>Person</code>没有实现了接口<code>GetSet</code>，编译的时候就会报错。</p>
 <p>实际上，我们不需要创建一个变量（<code>new(Person)</code>），因为<code>Person</code>是任意值都实现了这个接口，所以<code>nil</code>也实现了，所以可以用类型转化做断言，代码如下：</p>
 <div class="highlight highlight-source-go"><pre><span class="pl-k">var</span> <span class="pl-s1">_</span> <span class="pl-smi">GetSet</span> <span class="pl-c1">=</span> (<span class="pl-c1">*</span><span class="pl-s1">Person</span>)(<span class="pl-c1">nil</span>)</pre></div>
-<h2>
-<a id="user-content-空-interface-是什么" class="anchor" href="#%E7%A9%BA-interface-%E6%98%AF%E4%BB%80%E4%B9%88" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>空 interface 是什么</h2>
+<h2><a id="user-content-空-interface-是什么" class="anchor" aria-hidden="true" href="#空-interface-是什么"><span aria-hidden="true" class="octicon octicon-link"></span></a>空 interface 是什么</h2>
 <p>什么是空接口：</p>
 <div class="highlight highlight-source-go"><pre><span class="pl-k">interface</span>{}</pre></div>
 <p>上面说过，接口是声明的方法的集合，空接口没有声明方法，所以任何类型都实现了空接口。</p>

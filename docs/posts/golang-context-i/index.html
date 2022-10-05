@@ -32,8 +32,7 @@
 <blockquote>
 <p>现在是 2018-04-29 19:49，正在北京开往家的动车上，窗外已经是黑黑的一片了，11 点到家，写一会文章吧</p>
 </blockquote>
-<h2>
-<a id="user-content-context-包" class="anchor" href="#context-%E5%8C%85" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>context 包</h2>
+<h2><a id="user-content-context-包" class="anchor" aria-hidden="true" href="#context-包"><span aria-hidden="true" class="octicon octicon-link"></span></a>context 包</h2>
 <p>这里说的 context 包指的是 golang(1.7+)中的标准库 context，文档在这里：<a href="https://pkg.go.dev/context%E3%80%82" rel="nofollow">https://pkg.go.dev/context。</a></p>
 <p>context 包定义了 Context 类型，他可以在携带 deadlines 和 cancelatin 信号，也可以携带其他的请求值。</p>
 <p>发送到 server 的请求应该创建一个 context，服务器处理请求的时候也应该接受一个 context。在程序的函数调用链中，必须传递 context，也可以基于一个 context，使用 WithCancel, WithDeadline, WithTimeout, or WithValue 等函数创建一个新的 context 传递下去。当一个 context 被 canceled 的时候，那么所有通过改 context 派生的 context 都应该被 cancel</p>
@@ -46,8 +45,7 @@
 <li>只使用 context 传递请求上下文，而不是为了传递可选参数</li>
 <li>context 可能会被同一个函数在不同的 goroutine 中使用，他是并发安全的</li>
 </ul>
-<h2>
-<a id="user-content-context-接口" class="anchor" href="#context-%E6%8E%A5%E5%8F%A3" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>context 接口</h2>
+<h2><a id="user-content-context-接口" class="anchor" aria-hidden="true" href="#context-接口"><span aria-hidden="true" class="octicon octicon-link"></span></a>context 接口</h2>
 <p>以下是 context 的接口定义</p>
 <div class="highlight highlight-source-go"><pre><span class="pl-k">type</span> <span class="pl-smi">Context</span> <span class="pl-k">interface</span> {
     <span class="pl-c">// 返回当前context应该被cancel的时间</span>
@@ -97,22 +95,18 @@
     <span class="pl-c">// 各个包应该定义自己的非导出的类型所谓key，以避免重叠</span>
     <span class="pl-c1">Value</span>(<span class="pl-s1">key</span> <span class="pl-k">interface</span>{}) <span class="pl-k">interface</span>{}
 }</pre></div>
-<h2>
-<a id="user-content-context-是如何实现-k-v-键值对存储的" class="anchor" href="#context-%E6%98%AF%E5%A6%82%E4%BD%95%E5%AE%9E%E7%8E%B0-k-v-%E9%94%AE%E5%80%BC%E5%AF%B9%E5%AD%98%E5%82%A8%E7%9A%84" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>context 是如何实现 k-v 键值对存储的</h2>
-<h3>
-<a id="user-content-什么是-contextk-v-存储" class="anchor" href="#%E4%BB%80%E4%B9%88%E6%98%AF-contextk-v-%E5%AD%98%E5%82%A8" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>什么是 contextk-v 存储</h3>
+<h2><a id="user-content-context-是如何实现-k-v-键值对存储的" class="anchor" aria-hidden="true" href="#context-是如何实现-k-v-键值对存储的"><span aria-hidden="true" class="octicon octicon-link"></span></a>context 是如何实现 k-v 键值对存储的</h2>
+<h3><a id="user-content-什么是-contextk-v-存储" class="anchor" aria-hidden="true" href="#什么是-contextk-v-存储"><span aria-hidden="true" class="octicon octicon-link"></span></a>什么是 contextk-v 存储</h3>
 <p>通过下面这样的代码可以在 goroutine 之间安全的传递数据</p>
 <div class="highlight highlight-source-go"><pre><span class="pl-k">type</span> <span class="pl-smi">key</span> <span class="pl-c1">=</span> <span class="pl-k">struct</span>{}
 <span class="pl-s1">ctx</span> <span class="pl-c1">:=</span> <span class="pl-s1">context</span>.<span class="pl-en">Background</span>()
 <span class="pl-s1">ctx</span> <span class="pl-c1">=</span> <span class="pl-s1">context</span>.<span class="pl-en">WithValue</span>(<span class="pl-s1">ctx</span>, <span class="pl-smi">key</span>{}, <span class="pl-s">&#34;this is value&#34;</span>)
 <span class="pl-s1">fmt</span>.<span class="pl-en">Printf</span>(<span class="pl-s">&#34;value: %v<span class="pl-cce">\n</span>&#34;</span>, <span class="pl-s1">ctx</span>.<span class="pl-en">Value</span>(<span class="pl-smi">key</span>{}))</pre></div>
-<h3>
-<a id="user-content-简析" class="anchor" href="#%E7%AE%80%E6%9E%90" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>简析</h3>
+<h3><a id="user-content-简析" class="anchor" aria-hidden="true" href="#简析"><span aria-hidden="true" class="octicon octicon-link"></span></a>简析</h3>
 <p>context 值的实现和 cancel 等的实现是基于不同的 struct 的，这些 struct 都和接口 Context 组合了，所以都<strong>实现</strong>了接口 Context（参见<a href="https://blog.chyroc.cn/posts/golang-interface-i/" rel="nofollow">这篇我的博文</a>）</p>
 <p>这种思想是可以借鉴的，即先定义一个 interface，然后不同的 struct 组合这个 interface，然后实现不同的方法</p>
 <p>context 的 k-v 对存储是一个树状的结构，每个节点都存储一对 k-v，并指向父 context</p>
-<h3>
-<a id="user-content-代码解析" class="anchor" href="#%E4%BB%A3%E7%A0%81%E8%A7%A3%E6%9E%90" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>代码解析</h3>
+<h3><a id="user-content-代码解析" class="anchor" aria-hidden="true" href="#代码解析"><span aria-hidden="true" class="octicon octicon-link"></span></a>代码解析</h3>
 <p>下面结合 k-v 实现的代码看一下</p>
 <div class="highlight highlight-source-go"><pre><span class="pl-c">// 定义存储k-v的struct，是一个树结构</span>
 <span class="pl-k">type</span> <span class="pl-smi">valueCtx</span> <span class="pl-k">struct</span> {
@@ -153,8 +147,7 @@
 
     <span class="pl-k">return</span> <span class="pl-c1">&amp;</span><span class="pl-smi">valueCtx</span>{<span class="pl-s1">parent</span>, <span class="pl-s1">key</span>, <span class="pl-s1">val</span>}
 }</pre></div>
-<h2>
-<a id="user-content-context-中的-value-存储与-grpc-medatada" class="anchor" href="#context-%E4%B8%AD%E7%9A%84-value-%E5%AD%98%E5%82%A8%E4%B8%8E-grpc-medatada" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>context 中的 value 存储与 grpc medatada</h2>
+<h2><a id="user-content-context-中的-value-存储与-grpc-medatada" class="anchor" aria-hidden="true" href="#context-中的-value-存储与-grpc-medatada"><span aria-hidden="true" class="octicon octicon-link"></span></a>context 中的 value 存储与 grpc medatada</h2>
 <p>在 grpc 中，client 与 server 之间通过 context 传递上下文数据的时候，不能使用 context.WithValue。</p>
 <p>因为 context.Context 是没有办法跨网络传输的， grpc 需要定义自己的 Context 实现，并为这个 Context 实现基于网络的数据传输、序列化和反序列化方法。</p>
 <p>那么如何在 client 与 server 之间传递数据呢？可以使用 grpc 提供的 medadata 接口:</p>
@@ -187,8 +180,7 @@
 <p>这里使用了<code>metadata.NewOutgoingContext</code>传递数据，<code>metadata.FromIncomingContext</code>获取数据。</p>
 <p>这里其实就是通过 context.WithValue 实现的，只不过 key 分别是指定的<code>mdOutgoingKey{}</code>，<code>mdIncomingKey{}</code></p>
 <p><code>mdOutgoingKey{}</code>，<code>mdIncomingKey{}</code>之间的区别就是，在 client 端发送数据的时候选用<code>metadata.NewOutgoingContext</code>，在 server 接受数据的时候，选用<code>metadata.FromIncomingContext</code></p>
-<h2>
-<a id="user-content-参考文章" class="anchor" href="#%E5%8F%82%E8%80%83%E6%96%87%E7%AB%A0" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>参考文章</h2>
+<h2><a id="user-content-参考文章" class="anchor" aria-hidden="true" href="#参考文章"><span aria-hidden="true" class="octicon octicon-link"></span></a>参考文章</h2>
 <ul>
 <li><a href="https://github.com/grpc/grpc-go/issues/156">https://github.com/grpc/grpc-go/issues/156</a></li>
 <li><a href="https://talks.golang.org/2014/gotham-context.slide#1" rel="nofollow">https://talks.golang.org/2014/gotham-context.slide#1</a></li>

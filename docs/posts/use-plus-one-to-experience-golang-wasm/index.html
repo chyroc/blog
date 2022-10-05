@@ -26,23 +26,19 @@
             </div>
         </div>
         <article class="markdown-body entry-content container-lg" itemprop="text">
-            <h2>
-<a id="user-content-什么是-webassembly" class="anchor" href="#%E4%BB%80%E4%B9%88%E6%98%AF-webassembly" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>什么是 WebAssembly</h2>
+            <h2><a id="user-content-什么是-webassembly" class="anchor" aria-hidden="true" href="#什么是-webassembly"><span aria-hidden="true" class="octicon octicon-link"></span></a>什么是 WebAssembly</h2>
 <p>WebAssembly（以下简称 wasm）是一种新的编码方式，可以在现代的网络浏览器中运行。啥意思，就是除了 JavaScript（以下简称 js），还有一种语言可以在浏览器里面运行了！</p>
 <p>对于网络平台而言，WebAssembly 具有巨大的意义——它提供了一条途径，以使得以各种语言编写的代码都可以以接近原生的速度在 Web 中运行。在这种情况下，以前无法以此方式运行的客户端软件都将可以运行在 Web 中。</p>
-<h2>
-<a id="user-content-编译支持-wasm-的-go" class="anchor" href="#%E7%BC%96%E8%AF%91%E6%94%AF%E6%8C%81-wasm-%E7%9A%84-go" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>编译支持 wasm 的 go</h2>
+<h2><a id="user-content-编译支持-wasm-的-go" class="anchor" aria-hidden="true" href="#编译支持-wasm-的-go"><span aria-hidden="true" class="octicon octicon-link"></span></a>编译支持 wasm 的 go</h2>
 <p>golang 的 release 版本（1.10）还不支持 wasm，但是在 github.com/golang/go 的 master 分支中已经包含 wasm 了，所以我们需要自己编译一个 go。</p>
 <div class="highlight highlight-source-shell"><pre>git clone https://github.com/golang/go /path/go
 <span class="pl-c1">cd</span> /path/go/src
 ./make.bash</pre></div>
 <p><code>/path/go/bin/</code>目录下会生成编译后的 go：<code>/path/go/bin/go</code></p>
 <p>设置<code>GOROOT</code>为<code>/path/go/</code></p>
-<h2>
-<a id="user-content-创建自己的-wasm-程序" class="anchor" href="#%E5%88%9B%E5%BB%BA%E8%87%AA%E5%B7%B1%E7%9A%84-wasm-%E7%A8%8B%E5%BA%8F" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>创建自己的 wasm 程序</h2>
+<h2><a id="user-content-创建自己的-wasm-程序" class="anchor" aria-hidden="true" href="#创建自己的-wasm-程序"><span aria-hidden="true" class="octicon octicon-link"></span></a>创建自己的 wasm 程序</h2>
 <p>参见项目：<a href="https://github.com/chyroc/golang-wasm-example">https://github.com/chyroc/golang-wasm-example</a></p>
-<h3>
-<a id="user-content-indexhtml" class="anchor" href="#indexhtml" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>index.html</h3>
+<h3><a id="user-content-indexhtml" class="anchor" aria-hidden="true" href="#indexhtml"><span aria-hidden="true" class="octicon octicon-link"></span></a>index.html</h3>
 <p><code>index.html</code>引入了<code>wasm_exec.js</code>（这个是从<code>/path/go/misc/wasm/wasm_exec.js</code>复制来过的）和加载 wasm 的 js（这个参见参见<a href="https://developer.mozilla.org/zh-CN/docs/WebAssembly/Loading_and_running#%E4%BD%BF%E7%94%A8Fetch" rel="nofollow">文档</a>），总之这样我们的 wasm 就已经加载到我们的网页了</p>
 <p>最后有一个显示数字的 span 块，和两个<kbd>+</kbd>和<kbd>-</kbd>的 button，我们待会写的 wasm 代码就是操作这个 span 块的</p>
 <div class="highlight highlight-text-html-basic"><pre><span class="pl-kos">&lt;</span><span class="pl-ent">html</span><span class="pl-kos">&gt;</span>
@@ -78,8 +74,7 @@
 <span class="pl-kos">&lt;</span><span class="pl-ent">button</span> <span class="pl-c1">id</span>=&#34;<span class="pl-s">plus</span>&#34; <span class="pl-c1">type</span>=&#34;<span class="pl-s">button</span>&#34; <span class="pl-c1">disabled</span>=<span class="pl-s">true</span><span class="pl-kos">&gt;</span>+<span class="pl-kos">&lt;/</span><span class="pl-ent">button</span><span class="pl-kos">&gt;</span>
 <span class="pl-kos">&lt;/</span><span class="pl-ent">body</span><span class="pl-kos">&gt;</span>
 <span class="pl-kos">&lt;/</span><span class="pl-ent">html</span><span class="pl-kos">&gt;</span></pre></div>
-<h3>
-<a id="user-content-wasmgo" class="anchor" href="#wasmgo" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>wasm.go</h3>
+<h3><a id="user-content-wasmgo" class="anchor" aria-hidden="true" href="#wasmgo"><span aria-hidden="true" class="octicon octicon-link"></span></a>wasm.go</h3>
 <p>第一行有 build tag：<code>// +build js,wasm</code>表示<code>GOARCH</code>是<code>wasm</code>，<code>GOOS</code>是<code>js</code></p>
 <p>然后<code>syscall/js</code>包提供了操作网页的接口：</p>
 <p><code>js.Global.Get(&#34;document&#34;).Call(&#34;getElementById&#34;, &#34;number&#34;)</code>这几行获取到刚刚<code>index.html</code>中最后一个按钮和 span 块</p>
@@ -120,8 +115,7 @@
 	<span class="pl-k">select</span> {}
 }</pre></div>
 <p>程序效果请访问：<a href="https://chyroc.cn/golang-wasm-example/" rel="nofollow">https://chyroc.cn/golang-wasm-example/</a> 体验</p>
-<h2>
-<a id="user-content-参考" class="anchor" href="#%E5%8F%82%E8%80%83" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>参考</h2>
+<h2><a id="user-content-参考" class="anchor" aria-hidden="true" href="#参考"><span aria-hidden="true" class="octicon octicon-link"></span></a>参考</h2>
 <ul>
 <li><a href="https://blog.gopheracademy.com/advent-2017/go-wasm/" rel="nofollow">https://blog.gopheracademy.com/advent-2017/go-wasm/</a></li>
 <li><a href="https://github.com/neelance/go/issues/29">https://github.com/neelance/go/issues/29</a></li>

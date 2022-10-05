@@ -35,8 +35,7 @@
 <li>我们是怎么设计的</li>
 </ul>
 <hr/>
-<h1>
-<a id="user-content-认证和授权" class="anchor" href="#%E8%AE%A4%E8%AF%81%E5%92%8C%E6%8E%88%E6%9D%83" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>认证和授权</h1>
+<h1><a id="user-content-认证和授权" class="anchor" aria-hidden="true" href="#认证和授权"><span aria-hidden="true" class="octicon octicon-link"></span></a>认证和授权</h1>
 <table>
 <thead>
 <tr>
@@ -71,8 +70,7 @@
 <li>需要 ACL 系统验证</li>
 </ul>
 <hr/>
-<h1>
-<a id="user-content-有哪些方式" class="anchor" href="#%E6%9C%89%E5%93%AA%E4%BA%9B%E6%96%B9%E5%BC%8F" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>有哪些方式</h1>
+<h1><a id="user-content-有哪些方式" class="anchor" aria-hidden="true" href="#有哪些方式"><span aria-hidden="true" class="octicon octicon-link"></span></a>有哪些方式</h1>
 <ul>
 <li>Cookie 与 Session</li>
 <li>Basic Auth</li>
@@ -80,8 +78,7 @@
 <li>OAuth2</li>
 </ul>
 <hr/>
-<h2>
-<a id="user-content-cookie-与-session" class="anchor" href="#cookie-%E4%B8%8E-session" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Cookie 与 Session</h2>
+<h2><a id="user-content-cookie-与-session" class="anchor" aria-hidden="true" href="#cookie-与-session"><span aria-hidden="true" class="octicon octicon-link"></span></a>Cookie 与 Session</h2>
 <ul>
 <li>Cookie：键值对；Set-Cookie</li>
 <li>Session：浏览器存储 cookie，包含 session-id；服务端验证 session-id 有效性，并获取 user 信息</li>
@@ -90,14 +87,13 @@
 <ul>
 <li>对非浏览器端不友好</li>
 <li>CSRF：Cross Site Request Forgery，跨站请求伪造
-<a href="https://camo.githubusercontent.com/03107655dc144d0502a499aa85e5d925cd1083effe50786fe4700b21abca21eb/68747470733a2f2f6d656469612e636879726f632e636e2f696d672f637372662e6a7067" target="_blank" rel="nofollow"><img src="https://camo.githubusercontent.com/03107655dc144d0502a499aa85e5d925cd1083effe50786fe4700b21abca21eb/68747470733a2f2f6d656469612e636879726f632e636e2f696d672f637372662e6a7067" alt="" data-canonical-src="https://media.chyroc.cn/img/csrf.jpg" style="max-width:100%;"/></a>
+<a target="_blank" rel="noopener noreferrer nofollow" href="https://camo.githubusercontent.com/03107655dc144d0502a499aa85e5d925cd1083effe50786fe4700b21abca21eb/68747470733a2f2f6d656469612e636879726f632e636e2f696d672f637372662e6a7067"><img src="https://camo.githubusercontent.com/03107655dc144d0502a499aa85e5d925cd1083effe50786fe4700b21abca21eb/68747470733a2f2f6d656469612e636879726f632e636e2f696d672f637372662e6a7067" alt="" data-canonical-src="https://media.chyroc.cn/img/csrf.jpg" style="max-width: 100%;"/></a>
 </li>
 </ul>
 </li>
 </ul>
 <hr/>
-<h2>
-<a id="user-content-basic-auth" class="anchor" href="#basic-auth" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Basic Auth</h2>
+<h2><a id="user-content-basic-auth" class="anchor" aria-hidden="true" href="#basic-auth"><span aria-hidden="true" class="octicon octicon-link"></span></a>Basic Auth</h2>
 <ul>
 <li>Header: <code>Authorization: &#34;Basic &#34; + base64(username:password)</code>
 </li>
@@ -110,8 +106,7 @@
 </li>
 </ul>
 <hr/>
-<h2>
-<a id="user-content-jwt" class="anchor" href="#jwt" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>JWT</h2>
+<h2><a id="user-content-jwt" class="anchor" aria-hidden="true" href="#jwt"><span aria-hidden="true" class="octicon octicon-link"></span></a>JWT</h2>
 <ul>
 <li>JWT：JSON Web Token</li>
 <li>由三段构成：header、payload、signature，三段都进行 base64 编码，由”.”连接起来
@@ -140,8 +135,7 @@
 </li>
 </ul>
 <hr/>
-<h2>
-<a id="user-content-oauth2" class="anchor" href="#oauth2" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>OAuth2</h2>
+<h2><a id="user-content-oauth2" class="anchor" aria-hidden="true" href="#oauth2"><span aria-hidden="true" class="octicon octicon-link"></span></a>OAuth2</h2>
 <ul>
 <li>两种：access_token 和 refresh_token（optional）</li>
 <li>签发与验证、刷新</li>
@@ -171,27 +165,22 @@
 </ul>
 <hr/>
 <p><strong>时序图</strong></p>
-<p><a href="https://camo.githubusercontent.com/ca030e626c0adab4a81dfe3b7aa3daae81c73396f8881a9facfd60e61f46ee0a/68747470733a2f2f6d656469612e636879726f632e636e2f696d672f61757468322d726566726573682d746f6b656e2e706e67" target="_blank" rel="nofollow"><img src="https://camo.githubusercontent.com/ca030e626c0adab4a81dfe3b7aa3daae81c73396f8881a9facfd60e61f46ee0a/68747470733a2f2f6d656469612e636879726f632e636e2f696d672f61757468322d726566726573682d746f6b656e2e706e67" alt="" data-canonical-src="https://media.chyroc.cn/img/auth2-refresh-token.png" style="max-width:100%;"/></a></p>
+<p><a target="_blank" rel="noopener noreferrer nofollow" href="https://camo.githubusercontent.com/ca030e626c0adab4a81dfe3b7aa3daae81c73396f8881a9facfd60e61f46ee0a/68747470733a2f2f6d656469612e636879726f632e636e2f696d672f61757468322d726566726573682d746f6b656e2e706e67"><img src="https://camo.githubusercontent.com/ca030e626c0adab4a81dfe3b7aa3daae81c73396f8881a9facfd60e61f46ee0a/68747470733a2f2f6d656469612e636879726f632e636e2f696d672f61757468322d726566726573682d746f6b656e2e706e67" alt="" data-canonical-src="https://media.chyroc.cn/img/auth2-refresh-token.png" style="max-width: 100%;"/></a></p>
 <hr/>
 <p><strong>第三方授权时序图</strong></p>
-<p><a href="https://camo.githubusercontent.com/0ee2d67595b35e84f5f6364cafa961bb1ec319015b1bd31c80d80dd25035b8fe/68747470733a2f2f6d656469612e636879726f632e636e2f696d672f61757468322d74686972642d70617274792e706e67" target="_blank" rel="nofollow"><img src="https://camo.githubusercontent.com/0ee2d67595b35e84f5f6364cafa961bb1ec319015b1bd31c80d80dd25035b8fe/68747470733a2f2f6d656469612e636879726f632e636e2f696d672f61757468322d74686972642d70617274792e706e67" alt="" data-canonical-src="https://media.chyroc.cn/img/auth2-third-party.png" style="max-width:100%;"/></a></p>
+<p><a target="_blank" rel="noopener noreferrer nofollow" href="https://camo.githubusercontent.com/0ee2d67595b35e84f5f6364cafa961bb1ec319015b1bd31c80d80dd25035b8fe/68747470733a2f2f6d656469612e636879726f632e636e2f696d672f61757468322d74686972642d70617274792e706e67"><img src="https://camo.githubusercontent.com/0ee2d67595b35e84f5f6364cafa961bb1ec319015b1bd31c80d80dd25035b8fe/68747470733a2f2f6d656469612e636879726f632e636e2f696d672f61757468322d74686972642d70617274792e706e67" alt="" data-canonical-src="https://media.chyroc.cn/img/auth2-third-party.png" style="max-width: 100%;"/></a></p>
 <hr/>
-<h2>
-<a id="user-content--我们是怎么设计的" class="anchor" href="#-%E6%88%91%E4%BB%AC%E6%98%AF%E6%80%8E%E4%B9%88%E8%AE%BE%E8%AE%A1%E7%9A%84" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a><del># 我们是怎么设计的</del>
-</h2>
-<h1>
-<a id="user-content-安全性" class="anchor" href="#%E5%AE%89%E5%85%A8%E6%80%A7" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>安全性</h1>
+<h2><a id="user-content--我们是怎么设计的" class="anchor" aria-hidden="true" href="#-我们是怎么设计的"><span aria-hidden="true" class="octicon octicon-link"></span></a><del># 我们是怎么设计的</del></h2>
+<h1><a id="user-content-安全性" class="anchor" aria-hidden="true" href="#安全性"><span aria-hidden="true" class="octicon octicon-link"></span></a>安全性</h1>
 <ul>
 <li>HTTPS</li>
 <li>弱口令/暴力破解</li>
 <li>二次验证  Two-factor Authentication</li>
 </ul>
 <hr/>
-<h1>
-<a id="user-content-q--a" class="anchor" href="#q--a" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Q &amp; A</h1>
+<h1><a id="user-content-q--a" class="anchor" aria-hidden="true" href="#q--a"><span aria-hidden="true" class="octicon octicon-link"></span></a>Q &amp; A</h1>
 <hr/>
-<h1>
-<a id="user-content-谢谢大家" class="anchor" href="#%E8%B0%A2%E8%B0%A2%E5%A4%A7%E5%AE%B6" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>谢谢大家</h1>
+<h1><a id="user-content-谢谢大家" class="anchor" aria-hidden="true" href="#谢谢大家"><span aria-hidden="true" class="octicon octicon-link"></span></a>谢谢大家</h1>
 <hr/>
 
         </article>

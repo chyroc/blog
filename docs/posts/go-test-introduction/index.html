@@ -27,14 +27,12 @@
         </div>
         <article class="markdown-body entry-content container-lg" itemprop="text">
             <p>testing 包是 go 中提供自动化测试的包，和命令 go test 配合使用，能够自动执行匹配到的函数。</p>
-<h1>
-<a id="user-content-testxxx" class="anchor" href="#testxxx" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>TestXxx</h1>
+<h1><a id="user-content-testxxx" class="anchor" aria-hidden="true" href="#testxxx"><span aria-hidden="true" class="octicon octicon-link"></span></a>TestXxx</h1>
 <p>测试函数一般是这样的：</p>
 <div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">TestXxx</span>(<span class="pl-c1">*</span>testing.<span class="pl-smi">T</span>)</pre></div>
 <p>测试函数需要满足一定的条件才能被执行，就像上面的那样，以<code>Test</code>开头，然后接一个以大写字母开头的单词，函数参数是<code>*testing.T</code></p>
 <p>测试函数所在的文件也需要满足一定的条件：文件名需要以<code>_test.go</code>结尾，这样的文件在<code>go build</code>的时候不会包含，但是可以在<code>go test</code>的时候调用到</p>
-<h1>
-<a id="user-content-benchmarkxxx" class="anchor" href="#benchmarkxxx" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>BenchmarkXxx</h1>
+<h1><a id="user-content-benchmarkxxx" class="anchor" aria-hidden="true" href="#benchmarkxxx"><span aria-hidden="true" class="octicon octicon-link"></span></a>BenchmarkXxx</h1>
 <p>其实还有一种测试函数：</p>
 <div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">BenchmarkXxx</span>(<span class="pl-c1">*</span>testing.<span class="pl-smi">B</span>)</pre></div>
 <p>和上面那个<code>TestXxx</code>差不多，以<code>Benchmark</code>开头，并接一个大写字母开头的单词，函数参数是<code>*testing.B</code></p>
@@ -69,8 +67,7 @@
         }
     })
 }</pre></div>
-<h1>
-<a id="user-content-examplexxx" class="anchor" href="#examplexxx" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>ExampleXxx</h1>
+<h1><a id="user-content-examplexxx" class="anchor" aria-hidden="true" href="#examplexxx"><span aria-hidden="true" class="octicon octicon-link"></span></a>ExampleXxx</h1>
 <p>测试函数以<code>Example</code>开头，接一个大写字母开头的单词，没有函数参数；然后将函数内部以<code>// Output:</code>开头下面的注释和标准输出进行比较（忽略前后的空格）。</p>
 <p>示例：</p>
 <div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">ExampleSalutations</span>() {
@@ -101,8 +98,7 @@
 <span class="pl-k">func</span> <span class="pl-en">ExampleF_suffix</span>() { <span class="pl-c1">...</span> }
 <span class="pl-k">func</span> <span class="pl-en">ExampleT_suffix</span>() { <span class="pl-c1">...</span> }
 <span class="pl-k">func</span> <span class="pl-en">ExampleT_M_suffix</span>() { <span class="pl-c1">...</span> }</pre></div>
-<h1>
-<a id="user-content-子测试和子压力测试" class="anchor" href="#%E5%AD%90%E6%B5%8B%E8%AF%95%E5%92%8C%E5%AD%90%E5%8E%8B%E5%8A%9B%E6%B5%8B%E8%AF%95" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>子测试和子压力测试</h1>
+<h1><a id="user-content-子测试和子压力测试" class="anchor" aria-hidden="true" href="#子测试和子压力测试"><span aria-hidden="true" class="octicon octicon-link"></span></a>子测试和子压力测试</h1>
 <p><code>*testing.T</code>和<code>*testing.B</code>的 Run 方法允许定义子测试和子压力测试，而不需要定义两个测试</p>
 <p>示例：</p>
 <div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">TestFoo</span>(<span class="pl-s1">t</span> <span class="pl-c1">*</span>testing.<span class="pl-smi">T</span>) {
@@ -119,8 +115,7 @@ go test -run Foo     # Run top-level tests matching &#34;Foo&#34;, such as &#34;
 go test -run Foo/A=  # For top-level tests matching &#34;Foo&#34;, run subtests matching &#34;A=&#34;.
 go test -run /A=1    # For all top-level tests, run subtests matching &#34;A=1&#34;.
 </code></pre>
-<h1>
-<a id="user-content-主测试" class="anchor" href="#%E4%B8%BB%E6%B5%8B%E8%AF%95" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>主测试</h1>
+<h1><a id="user-content-主测试" class="anchor" aria-hidden="true" href="#主测试"><span aria-hidden="true" class="octicon octicon-link"></span></a>主测试</h1>
 <p>在有些测试中，需要在所有的测试之前做一些 setup，在所有的测试之后做一些 teardown，所以需要一个主测试来控制这些：</p>
 <div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">TestMain</span>(<span class="pl-s1">m</span> <span class="pl-c1">*</span>testing.<span class="pl-smi">M</span>)</pre></div>
 <p>然后测试代码就不会直接运行了，而是会调用<code>TestMain</code></p>
@@ -159,8 +154,7 @@ go test -run /A=1    # For all top-level tests, run subtests matching &#34;A=1&#
 PASS
 </code></pre>
 <p>可以看到<code>TestMain</code>初始化了变量 s，然后函数<code>TestMain</code>上面和下面的函数获取到的都是字符串 1</p>
-<h1>
-<a id="user-content-参考" class="anchor" href="#%E5%8F%82%E8%80%83" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>参考</h1>
+<h1><a id="user-content-参考" class="anchor" aria-hidden="true" href="#参考"><span aria-hidden="true" class="octicon octicon-link"></span></a>参考</h1>
 <ul>
 <li><a href="https://golang.org/pkg/testing/" rel="nofollow">godoc: Package testing</a></li>
 </ul>

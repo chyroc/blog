@@ -26,13 +26,11 @@
             </div>
         </div>
         <article class="markdown-body entry-content container-lg" itemprop="text">
-            <h2>
-<a id="user-content-前言" class="anchor" href="#%E5%89%8D%E8%A8%80" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>前言</h2>
+            <h2><a id="user-content-前言" class="anchor" aria-hidden="true" href="#前言"><span aria-hidden="true" class="octicon octicon-link"></span></a>前言</h2>
 <p>最近在做 leetcode 的题目，需要搞一些简单的测试代码，但是测试函数的输入输出的描述、判断函数是否成功比较麻烦</p>
 <p>所以我就在想，能不能我定义一个 input 和一个 output，能够自动的将 input 转成 go 的代码，然后执行测试函数之后，比较返回值和 output 是否一致</p>
 <p>要想这么做，肯定需要使用到反射，并且需要定义一下怎么从字符串转化到 go 的代码</p>
-<h2>
-<a id="user-content-parse-字符串定义" class="anchor" href="#parse-%E5%AD%97%E7%AC%A6%E4%B8%B2%E5%AE%9A%E4%B9%89" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>parse 字符串定义</h2>
+<h2><a id="user-content-parse-字符串定义" class="anchor" aria-hidden="true" href="#parse-字符串定义"><span aria-hidden="true" class="octicon octicon-link"></span></a>parse 字符串定义</h2>
 <ul>
 <li>用逗号分隔数组的各个元素</li>
 <li>用<code>\n</code>分隔多个输入或者多个输出</li>
@@ -42,10 +40,8 @@
 <code>{a: b}</code> 定义 map</li>
 <li>slice 或者 map 中的子元素的类型要看函数定义参数的类型</li>
 </ul>
-<h2>
-<a id="user-content-代码解析" class="anchor" href="#%E4%BB%A3%E7%A0%81%E8%A7%A3%E6%9E%90" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>代码解析</h2>
-<h3>
-<a id="user-content-parseparam-这里需要自定义-string-转化" class="anchor" href="#parseparam-%E8%BF%99%E9%87%8C%E9%9C%80%E8%A6%81%E8%87%AA%E5%AE%9A%E4%B9%89-string-%E8%BD%AC%E5%8C%96" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>parseParam 这里需要自定义 string 转化</h3>
+<h2><a id="user-content-代码解析" class="anchor" aria-hidden="true" href="#代码解析"><span aria-hidden="true" class="octicon octicon-link"></span></a>代码解析</h2>
+<h3><a id="user-content-parseparam-这里需要自定义-string-转化" class="anchor" aria-hidden="true" href="#parseparam-这里需要自定义-string-转化"><span aria-hidden="true" class="octicon octicon-link"></span></a>parseParam 这里需要自定义 string 转化</h3>
 <p>参数是<code>string</code> / <code>reflect.Type</code>，返回值是<code>reflect.Value</code></p>
 <p>主要是<code>tring</code> to <code>int</code>,<code>bool</code>,<code>slice</code>,<code>map</code>，并转成<code>reflect.Value</code>的类型</p>
 <div class="highlight highlight-source-go"><pre><span class="pl-k">func</span> <span class="pl-en">parseParam</span>(<span class="pl-s1">t</span> <span class="pl-c1">*</span>testing.<span class="pl-smi">T</span>, <span class="pl-s1">param</span> <span class="pl-smi">string</span>, <span class="pl-s1">typ</span> reflect.<span class="pl-smi">Type</span>) reflect.<span class="pl-smi">Value</span> {
@@ -82,8 +78,7 @@
 
 	<span class="pl-k">return</span> <span class="pl-s1">r</span>
 }</pre></div>
-<h3>
-<a id="user-content-输入参数解析" class="anchor" href="#%E8%BE%93%E5%85%A5%E5%8F%82%E6%95%B0%E8%A7%A3%E6%9E%90" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>输入参数解析</h3>
+<h3><a id="user-content-输入参数解析" class="anchor" aria-hidden="true" href="#输入参数解析"><span aria-hidden="true" class="octicon octicon-link"></span></a>输入参数解析</h3>
 <div class="highlight highlight-source-go"><pre><span class="pl-s1">ft</span> <span class="pl-c1">:=</span> <span class="pl-s1">reflect</span>.<span class="pl-en">TypeOf</span>(<span class="pl-s1">Func</span>)
 <span class="pl-s1">fv</span> <span class="pl-c1">:=</span> <span class="pl-s1">reflect</span>.<span class="pl-en">ValueOf</span>(<span class="pl-s1">Func</span>)</pre></div>
 <p>然后遍历 reflect.TypeOf(Func).In(i)，这个是输入参数的类型</p>
@@ -96,12 +91,10 @@
 
 	<span class="pl-s1">in</span> <span class="pl-c1">=</span> <span class="pl-en">append</span>(<span class="pl-s1">in</span>, <span class="pl-s1">ithParamIn</span>)
 }</pre></div>
-<h3>
-<a id="user-content-执行测试函数" class="anchor" href="#%E6%89%A7%E8%A1%8C%E6%B5%8B%E8%AF%95%E5%87%BD%E6%95%B0" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>执行测试函数</h3>
+<h3><a id="user-content-执行测试函数" class="anchor" aria-hidden="true" href="#执行测试函数"><span aria-hidden="true" class="octicon octicon-link"></span></a>执行测试函数</h3>
 <div class="highlight highlight-source-go"><pre><span class="pl-s1">out</span> <span class="pl-c1">:=</span> <span class="pl-s1">fv</span>.<span class="pl-en">Call</span>(<span class="pl-s1">in</span>)</pre></div>
 <p>这边的 out 是一个[]reflect.Value，需要将他和函数签名，以及给定的输出的字符串进行比较</p>
-<h3>
-<a id="user-content-输出参数解析和验证" class="anchor" href="#%E8%BE%93%E5%87%BA%E5%8F%82%E6%95%B0%E8%A7%A3%E6%9E%90%E5%92%8C%E9%AA%8C%E8%AF%81" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>输出参数解析和验证</h3>
+<h3><a id="user-content-输出参数解析和验证" class="anchor" aria-hidden="true" href="#输出参数解析和验证"><span aria-hidden="true" class="octicon octicon-link"></span></a>输出参数解析和验证</h3>
 <p>out 有三个，call 返回，ft.Out(i)的，output 的</p>
 <div class="highlight highlight-source-go"><pre><span class="pl-k">for</span> <span class="pl-s1">i</span> <span class="pl-c1">:=</span> <span class="pl-c1">0</span>; <span class="pl-s1">i</span> <span class="pl-c1">&lt;</span> <span class="pl-s1">ft</span>.<span class="pl-en">NumOut</span>(); <span class="pl-s1">i</span><span class="pl-c1">++</span> {
 	<span class="pl-s1">ithCallRealOut</span> <span class="pl-c1">:=</span> <span class="pl-s1">out</span>[<span class="pl-s1">i</span>] <span class="pl-c">// 比input多的</span>
@@ -112,13 +105,11 @@
 	<span class="pl-s1">as</span>.<span class="pl-en">Equal</span>(<span class="pl-s1">ithCallOut</span>.<span class="pl-en">Kind</span>(), <span class="pl-s1">ithCallRealOut</span>.<span class="pl-en">Convert</span>(<span class="pl-s1">ithCallOutType</span>).<span class="pl-en">Kind</span>())
 	<span class="pl-s1">as</span>.<span class="pl-en">Equal</span>(<span class="pl-s1">ithCallOut</span>.<span class="pl-en">Interface</span>(), <span class="pl-s1">ithCallRealOut</span>.<span class="pl-en">Convert</span>(<span class="pl-s1">ithCallOutType</span>).<span class="pl-en">Interface</span>())
 }</pre></div>
-<h2>
-<a id="user-content-所以看看这怎么用" class="anchor" href="#%E6%89%80%E4%BB%A5%E7%9C%8B%E7%9C%8B%E8%BF%99%E6%80%8E%E4%B9%88%E7%94%A8" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>所以看看这怎么用</h2>
+<h2><a id="user-content-所以看看这怎么用" class="anchor" aria-hidden="true" href="#所以看看这怎么用"><span aria-hidden="true" class="octicon octicon-link"></span></a>所以看看这怎么用</h2>
 <p>可以看到只要给了 input 和 output 的字符串，和要测试的函数，那么就能通过反射自动解析参数，执行测试代码，并看看是不是给定的输出</p>
-&lt;script src=&#34;<a href="https://gist.github.com/chyroc/8dc21c2ea65dc3c83e43a62b3f2759e8.js%22&gt;&lt;/script">https://gist.github.com/chyroc/8dc21c2ea65dc3c83e43a62b3f2759e8.js&#34;&gt;&lt;/script</a>&gt;
-<h2>
-<a id="user-content-代码地址" class="anchor" href="#%E4%BB%A3%E7%A0%81%E5%9C%B0%E5%9D%80" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>代码（<a href="https://github.com/chyroc/algorithms-go/blob/master/test/run_case.go">地址</a>）</h2>
-&lt;script src=&#34;<a href="https://gist.github.com/chyroc/3be97f3fc601a0a851e2bddbda48d89b.js%22&gt;&lt;/script">https://gist.github.com/chyroc/3be97f3fc601a0a851e2bddbda48d89b.js&#34;&gt;&lt;/script</a>&gt;
+&lt;script src=&#34;<a href="https://gist.github.com/chyroc/8dc21c2ea65dc3c83e43a62b3f2759e8.js&#34;&gt;&lt;/script">https://gist.github.com/chyroc/8dc21c2ea65dc3c83e43a62b3f2759e8.js&#34;&gt;&lt;/script</a>&gt;
+<h2><a id="user-content-代码地址" class="anchor" aria-hidden="true" href="#代码地址"><span aria-hidden="true" class="octicon octicon-link"></span></a>代码（<a href="https://github.com/chyroc/algorithms-go/blob/master/test/run_case.go">地址</a>）</h2>
+&lt;script src=&#34;<a href="https://gist.github.com/chyroc/3be97f3fc601a0a851e2bddbda48d89b.js&#34;&gt;&lt;/script">https://gist.github.com/chyroc/3be97f3fc601a0a851e2bddbda48d89b.js&#34;&gt;&lt;/script</a>&gt;
 
         </article>
         <div id="gitalk-container"></div>

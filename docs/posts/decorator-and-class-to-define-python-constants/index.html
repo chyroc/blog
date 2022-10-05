@@ -26,12 +26,10 @@
             </div>
         </div>
         <article class="markdown-body entry-content container-lg" itemprop="text">
-            <h4>
-<a id="user-content-起因" class="anchor" href="#%E8%B5%B7%E5%9B%A0" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>起因</h4>
+            <h4><a id="user-content-起因" class="anchor" aria-hidden="true" href="#起因"><span aria-hidden="true" class="octicon octicon-link"></span></a>起因</h4>
 <p>在一些函数中，我们有时候只想要指定的几个输入，但是在代码/函数 交给别人使用的时候，别人还需要看文档，甚至不知道该传什么值，这个有一点不友好。</p>
 <p>所以，我们想在代码中定义一些常量，供代码使用者调用。</p>
-<h4>
-<a id="user-content-使用变量" class="anchor" href="#%E4%BD%BF%E7%94%A8%E5%8F%98%E9%87%8F" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>使用变量</h4>
+<h4><a id="user-content-使用变量" class="anchor" aria-hidden="true" href="#使用变量"><span aria-hidden="true" class="octicon octicon-link"></span></a>使用变量</h4>
 <div class="highlight highlight-source-python"><pre><span class="pl-c"># const.py</span>
 
 <span class="pl-v">CAT</span> <span class="pl-c1">=</span> <span class="pl-s">&#39;cat&#39;</span>
@@ -40,7 +38,7 @@
 <div class="highlight highlight-source-python"><pre><span class="pl-k">import</span> <span class="pl-s1">const</span>
 
 <span class="pl-s1">const</span>.<span class="pl-v">CAT</span></pre></div>
-<p><a href="https://camo.githubusercontent.com/ee183c516a7169d16be4b39f433cd2a83f9fbdc8bad80e05350e62c0f3447c74/68747470733a2f2f6d656469612e636879726f632e636e2f696d672f6465636f7261746f722d616e642d636c6173732d746f2d646566696e652d707974686f6e2d636f6e7374616e74732f312e706e67" target="_blank" rel="nofollow"><img src="https://camo.githubusercontent.com/ee183c516a7169d16be4b39f433cd2a83f9fbdc8bad80e05350e62c0f3447c74/68747470733a2f2f6d656469612e636879726f632e636e2f696d672f6465636f7261746f722d616e642d636c6173732d746f2d646566696e652d707974686f6e2d636f6e7374616e74732f312e706e67" alt="image" data-canonical-src="https://media.chyroc.cn/img/decorator-and-class-to-define-python-constants/1.png" style="max-width:100%;"/></a></p>
+<p><a target="_blank" rel="noopener noreferrer nofollow" href="https://camo.githubusercontent.com/ee183c516a7169d16be4b39f433cd2a83f9fbdc8bad80e05350e62c0f3447c74/68747470733a2f2f6d656469612e636879726f632e636e2f696d672f6465636f7261746f722d616e642d636c6173732d746f2d646566696e652d707974686f6e2d636f6e7374616e74732f312e706e67"><img src="https://camo.githubusercontent.com/ee183c516a7169d16be4b39f433cd2a83f9fbdc8bad80e05350e62c0f3447c74/68747470733a2f2f6d656469612e636879726f632e636e2f696d672f6465636f7261746f722d616e642d636c6173732d746f2d646566696e652d707974686f6e2d636f6e7374616e74732f312e706e67" alt="image" data-canonical-src="https://media.chyroc.cn/img/decorator-and-class-to-define-python-constants/1.png" style="max-width: 100%;"/></a></p>
 <p>嗯。。。。。这个时候我们又有一个类型了</p>
 <div class="highlight highlight-source-python"><pre><span class="pl-c"># const.py</span>
 
@@ -51,10 +49,9 @@
 <span class="pl-v">WIN</span> <span class="pl-c1">=</span> <span class="pl-s">&#39;windows&#39;</span>
 <span class="pl-v">LINUX</span> <span class="pl-c1">=</span> <span class="pl-s">&#39;linux&#39;</span></pre></div>
 <p>我们再来看一下</p>
-<p><a href="https://camo.githubusercontent.com/006ef2e569158021232bacf7532e95a8b90a78ba00a6cd6f73966fac8ee6db1f/68747470733a2f2f6d656469612e636879726f632e636e2f696d672f6465636f7261746f722d616e642d636c6173732d746f2d646566696e652d707974686f6e2d636f6e7374616e74732f322e706e67" target="_blank" rel="nofollow"><img src="https://camo.githubusercontent.com/006ef2e569158021232bacf7532e95a8b90a78ba00a6cd6f73966fac8ee6db1f/68747470733a2f2f6d656469612e636879726f632e636e2f696d672f6465636f7261746f722d616e642d636c6173732d746f2d646566696e652d707974686f6e2d636f6e7374616e74732f322e706e67" alt="image" data-canonical-src="https://media.chyroc.cn/img/decorator-and-class-to-define-python-constants/2.png" style="max-width:100%;"/></a></p>
+<p><a target="_blank" rel="noopener noreferrer nofollow" href="https://camo.githubusercontent.com/006ef2e569158021232bacf7532e95a8b90a78ba00a6cd6f73966fac8ee6db1f/68747470733a2f2f6d656469612e636879726f632e636e2f696d672f6465636f7261746f722d616e642d636c6173732d746f2d646566696e652d707974686f6e2d636f6e7374616e74732f322e706e67"><img src="https://camo.githubusercontent.com/006ef2e569158021232bacf7532e95a8b90a78ba00a6cd6f73966fac8ee6db1f/68747470733a2f2f6d656469612e636879726f632e636e2f696d672f6465636f7261746f722d616e642d636c6173732d746f2d646566696e652d707974686f6e2d636f6e7374616e74732f322e706e67" alt="image" data-canonical-src="https://media.chyroc.cn/img/decorator-and-class-to-define-python-constants/2.png" style="max-width: 100%;"/></a></p>
 <p>？？？（黑人问号脸），改选哪一个，CAT 是什么鬼？</p>
-<h4>
-<a id="user-content-使用类--property" class="anchor" href="#%E4%BD%BF%E7%94%A8%E7%B1%BB--property" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>使用类 + property</h4>
+<h4><a id="user-content-使用类--property" class="anchor" aria-hidden="true" href="#使用类--property"><span aria-hidden="true" class="octicon octicon-link"></span></a>使用类 + property</h4>
 <p>现在的常量代码如下</p>
 <pre lang="pyhton"><code># const.py
 
@@ -87,17 +84,16 @@ Animal = _Animal()
 Platform = _Platform()
 </code></pre>
 <p>使用：
-<a href="https://camo.githubusercontent.com/c1a1b44fa0ff4ab052136433a074cf036dbfcde803acc25afb977720eb8ad2da/68747470733a2f2f6d656469612e636879726f632e636e2f696d672f6465636f7261746f722d616e642d636c6173732d746f2d646566696e652d707974686f6e2d636f6e7374616e74732f332e706e67" target="_blank" rel="nofollow"><img src="https://camo.githubusercontent.com/c1a1b44fa0ff4ab052136433a074cf036dbfcde803acc25afb977720eb8ad2da/68747470733a2f2f6d656469612e636879726f632e636e2f696d672f6465636f7261746f722d616e642d636c6173732d746f2d646566696e652d707974686f6e2d636f6e7374616e74732f332e706e67" alt="image" data-canonical-src="https://media.chyroc.cn/img/decorator-and-class-to-define-python-constants/3.png" style="max-width:100%;"/></a></p>
-<p><a href="https://camo.githubusercontent.com/862596f29514c3c008cc61496ed6eb60de1f04c637e01490897bc47ae3d64141/68747470733a2f2f6d656469612e636879726f632e636e2f696d672f6465636f7261746f722d616e642d636c6173732d746f2d646566696e652d707974686f6e2d636f6e7374616e74732f342e706e67" target="_blank" rel="nofollow"><img src="https://camo.githubusercontent.com/862596f29514c3c008cc61496ed6eb60de1f04c637e01490897bc47ae3d64141/68747470733a2f2f6d656469612e636879726f632e636e2f696d672f6465636f7261746f722d616e642d636c6173732d746f2d646566696e652d707974686f6e2d636f6e7374616e74732f342e706e67" alt="image" data-canonical-src="https://media.chyroc.cn/img/decorator-and-class-to-define-python-constants/4.png" style="max-width:100%;"/></a></p>
+<a target="_blank" rel="noopener noreferrer nofollow" href="https://camo.githubusercontent.com/c1a1b44fa0ff4ab052136433a074cf036dbfcde803acc25afb977720eb8ad2da/68747470733a2f2f6d656469612e636879726f632e636e2f696d672f6465636f7261746f722d616e642d636c6173732d746f2d646566696e652d707974686f6e2d636f6e7374616e74732f332e706e67"><img src="https://camo.githubusercontent.com/c1a1b44fa0ff4ab052136433a074cf036dbfcde803acc25afb977720eb8ad2da/68747470733a2f2f6d656469612e636879726f632e636e2f696d672f6465636f7261746f722d616e642d636c6173732d746f2d646566696e652d707974686f6e2d636f6e7374616e74732f332e706e67" alt="image" data-canonical-src="https://media.chyroc.cn/img/decorator-and-class-to-define-python-constants/3.png" style="max-width: 100%;"/></a></p>
+<p><a target="_blank" rel="noopener noreferrer nofollow" href="https://camo.githubusercontent.com/862596f29514c3c008cc61496ed6eb60de1f04c637e01490897bc47ae3d64141/68747470733a2f2f6d656469612e636879726f632e636e2f696d672f6465636f7261746f722d616e642d636c6173732d746f2d646566696e652d707974686f6e2d636f6e7374616e74732f342e706e67"><img src="https://camo.githubusercontent.com/862596f29514c3c008cc61496ed6eb60de1f04c637e01490897bc47ae3d64141/68747470733a2f2f6d656469612e636879726f632e636e2f696d672f6465636f7261746f722d616e642d636c6173732d746f2d646566696e652d707974686f6e2d636f6e7374616e74732f342e706e67" alt="image" data-canonical-src="https://media.chyroc.cn/img/decorator-and-class-to-define-python-constants/4.png" style="max-width: 100%;"/></a></p>
 <p>嗯。。很好，现在有了刚刚吐槽的 <code>分类</code> 的功能。</p>
 <p>不过有一天，有一个二货改了你的常量！！！</p>
 <div class="highlight highlight-source-python"><pre><span class="pl-s1">const</span>.<span class="pl-v">Platform</span>.<span class="pl-s1">mac</span> <span class="pl-c1">=</span> <span class="pl-s">&#39;windows&#39;</span></pre></div>
 <p>你是不是是不是傻了？</p>
 <p>不过这是不可能的，嘿嘿，因为没有设置 <code>@mac.setter</code>修饰器的方法！
-<a href="https://camo.githubusercontent.com/24d1798dbca49090472f9967e52cf71e582d51292f811d7e3117bb56e9b32e03/68747470733a2f2f6d656469612e636879726f632e636e2f696d672f6465636f7261746f722d616e642d636c6173732d746f2d646566696e652d707974686f6e2d636f6e7374616e74732f352e706e67" target="_blank" rel="nofollow"><img src="https://camo.githubusercontent.com/24d1798dbca49090472f9967e52cf71e582d51292f811d7e3117bb56e9b32e03/68747470733a2f2f6d656469612e636879726f632e636e2f696d672f6465636f7261746f722d616e642d636c6173732d746f2d646566696e652d707974686f6e2d636f6e7374616e74732f352e706e67" alt="image" data-canonical-src="https://media.chyroc.cn/img/decorator-and-class-to-define-python-constants/5.png" style="max-width:100%;"/></a></p>
+<a target="_blank" rel="noopener noreferrer nofollow" href="https://camo.githubusercontent.com/24d1798dbca49090472f9967e52cf71e582d51292f811d7e3117bb56e9b32e03/68747470733a2f2f6d656469612e636879726f632e636e2f696d672f6465636f7261746f722d616e642d636c6173732d746f2d646566696e652d707974686f6e2d636f6e7374616e74732f352e706e67"><img src="https://camo.githubusercontent.com/24d1798dbca49090472f9967e52cf71e582d51292f811d7e3117bb56e9b32e03/68747470733a2f2f6d656469612e636879726f632e636e2f696d672f6465636f7261746f722d616e642d636c6173732d746f2d646566696e652d707974686f6e2d636f6e7374616e74732f352e706e67" alt="image" data-canonical-src="https://media.chyroc.cn/img/decorator-and-class-to-define-python-constants/5.png" style="max-width: 100%;"/></a></p>
 <p>但是呢，这里还有一个问题，就是这代码也太长了吧，为了定义一个常量，需要 3 行代码，假如有 20 个常量呢。。。不仅写起来麻烦，看代码也很烦啊！！</p>
-<h4>
-<a id="user-content-使用类修饰器" class="anchor" href="#%E4%BD%BF%E7%94%A8%E7%B1%BB%E4%BF%AE%E9%A5%B0%E5%99%A8" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>使用类修饰器</h4>
+<h4><a id="user-content-使用类修饰器" class="anchor" aria-hidden="true" href="#使用类修饰器"><span aria-hidden="true" class="octicon octicon-link"></span></a>使用类修饰器</h4>
 <div class="highlight highlight-source-python"><pre><span class="pl-c"># const.py</span>
 
 
@@ -131,9 +127,8 @@ Platform = _Platform()
 
 
 <span class="pl-v">Platform</span> <span class="pl-c1">=</span> <span class="pl-en">_Platform</span>()</pre></div>
-<p><a href="https://camo.githubusercontent.com/966dd644f9f3c92b89c5314e8a3615a483804d8f4123cfff836eed9a171e7eba/68747470733a2f2f6d656469612e636879726f632e636e2f696d672f6465636f7261746f722d616e642d636c6173732d746f2d646566696e652d707974686f6e2d636f6e7374616e74732f362e706e67" target="_blank" rel="nofollow"><img src="https://camo.githubusercontent.com/966dd644f9f3c92b89c5314e8a3615a483804d8f4123cfff836eed9a171e7eba/68747470733a2f2f6d656469612e636879726f632e636e2f696d672f6465636f7261746f722d616e642d636c6173732d746f2d646566696e652d707974686f6e2d636f6e7374616e74732f362e706e67" alt="image" data-canonical-src="https://media.chyroc.cn/img/decorator-and-class-to-define-python-constants/6.png" style="max-width:100%;"/></a></p>
-<h4>
-<a id="user-content-最终的代码" class="anchor" href="#%E6%9C%80%E7%BB%88%E7%9A%84%E4%BB%A3%E7%A0%81" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>最终的代码</h4>
+<p><a target="_blank" rel="noopener noreferrer nofollow" href="https://camo.githubusercontent.com/966dd644f9f3c92b89c5314e8a3615a483804d8f4123cfff836eed9a171e7eba/68747470733a2f2f6d656469612e636879726f632e636e2f696d672f6465636f7261746f722d616e642d636c6173732d746f2d646566696e652d707974686f6e2d636f6e7374616e74732f362e706e67"><img src="https://camo.githubusercontent.com/966dd644f9f3c92b89c5314e8a3615a483804d8f4123cfff836eed9a171e7eba/68747470733a2f2f6d656469612e636879726f632e636e2f696d672f6465636f7261746f722d616e642d636c6173732d746f2d646566696e652d707974686f6e2d636f6e7374616e74732f362e706e67" alt="image" data-canonical-src="https://media.chyroc.cn/img/decorator-and-class-to-define-python-constants/6.png" style="max-width: 100%;"/></a></p>
+<h4><a id="user-content-最终的代码" class="anchor" aria-hidden="true" href="#最终的代码"><span aria-hidden="true" class="octicon octicon-link"></span></a>最终的代码</h4>
 <div class="highlight highlight-source-python"><pre><span class="pl-c"># const.py</span>
 
 <span class="pl-k">from</span> <span class="pl-s1">functools</span> <span class="pl-k">import</span> <span class="pl-s1">wraps</span>

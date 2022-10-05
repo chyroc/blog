@@ -29,8 +29,7 @@
             <p>在一个 web server 程序中，我们需要读取 client 请求的输入，并且需要将服务端的数据返回给 client。在 linux（Unix）系统中，任何资源都是文件，即 fd（文件描述符），所以我们需要监控需要的 fd，以便可读时，读取 client 的输入，可写时，向 client 返回服务端的数据。</p>
 <p>假设程序有 100 个 client 访问，那么就需要从 100 个 fd 中读取数据，那么怎么做呢？</p>
 <p>可以为每一个 client 生成一个 thred 或者 process（线程或者进程）来处理请求，但是很显然当 client 越来越大的时候，就会非常消耗资源，因为（？？？）</p>
-<h2>
-<a id="user-content-select--poll" class="anchor" href="#select--poll" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>select &amp; poll</h2>
+<h2><a id="user-content-select--poll" class="anchor" aria-hidden="true" href="#select--poll"><span aria-hidden="true" class="octicon octicon-link"></span></a>select &amp; poll</h2>
 <p>这两种方法是任何 Unix 系统都有的，epoll 只有 linux 有，他们的工作方式都是：</p>
 <ul>
 <li>告诉他们你想要你知道哪些 fd 的信息</li>
@@ -46,16 +45,14 @@
 <p>poll 返回了很多可能的 fd 处理结果，而 select 只返回了输入/输出/错误（select 内部做了转换）</p>
 <p>另外一个区别就是：如果只想知道 1，3，4，19 四个 fd 的信息，poll 会遍历所有的 19 个 fd，而 select 只会遍历这 4 个</p>
 <p>虽然 select 好一点，但是他们实际上还是依靠循环实现的，所以时间负复杂度是<code>O(N)</code></p>
-<h2>
-<a id="user-content-信号驱动-io" class="anchor" href="#%E4%BF%A1%E5%8F%B7%E9%A9%B1%E5%8A%A8-io" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>信号驱动 IO</h2>
+<h2><a id="user-content-信号驱动-io" class="anchor" aria-hidden="true" href="#信号驱动-io"><span aria-hidden="true" class="octicon octicon-link"></span></a>信号驱动 IO</h2>
 <p>当 fd 发生变化的时候，让内核给你发一个信号</p>
 <p>什么时候会内核会发出信号呢，有两种模式</p>
 <ul>
 <li>level-triggered：在某状态下触发，只要在这个状态，就会一直触发</li>
 <li>edge-triggered：状态变化的时候，发出信号；</li>
 </ul>
-<h2>
-<a id="user-content-epoll" class="anchor" href="#epoll" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>epoll</h2>
+<h2><a id="user-content-epoll" class="anchor" aria-hidden="true" href="#epoll"><span aria-hidden="true" class="octicon octicon-link"></span></a>epoll</h2>
 <ul>
 <li>调用<code>epoll_create</code>，返回一个 epfd 的 id</li>
 </ul>
@@ -112,8 +109,7 @@
 1000          |  35    |   35      | 0.53
 10000         | 990    |  930      | 0.66
 </code></pre>
-<h2>
-<a id="user-content-参考" class="anchor" href="#%E5%8F%82%E8%80%83" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>参考</h2>
+<h2><a id="user-content-参考" class="anchor" aria-hidden="true" href="#参考"><span aria-hidden="true" class="octicon octicon-link"></span></a>参考</h2>
 <ul>
 <li><a href="https://jvns.ca/blog/2017/06/03/async-io-on-linux--select--poll--and-epoll/" rel="nofollow">https://jvns.ca/blog/2017/06/03/async-io-on-linux--select--poll--and-epoll/</a></li>
 <li><a href="https://medium.com/@copyconstruct/the-method-to-epolls-madness-d9d2d6378642" rel="nofollow">https://medium.com/@copyconstruct/the-method-to-epolls-madness-d9d2d6378642</a></li>

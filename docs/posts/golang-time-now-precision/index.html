@@ -30,7 +30,7 @@
 <blockquote>
 <p>golang defer 函数参数是什么时候求值的哈， 我这边试了下输出有时候两者是一样的，有时候两者相差 1000ms</p>
 </blockquote>
-<p><a href="https://camo.githubusercontent.com/3ef151328b1569c7d751d3625ce297fc72f9d065cec04ae02280169b2af75a0e/68747470733a2f2f6d656469612e636879726f632e636e2f696d672f31613930386537332d356231662d346265642d613637362d3039376134333730656639662e706e67" target="_blank" rel="nofollow"><img src="https://camo.githubusercontent.com/3ef151328b1569c7d751d3625ce297fc72f9d065cec04ae02280169b2af75a0e/68747470733a2f2f6d656469612e636879726f632e636e2f696d672f31613930386537332d356231662d346265642d613637362d3039376134333730656639662e706e67" alt="" data-canonical-src="https://media.chyroc.cn/img/1a908e73-5b1f-4bed-a676-097a4370ef9f.png" style="max-width:100%;"/></a></p>
+<p><a target="_blank" rel="noopener noreferrer nofollow" href="https://camo.githubusercontent.com/3ef151328b1569c7d751d3625ce297fc72f9d065cec04ae02280169b2af75a0e/68747470733a2f2f6d656469612e636879726f632e636e2f696d672f31613930386537332d356231662d346265642d613637362d3039376134333730656639662e706e67"><img src="https://camo.githubusercontent.com/3ef151328b1569c7d751d3625ce297fc72f9d065cec04ae02280169b2af75a0e/68747470733a2f2f6d656469612e636879726f632e636e2f696d672f31613930386537332d356231662d346265642d613637362d3039376134333730656639662e706e67" alt="" data-canonical-src="https://media.chyroc.cn/img/1a908e73-5b1f-4bed-a676-097a4370ef9f.png" style="max-width: 100%;"/></a></p>
 <p>这里面的 defer 的参数计算问题可以在<a href="https://chyroc.cn/posts/defer-return/" rel="nofollow">这篇文章</a>中找到</p>
 <p>本文主要讨论 <code>time.Now</code> 函数的精度问题。</p>
 <p>先看一下下面这段代码</p>
@@ -89,7 +89,7 @@
 <p>[捂脸]根据 <code>line 7</code>，在 <code>darwin(mac)</code> 系统上，go 的 <code>time.Now</code> 精度就是 1000ns。</p>
 <p>所以在上面 <code>line 2</code> 的代码中，每个 <code>time.Now</code> 都是 80 - 150 ns 的时间，然后 print 0，到 1000 ns 过去后，就 print 一个 1000 ns</p>
 <p>将上面的代码交叉编译并在 linux 系统上执行，结果是：</p>
-<p><a href="https://camo.githubusercontent.com/39671121f7e44da6542d0e9261ff4a0b76f23fa6e9492d09fa412c6f195325fd/68747470733a2f2f6d656469612e636879726f632e636e2f696d672f64653130636231332d363433392d343232352d383733632d3263326661306463333233392e706e67" target="_blank" rel="nofollow"><img src="https://camo.githubusercontent.com/39671121f7e44da6542d0e9261ff4a0b76f23fa6e9492d09fa412c6f195325fd/68747470733a2f2f6d656469612e636879726f632e636e2f696d672f64653130636231332d363433392d343232352d383733632d3263326661306463333233392e706e67" alt="" data-canonical-src="https://media.chyroc.cn/img/de10cb13-6439-4225-873c-2c2fa0dc3239.png" style="max-width:100%;"/></a></p>
+<p><a target="_blank" rel="noopener noreferrer nofollow" href="https://camo.githubusercontent.com/39671121f7e44da6542d0e9261ff4a0b76f23fa6e9492d09fa412c6f195325fd/68747470733a2f2f6d656469612e636879726f632e636e2f696d672f64653130636231332d363433392d343232352d383733632d3263326661306463333233392e706e67"><img src="https://camo.githubusercontent.com/39671121f7e44da6542d0e9261ff4a0b76f23fa6e9492d09fa412c6f195325fd/68747470733a2f2f6d656469612e636879726f632e636e2f696d672f64653130636231332d363433392d343232352d383733632d3263326661306463333233392e706e67" alt="" data-canonical-src="https://media.chyroc.cn/img/de10cb13-6439-4225-873c-2c2fa0dc3239.png" style="max-width: 100%;"/></a></p>
 <p>嗯...是正常的了。</p>
 
         </article>
