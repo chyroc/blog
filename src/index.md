@@ -41,7 +41,7 @@ slug: "index"
 ### 友链
 
 - [laike9m's blog](https://laike9m.com/)
-- [BoyChai Blog's](https://blog.boychai.xyz/)
+- [BoyChai's Blog](https://blog.boychai.xyz/)
 
 ## 备案
 
